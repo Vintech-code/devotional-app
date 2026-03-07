@@ -1,10 +1,10 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing } from '../../theme';
 
-export const styles = StyleSheet.create({
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: c.background,
   },
   container: {
     flexGrow: 1,
@@ -20,27 +20,27 @@ export const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headline: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     textAlign: 'center',
   },
   headlineAccent: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
     fontStyle: 'italic',
-    color: Colors.primary,
+    color: c.primary,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
   subtitle: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
     lineHeight: Typography.size.md * 1.6,
     marginBottom: Spacing.sm,
@@ -56,11 +56,11 @@ export const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: c.border,
   },
   dotActive: {
     width: 24,
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
   },
   spacer: {
     flex: 1,
@@ -71,10 +71,10 @@ export const styles = StyleSheet.create({
   },
   signInText: {
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
   },
   signInLink: {
-    color: Colors.primary,
+    color: c.primary,
     fontWeight: Typography.weight.semiBold,
   },
   lottie: {

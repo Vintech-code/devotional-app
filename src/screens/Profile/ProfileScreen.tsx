@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,17 +6,34 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ProfileStackParamList } from '../../navigation/types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
 import SettingsRow from '../../components/SettingsRow/SettingsRow';
-import { styles } from './Profile.styles';
+import ToggleCard from '../../components/ToggleCard/ToggleCard';
+import { makeStyles } from './Profile.styles';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
 export default function ProfileScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const profile = useAppStore((s) => s.profile);
+  const isDarkMode = useAppStore((s) => s.isDarkMode);
+  const toggleTheme = useAppStore((s) => s.toggleTheme);
   const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
+  const soapEntries   = useAppStore((s) => s.soapEntries);
+  const mcpwaEntries  = useAppStore((s) => s.mcpwaEntries);
+  const swordEntries  = useAppStore((s) => s.swordEntries);
+  const sermonNotes   = useAppStore((s) => s.sermonNotes);
+
+  const lastMonthCount = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    const end   = new Date(now.getFullYear(), now.getMonth(),     1).getTime();
+    return [...soapEntries, ...mcpwaEntries, ...swordEntries, ...sermonNotes]
+      .filter((e) => e.createdAt >= start && e.createdAt < end).length;
+  }, [soapEntries, mcpwaEntries, swordEntries, sermonNotes]);
 
   function handleSignOut() {
     setOnboardingDone(false);
@@ -26,11 +43,9 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Header bar */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => {}}>
-          <Icon source="chevron-left" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
+        <View style={{ width: 24 }} />
         <Text style={styles.headerTitle}>Profile</Text>
-        <Icon source="cog" size={22} color={Colors.textPrimary} />
+        <Icon source="cog" size={22} color={colors.textPrimary} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
@@ -42,7 +57,7 @@ export default function ProfileScreen() {
             </Text>
           </View>
           <View style={styles.editBadge}>
-            <Icon source="pencil" size={12} color={Colors.textPrimary} />
+            <Icon source="pencil" size={12} color={colors.textPrimary} />
           </View>
         </View>
 
@@ -58,13 +73,13 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-          <Icon source="book-multiple" size={24} color={Colors.primary} />
+          <Icon source="book-multiple" size={24} color={colors.textPrimary} />
             <Text style={styles.statNum}>{profile?.completedCount ?? 0}</Text>
             <Text style={styles.statLabel}>COMPLETED</Text>
-            <Text style={styles.statSub}>+0 from last month</Text>
+            <Text style={styles.statSub}>{lastMonthCount > 0 ? '+' : ''}{lastMonthCount} from last month</Text>
           </View>
           <View style={styles.statCard}>
-          <Icon source="fire" size={24} color={Colors.primary} />
+          <Icon source="fire" size={24} color={colors.textPrimary} />
             <Text style={styles.statNum}>{profile?.dayStreak ?? 0}</Text>
             <Text style={styles.statLabel}>DAY STREAK</Text>
             <Text style={styles.statSub}>Your personal best!</Text>
@@ -74,12 +89,6 @@ export default function ProfileScreen() {
         {/* My Progress */}
         <Text style={styles.sectionLabel}>MY PROGRESS</Text>
         <View style={styles.card}>
-          <SettingsRow
-            icon="clipboard-text"
-            title="Journal History"
-            subtitle="View your SOAP & MCPWA entries"
-            onPress={() => navigation.navigate('JournalHistory')}
-          />
           <SettingsRow
             icon="bell"
             title="Reminders"
@@ -91,13 +100,14 @@ export default function ProfileScreen() {
 
         {/* App Preferences */}
         <Text style={styles.sectionLabel}>APP PREFERENCES</Text>
+        <ToggleCard
+          icon="moon-waning-crescent"
+          title="Dark Mode"
+          description="Easier on the eyes at night"
+          value={isDarkMode}
+          onValueChange={toggleTheme}
+        />
         <View style={styles.card}>
-          <SettingsRow
-            icon="moon-waning-crescent"
-            title="Dark Mode"
-            subtitle="Easier on the eyes at night"
-            rightElement={<View style={styles.toggleOff} />}
-          />
           <SettingsRow
             icon="help-circle"
             title="Support & Feedback"

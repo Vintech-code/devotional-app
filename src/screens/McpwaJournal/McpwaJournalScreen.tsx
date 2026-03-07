@@ -1,18 +1,18 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { JournalStackParamList } from '../../navigation/types';
 import { McpwaEntry } from '../../types';
-import { Colors, Typography, Spacing } from '../../theme';
+import { useColors, Typography, Spacing } from '../../theme';
 import { saveMcpwaEntry, refreshProfileProgress } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import JournalSection from '../../components/JournalSection/JournalSection';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './McpwaJournal.styles';
+import { makeStyles } from './McpwaJournal.styles';
 
 type Props = NativeStackScreenProps<JournalStackParamList, 'McpwaJournal'>;
 
@@ -31,6 +31,8 @@ const SECTIONS = [
 type FieldKey = 'message' | 'command' | 'promise' | 'warning' | 'application';
 
 export default function McpwaJournalScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const setMcpwaEntries = useAppStore((s) => s.setMcpwaEntries);
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.mcpwaEntries);

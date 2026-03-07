@@ -1,8 +1,8 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -10,13 +10,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderBottomColor: c.border,
+    backgroundColor: c.surface,
   },
   headerTitle: {
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.semiBold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   container: { padding: Spacing.lg, paddingBottom: Spacing.xxl, alignItems: 'center' },
   avatarWrap: { position: 'relative', marginBottom: Spacing.md, marginTop: Spacing.md },
@@ -24,16 +24,16 @@ export const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   avatarInitials: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
-    color: Colors.primary,
+    color: c.primary,
   },
   editBadge: {
     position: 'absolute',
@@ -42,26 +42,26 @@ export const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   name: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: Spacing.xs,
   },
   memberSince: {
     fontSize: Typography.size.sm,
-    color: Colors.accent,
+    color: c.accent,
     marginBottom: Spacing.md,
   },
   levelText: {
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     fontWeight: Typography.weight.medium,
     marginBottom: Spacing.lg,
   },
@@ -73,7 +73,7 @@ export const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     alignItems: 'center',
@@ -86,30 +86,30 @@ export const styles = StyleSheet.create({
   statNum: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   statLabel: {
     fontSize: Typography.size.xs,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1,
     marginTop: 2,
   },
   statSub: {
     fontSize: Typography.size.xs,
-    color: Colors.textMuted,
+    color: c.textMuted,
     marginTop: 2,
   },
   sectionLabel: {
     alignSelf: 'flex-start',
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.5,
     marginBottom: Spacing.sm,
     marginTop: Spacing.md,
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.md,
     width: '100%',
@@ -125,12 +125,12 @@ export const styles = StyleSheet.create({
     width: 44,
     height: 26,
     borderRadius: 13,
-    backgroundColor: Colors.border,
+    backgroundColor: c.border,
   },
   signOutRow: {},
   version: {
     fontSize: Typography.size.xs,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1,
     marginTop: Spacing.lg,
   },

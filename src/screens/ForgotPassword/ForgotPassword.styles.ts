@@ -1,23 +1,23 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: c.border,
   },
   backBtn: { width: 40, padding: Spacing.xs },
   headerTitle: {
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.semiBold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   headerSpacer: { width: 40 },
   container: {
@@ -29,7 +29,7 @@ export const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.lg,
@@ -38,13 +38,13 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: Spacing.lg,
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.2,
     marginBottom: 4,
   },
@@ -61,18 +61,18 @@ export const styles = StyleSheet.create({
   sentBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F1F12',
+    backgroundColor: c.successSurface,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginTop: Spacing.sm,
     alignSelf: 'stretch',
   },
-  sentText: { fontSize: Typography.size.sm, color: Colors.success, flex: 1 },
+  sentText: { fontSize: Typography.size.sm, color: c.success, flex: 1 },
   sendBtn: { alignSelf: 'stretch', marginTop: Spacing.md },
   tipCard: {
     flexDirection: 'row',
     alignSelf: 'stretch',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginTop: Spacing.lg,
@@ -80,16 +80,16 @@ export const styles = StyleSheet.create({
   tipText: {
     flex: 1,
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     lineHeight: 20,
   },
   backLink: { marginTop: Spacing.lg },
   backLinkText: {
     fontSize: Typography.size.md,
-    color: Colors.primary,
+    color: c.primary,
     fontWeight: Typography.weight.semiBold,
   },
   helpLink: { marginTop: Spacing.sm },
-  helpText: { fontSize: Typography.size.sm, color: Colors.textMuted },
+  helpText: { fontSize: Typography.size.sm, color: c.textMuted },
 }
 );

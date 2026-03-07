@@ -1,20 +1,20 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   container: { padding: Spacing.md, paddingBottom: Spacing.xxl },
   pageTitle: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: 4,
   },
-  pageDate: { fontSize: Typography.size.sm, color: Colors.textMuted, marginBottom: Spacing.xs },
+  pageDate: { fontSize: Typography.size.sm, color: c.textMuted, marginBottom: Spacing.xs },
   methodLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.5,
     marginBottom: Spacing.lg,
   },
@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
   footer: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.5,
     textAlign: 'center',
     marginTop: Spacing.md,

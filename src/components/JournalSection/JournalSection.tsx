@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Card } from 'react-native-paper';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 
 interface Props {
   letter: string;
@@ -12,6 +12,48 @@ interface Props {
 }
 
 export default function JournalSection({ letter, title, subtitle, children, style }: Props) {
+  const colors = useColors();
+  const styles = StyleSheet.create({
+  card: {
+    marginBottom: Spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: Radius.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  letterBox: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.sm,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  letter: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    color: colors.primary,
+  },
+  headerText: {
+    flex: 1,
+  },
+  title: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    color: colors.textPrimary,
+  },
+  subtitle: {
+    fontSize: Typography.size.sm,
+    color: colors.textSecondary,
+  },
+  content: {
+    marginTop: Spacing.xs,
+  },
+});
   return (
     <Card style={[styles.card, style]} mode="outlined">
       <Card.Content>
@@ -30,44 +72,3 @@ export default function JournalSection({ letter, title, subtitle, children, styl
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    marginBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  letterBox: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.sm,
-    backgroundColor: Colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.sm,
-  },
-  letter: {
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-    color: Colors.primary,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
-  },
-  subtitle: {
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-  },
-  content: {
-    marginTop: Spacing.xs,
-  },
-});

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,14 +6,14 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { JournalStackParamList } from '../../navigation/types';
 import { SwordEntry } from '../../types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { saveSwordEntry, refreshProfileProgress } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import JournalSection from '../../components/JournalSection/JournalSection';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './SwordJournal.styles';
+import { makeStyles } from './SwordJournal.styles';
 
 type Props = NativeStackScreenProps<JournalStackParamList, 'SwordJournal'>;
 
@@ -40,6 +40,8 @@ const PLACEHOLDERS: Record<FieldKey, string> = {
 };
 
 export default function SwordJournalScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const setSwordEntries = useAppStore((s) => s.setSwordEntries);
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.swordEntries);
@@ -122,7 +124,7 @@ export default function SwordJournalScreen({ navigation }: Props) {
 
         {/* FAB placeholder */}
         <TouchableOpacity style={styles.fab} onPress={() => {}}>
-          <Icon source="plus" size={22} color={Colors.textOnPrimary} />
+          <Icon source="plus" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

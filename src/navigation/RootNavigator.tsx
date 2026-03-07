@@ -2,17 +2,20 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   RootStackParamList,
   AuthStackParamList,
   MainTabParamList,
+  HomeStackParamList,
+  HistoryStackParamList,
   JournalStackParamList,
   ProfileStackParamList,
 } from './types';
 
 import { Icon } from 'react-native-paper';
-import { Colors, Typography, Spacing } from '../theme';
+import { useColors, Typography, Spacing } from '../theme';
 import { useAppStore } from '../store/useAppStore';
 
 // ─── Screens ──────────────────────────────────────────────────────────────────
@@ -24,10 +27,12 @@ import MethodSelectionScreen from '../screens/MethodSelection/MethodSelectionScr
 import CreateAccountScreen from '../screens/CreateAccount/CreateAccountScreen';
 
 import HomeScreen from '../screens/Home/HomeScreen';
+import VerseOfDayScreen from '../screens/VerseOfDay/VerseOfDayScreen';
 import BibleScreen from '../screens/Bible/BibleScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import RemindersScreen from '../screens/Reminders/RemindersScreen';
 import JournalHistoryScreen from '../screens/JournalHistory/JournalHistoryScreen';
+import DevotionalDetailScreen from '../screens/DevotionalDetail/DevotionalDetailScreen';
 
 import JournalHomeScreen from '../screens/JournalHome/JournalHomeScreen';
 import SoapJournalScreen from '../screens/SoapJournal/SoapJournalScreen';
@@ -46,15 +51,17 @@ const TAB_ICONS: Record<string, string> = {
   Home:    'home',
   Bible:   'book-open-variant',
   Journal: 'notebook',
+  History: 'history',
   Profile: 'account',
 };
 
 function TabIcon({ label, focused }: TabIconProps) {
+  const colors = useColors();
   return (
     <Icon
       source={TAB_ICONS[label] ?? 'circle'}
       size={24}
-      color={focused ? Colors.primary : Colors.textMuted}
+      color={focused ? colors.textPrimary : colors.textSecondary}
     />
   );
 }
@@ -95,6 +102,32 @@ function JournalNavigator() {
   );
 }
 
+// ─── Home Stack ──────────────────────────────────────────────────────────────
+
+const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+
+function HomeNavigator() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="VerseOfDay" component={VerseOfDayScreen} />
+    </HomeStack.Navigator>
+  );
+}
+
+// ─── History Stack ────────────────────────────────────────────────────────────
+
+const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
+
+function HistoryNavigator() {
+  return (
+    <HistoryStack.Navigator screenOptions={{ headerShown: false }}>
+      <HistoryStack.Screen name="HistoryMain" component={JournalHistoryScreen} />
+      <HistoryStack.Screen name="DevotionalDetail" component={DevotionalDetailScreen} />
+    </HistoryStack.Navigator>
+  );
+}
+
 // ─── Profile Stack ────────────────────────────────────────────────────────────
 
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
@@ -104,7 +137,6 @@ function ProfileNavigator() {
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="Reminders" component={RemindersScreen} />
-      <ProfileStack.Screen name="JournalHistory" component={JournalHistoryScreen} />
     </ProfileStack.Navigator>
   );
 }
@@ -114,6 +146,21 @@ function ProfileNavigator() {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainNavigator() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const styles = StyleSheet.create({
+    tabBar: {
+      backgroundColor: colors.surface,
+      borderTopColor: colors.border,
+      borderTopWidth: 1,
+      height: 64 + insets.bottom,
+      paddingBottom: Spacing.sm + insets.bottom,
+    },
+    tabLabel: {
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.medium,
+    },
+  });
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -123,20 +170,21 @@ function MainNavigator() {
           <Text
             style={[
               styles.tabLabel,
-              { color: focused ? Colors.primary : Colors.textMuted },
+              { color: focused ? colors.primary : colors.textMuted },
             ]}
           >
             {route.name}
           </Text>
         ),
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={HomeNavigator} />
       <Tab.Screen name="Bible" component={BibleScreen} />
       <Tab.Screen name="Journal" component={JournalNavigator} />
+      <Tab.Screen name="History" component={HistoryNavigator} />
       <Tab.Screen name="Profile" component={ProfileNavigator} />
     </Tab.Navigator>
   );
@@ -160,18 +208,4 @@ export default function RootNavigator() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: Colors.surface,
-    borderTopColor: Colors.border,
-    borderTopWidth: 1,
-    height: 64,
-    paddingBottom: Spacing.sm,
-  },
-  tabLabel: {
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.medium,
-  },
-});

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Switch, StyleSheet, ViewStyle } from 'react-native';
 import { List, Icon } from 'react-native-paper';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 
 interface Props {
   icon: string;
@@ -13,6 +13,36 @@ interface Props {
 }
 
 export default function ToggleCard({ icon, title, description, value, onValueChange, style }: Props) {
+  const colors = useColors();
+  const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.md,
+    elevation: 1,
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginLeft: Spacing.md,
+  },
+  title: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    color: colors.textPrimary,
+  },
+  description: {
+    fontSize: Typography.size.sm,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  switch: { alignSelf: 'center' },
+});
   return (
     <List.Item
       title={title}
@@ -22,15 +52,15 @@ export default function ToggleCard({ icon, title, description, value, onValueCha
       style={[styles.card, style]}
       left={() => (
         <View style={styles.iconWrap}>
-          <Icon source={icon} size={22} color={Colors.textOnPrimary} />
+          <Icon source={icon} size={22} color={colors.textOnPrimary} />
         </View>
       )}
       right={() => (
         <Switch
           value={Boolean(value)}
           onValueChange={onValueChange}
-          trackColor={{ false: Colors.border, true: Colors.primary }}
-          thumbColor={Colors.surface}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={colors.surface}
           style={styles.switch}
         />
       )}
@@ -38,32 +68,3 @@ export default function ToggleCard({ icon, title, description, value, onValueCha
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    marginBottom: Spacing.md,
-    elevation: 1,
-  },
-  iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginLeft: Spacing.md,
-  },
-  title: {
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
-  },
-  description: {
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  switch: { alignSelf: 'center' },
-});

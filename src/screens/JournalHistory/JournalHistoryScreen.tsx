@@ -1,12 +1,13 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, TextInput, Alert,
+  View, Text, FlatList, ScrollView, TouchableOpacity, TextInput, Alert,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
 import {
   deleteSoapEntry,
@@ -16,19 +17,23 @@ import {
   refreshProfileProgress,
 } from '../../services/storageService';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
-import { styles } from './JournalHistory.styles';
+import { HistoryStackParamList } from '../../navigation/types';
+import { makeStyles } from './JournalHistory.styles';
+
+type Nav = NativeStackNavigationProp<HistoryStackParamList>;
 
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-const TYPE_COLORS: Record<string, string> = {
-  SOAP:   Colors.primary,
-  MCPWA:  '#7C3AED',
-  SWORD:  '#0891B2',
-  Sermon: Colors.accent,
-};
-
 export default function JournalHistoryScreen() {
-  const navigation = useNavigation();
+  const colors = useColors();
+  const styles = makeStyles(colors);
+  const TYPE_COLORS: Record<string, string> = {
+    SOAP:   colors.primary,
+    MCPWA:  '#7C3AED',
+    SWORD:  '#0891B2',
+    Sermon: colors.accent,
+  };
+  const navigation = useNavigation<Nav>();
   const soapEntries   = useAppStore((s) => s.soapEntries);
   const mcpwaEntries  = useAppStore((s) => s.mcpwaEntries);
   const swordEntries  = useAppStore((s) => s.swordEntries);
@@ -41,10 +46,11 @@ export default function JournalHistoryScreen() {
   const setProfile = useAppStore((s) => s.setProfile);
 
   const [search, setSearch] = useState('');
+  const [activeType, setActiveType] = useState('');
 
   type HistoryEntry = {
     id: string; type: string; date: string; createdAt: number;
-    entryTitle: string; excerpt: string; tags: string[];
+    entryTitle: string; excerpt: string; tags: string[]; searchText: string;
   };
 
   const allEntries = useMemo((): HistoryEntry[] => [
@@ -53,34 +59,42 @@ export default function JournalHistoryScreen() {
       entryTitle: e.scripture || 'Scripture Study',
       excerpt: e.observation || e.application || '',
       tags: ['Scripture', 'Observation', 'Application', 'Prayer'],
+      searchText: [e.scripture, e.fullVerse, e.observation, e.application, e.prayer]
+        .filter(Boolean).join(' ').toLowerCase(),
     })),
     ...mcpwaEntries.map((e) => ({
       id: e.id, type: 'MCPWA', date: e.date, createdAt: e.createdAt,
       entryTitle: e.scripture || 'Daily Listening',
       excerpt: e.message || '',
       tags: ['Message', 'Command', 'Promise', 'Warning'],
+      searchText: [e.scripture, e.message, e.command, e.promise, e.warning, e.application]
+        .filter(Boolean).join(' ').toLowerCase(),
     })),
     ...swordEntries.map((e) => ({
       id: e.id, type: 'SWORD', date: e.date, createdAt: e.createdAt,
       entryTitle: e.scripture || 'Scripture Study',
       excerpt: e.observation || e.response || '',
       tags: ['Scripture', 'Word', 'Observation', 'Response'],
+      searchText: [e.scripture, e.word, e.observation, e.response, e.dailyLiving]
+        .filter(Boolean).join(' ').toLowerCase(),
     })),
     ...sermonNotes.map((e) => ({
       id: e.id, type: 'Sermon', date: e.serviceDate, createdAt: e.createdAt,
       entryTitle: e.title || 'Sermon Notes',
       excerpt: e.notes || '',
       tags: e.tags?.length ? e.tags : ['Sermon'],
+      searchText: [e.title, e.preacher, e.church, e.mainScripture, e.notes, ...(e.tags ?? [])]
+        .filter(Boolean).join(' ').toLowerCase(),
     })),
   ].sort((a, b) => b.createdAt - a.createdAt), [soapEntries, mcpwaEntries, swordEntries, sermonNotes]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return allEntries;
+    let result = allEntries;
+    if (activeType) result = result.filter((e) => e.type === activeType);
+    if (!search.trim()) return result;
     const q = search.toLowerCase();
-    return allEntries.filter(
-      (e) => e.entryTitle.toLowerCase().includes(q) || e.excerpt.toLowerCase().includes(q),
-    );
-  }, [allEntries, search]);
+    return result.filter((e) => e.searchText.includes(q));
+  }, [allEntries, search, activeType]);
 
   // Determine which days this week had entries
   const today = new Date();
@@ -130,22 +144,22 @@ export default function JournalHistoryScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
       <ScreenHeader title="Journal History" onBack={() => navigation.goBack()} />
 
-      {/* â”€â”€â”€ Consistency panel â”€â”€â”€ */}
+      {/* ─── Consistency panel ─── */}
       <View style={styles.consistencyPanel}>
         <Text style={styles.consistencyTitle}>CONSISTENCY</Text>
         <View style={styles.statsRow}>
           <View style={styles.statBadge}>
-            <Icon source="fire" size={24} color={Colors.primary} />
+            <Icon source="fire" size={24} color={colors.textPrimary} />
             <View>
               <Text style={styles.statBadgeValue}>{profile?.dayStreak ?? 0} Days</Text>
               <Text style={styles.statBadgeLabel}>CURRENT STREAK</Text>
             </View>
           </View>
           <View style={styles.statBadge}>
-            <Icon source="book-multiple" size={24} color={Colors.primary} />
+            <Icon source="book-multiple" size={24} color={colors.textPrimary} />
             <View>
               <Text style={styles.statBadgeValue}>{allEntries.length}</Text>
               <Text style={styles.statBadgeLabel}>TOTAL COMPLETED</Text>
@@ -170,31 +184,51 @@ export default function JournalHistoryScreen() {
         </View>
       </View>
 
-      {/* â”€â”€â”€ Entries header + search â”€â”€â”€ */}
+      {/* ─── Type filters ─── */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={styles.typeFilterRow}
+      >
+        {(['', 'SOAP', 'MCPWA', 'SWORD', 'Sermon'] as const).map((type) => (
+          <TouchableOpacity
+            key={type || 'all'}
+            style={[styles.typeChip, activeType === type && styles.typeChipActive]}
+            onPress={() => setActiveType(type)}
+          >
+            <Text style={[styles.typeChipText, activeType === type && styles.typeChipTextActive]}>
+              {type === '' ? 'ALL' : type}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* ─── Entries header + search ─── */}
       <View style={styles.entriesHeader}>
         <Text style={styles.sectionLabel}>ENTRIES</Text>
         <Text style={styles.entryCount}>{filtered.length}</Text>
       </View>
 
       <View style={styles.searchWrap}>
-        <Icon source="magnify" size={18} color={Colors.textMuted} />
+        <Icon source="magnify" size={18} color={colors.textSecondary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search scripture or notes..."
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           value={search}
           onChangeText={setSearch}
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Icon source="close" size={18} color={Colors.textMuted} />
+            <Icon source="close" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
 
       {filtered.length === 0 ? (
         <View style={styles.empty}>
-          <Icon source="book-open-variant" size={48} color={Colors.textMuted} />
+          <Icon source="book-open-variant" size={48} color={colors.textSecondary} />
           <Text style={styles.emptyTitle}>{search ? 'No results found' : 'No entries yet'}</Text>
           <Text style={styles.emptySubtitle}>
             {search ? 'Try a different search term.' : 'Start journaling to see your history here.'}
@@ -207,11 +241,15 @@ export default function JournalHistoryScreen() {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.entryCard} activeOpacity={0.85}>
+            <TouchableOpacity
+              style={styles.entryCard}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('DevotionalDetail', { entryId: item.id, entryType: item.type })}
+            >
               <View style={styles.entryMeta}>
                 <Text style={styles.entryDate}>{item.date}</Text>
                 <View style={styles.entryMetaRight}>
-                  <View style={[styles.typeBadge, { backgroundColor: TYPE_COLORS[item.type] ?? Colors.primary }]}>
+                  <View style={[styles.typeBadge, { backgroundColor: TYPE_COLORS[item.type] ?? colors.primary }]}>
                     <Text style={styles.typeText}>{item.type}</Text>
                   </View>
                   <TouchableOpacity
@@ -220,7 +258,7 @@ export default function JournalHistoryScreen() {
                       handleDeleteEntry(item);
                     }}
                   >
-                    <Icon source="trash-can-outline" size={14} color={Colors.textMuted} />
+                    <Icon source="trash-can-outline" size={14} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>

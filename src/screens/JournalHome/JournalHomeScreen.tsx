@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,9 +6,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { JournalStackParamList } from '../../navigation/types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
-import { styles } from './JournalHome.styles';
+import { makeStyles } from './JournalHome.styles';
 
 type Nav = NativeStackNavigationProp<JournalStackParamList>;
 
@@ -24,21 +24,21 @@ const OPTIONS: JournalOption[] = [
   {
     id: 'soap',
     title: 'SOAP Journal',
-    subtitle: 'Scripture · Observation · Application · Prayer',
+    subtitle: 'Scripture, Observation, Application, Prayer',
     icon: 'pencil',
     screen: 'SoapJournal',
   },
   {
     id: 'mcpwa',
     title: 'MCPWA Journal',
-    subtitle: 'Message · Command · Promise · Warning · Application',
+    subtitle: 'Message, Command, Promise, Warning, Application',
     icon: 'shield',
     screen: 'McpwaJournal',
   },
   {
     id: 'sword',
     title: 'SWORD Journal',
-    subtitle: 'Scripture · Word · Observation · Response · Daily Living',
+    subtitle: 'Scripture, Word, Observation, Response, Daily Living',
     icon: 'sword',
     screen: 'SwordJournal',
   },
@@ -52,6 +52,8 @@ const OPTIONS: JournalOption[] = [
 ];
 
 export default function JournalHomeScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const soapEntries = useAppStore((s) => s.soapEntries);
   const mcpwaEntries = useAppStore((s) => s.mcpwaEntries);
@@ -75,13 +77,13 @@ export default function JournalHomeScreen() {
             onPress={() => navigation.navigate(opt.screen as 'SoapJournal', {})}
           >
             <View style={styles.iconWrap}>
-              <Icon source={opt.icon} size={22} color={Colors.primary} />
+              <Icon source={opt.icon} size={22} color={colors.textPrimary} />
             </View>
             <View style={styles.cardBody}>
               <Text style={styles.cardTitle}>{opt.title}</Text>
               <Text style={styles.cardSubtitle}>{opt.subtitle}</Text>
             </View>
-            <Icon source="chevron-right" size={22} color={Colors.textMuted} />
+            <Icon source="chevron-right" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
         ))}
 

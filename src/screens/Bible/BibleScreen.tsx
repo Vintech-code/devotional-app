@@ -1,13 +1,14 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
-import { styles } from './Bible.styles';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
+import { makeStyles } from './Bible.styles';
+import { getBiblePosition, saveBiblePosition } from '../../services/storageService';
 
-// â”€â”€â”€ Sample Bible Data (NIV) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Sample Bible Data (NIV) ─────────────────────────────────────────────────
 
 type Verse = { v: number; text: string };
 
@@ -71,6 +72,8 @@ const BIBLE: Record<string, Record<number, Verse[]>> = {
 const BOOKS = Object.keys(BIBLE);
 
 export default function BibleScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const [book, setBook]           = useState('John');
   const [chapter, setChapter]     = useState(3);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
@@ -78,6 +81,21 @@ export default function BibleScreen() {
   const [showChapterPicker, setShowChapterPicker] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Restore last read position from storage
+  useEffect(() => {
+    getBiblePosition().then((pos) => {
+      if (pos && BIBLE[pos.book]?.[pos.chapter]) {
+        setBook(pos.book);
+        setChapter(pos.chapter);
+      }
+    });
+  }, []);
+
+  // Save position whenever book or chapter changes
+  useEffect(() => {
+    void saveBiblePosition(book, chapter);
+  }, [book, chapter]);
 
   const chapters = BIBLE[book] ? Object.keys(BIBLE[book]).map(Number).sort((a, b) => a - b) : [1];
   const verses   = BIBLE[book]?.[chapter] ?? [];
@@ -102,63 +120,63 @@ export default function BibleScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* â”€â”€â”€ Header â”€â”€â”€ */}
+      {/* ─── Header ─── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Holy Bible</Text>
         <TouchableOpacity
           style={styles.searchBtn}
           onPress={() => { setShowSearch((v) => !v); setShowBookPicker(false); setShowChapterPicker(false); }}
         >
-          <Icon source="magnify" size={18} color={Colors.textPrimary} />
+          <Icon source="magnify" size={18} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* â”€â”€â”€ Search bar â”€â”€â”€ */}
+      {/* ─── Search bar ─── */}
       {showSearch && (
         <View style={styles.searchBar}>
-          <Icon source="magnify" size={16} color={Colors.textMuted} />
+          <Icon source="magnify" size={16} color={colors.textMuted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search scripture..."
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoFocus
           />
           <TouchableOpacity onPress={() => { setShowSearch(false); setSearchQuery(''); }}>
-            <Icon source="close" size={16} color={Colors.textMuted} />
+            <Icon source="close" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
       )}
 
-      {/* â”€â”€â”€ Book / Chapter nav bar â”€â”€â”€ */}
+      {/* ─── Book / Chapter nav bar ─── */}
       <View style={styles.navBar}>
         <TouchableOpacity
           style={styles.selector}
           onPress={() => { setShowBookPicker((v) => !v); setShowChapterPicker(false); }}
         >
           <Text style={styles.selectorBook}>{book}</Text>
-          <Icon source="menu-down" size={16} color={Colors.textMuted} />
+          <Icon source="menu-down" size={16} color={colors.textMuted} />
         </TouchableOpacity>
-        <Icon source="chevron-right" size={16} color={Colors.textMuted} />
+        <Icon source="chevron-right" size={16} color={colors.textMuted} />
         <TouchableOpacity
           style={styles.selector}
           onPress={() => { setShowChapterPicker((v) => !v); setShowBookPicker(false); }}
         >
           <Text style={styles.selectorChapter}>{chapter}</Text>
-          <Icon source="menu-down" size={16} color={Colors.textMuted} />
+          <Icon source="menu-down" size={16} color={colors.textMuted} />
         </TouchableOpacity>
         <View style={styles.navButtons}>
           <TouchableOpacity style={styles.navBtn}>
-            <Icon source="chevron-left" size={14} color={Colors.textSecondary} />
+            <Icon source="chevron-left" size={14} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.navBtn}>
-            <Icon source="chevron-right" size={14} color={Colors.textSecondary} />
+            <Icon source="chevron-right" size={14} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* â”€â”€â”€ Book picker â”€â”€â”€ */}
+      {/* ─── Book picker ─── */}
       {showBookPicker && (
         <View style={styles.dropdown}>
           <ScrollView style={{ maxHeight: 200 }}>
@@ -175,7 +193,7 @@ export default function BibleScreen() {
         </View>
       )}
 
-      {/* â”€â”€â”€ Chapter picker â”€â”€â”€ */}
+      {/* ─── Chapter picker ─── */}
       {showChapterPicker && (
         <View style={styles.dropdown}>
           <View style={styles.chapterGrid}>
@@ -194,7 +212,7 @@ export default function BibleScreen() {
         </View>
       )}
 
-      {/* â”€â”€â”€ Verse list â”€â”€â”€ */}
+      {/* ─── Verse list ─── */}
       <ScrollView
         style={styles.verseList}
         contentContainerStyle={styles.verseListContent}
@@ -220,14 +238,14 @@ export default function BibleScreen() {
 
         {/* Hint */}
         <View style={styles.hintRow}>
-          <Icon source="gesture-tap" size={18} color={Colors.textMuted} />
+          <Icon source="gesture-tap" size={18} color={colors.textMuted} />
           <Text style={styles.hintText}>
             Long-press any verse to highlight or add personal study notes
           </Text>
         </View>
       </ScrollView>
 
-      {/* â”€â”€â”€ Action bar (shown when a verse is selected) â”€â”€â”€ */}
+      {/* ─── Action bar (shown when a verse is selected) ─── */}
       {selectedVerse !== null && (
         <View style={styles.actionBar}>
           <TouchableOpacity style={styles.actionBtn}>

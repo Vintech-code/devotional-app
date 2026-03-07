@@ -1,24 +1,24 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   container: { padding: Spacing.lg, paddingBottom: Spacing.xxl },
   title: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: Spacing.lg,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.md,
@@ -32,7 +32,7 @@ export const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
@@ -41,15 +41,15 @@ export const styles = StyleSheet.create({
   cardTitle: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: 2,
   },
   cardSubtitle: {
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
   },
   statsCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginTop: Spacing.md,
@@ -57,7 +57,7 @@ export const styles = StyleSheet.create({
   statsTitle: {
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semiBold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1,
     marginBottom: Spacing.md,
   },
@@ -66,11 +66,11 @@ export const styles = StyleSheet.create({
   statNum: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.primary,
+    color: c.primary,
   },
   statLabel: {
     fontSize: Typography.size.xs,
-    color: Colors.textMuted,
+    color: c.textMuted,
     marginTop: 2,
   },
 }

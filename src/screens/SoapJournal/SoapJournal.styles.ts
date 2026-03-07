@@ -1,12 +1,12 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   container: { padding: Spacing.md, paddingBottom: Spacing.xxl },
   metaBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
@@ -14,30 +14,30 @@ export const styles = StyleSheet.create({
   },
   metaBadgeText: {
     fontSize: Typography.size.xs,
-    color: Colors.primary,
+    color: c.primary,
     fontWeight: Typography.weight.semiBold,
   },
   pageTitle: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: 4,
   },
   pageDate: {
     fontSize: Typography.size.sm,
-    color: Colors.textMuted,
+    color: c.textMuted,
     marginBottom: Spacing.lg,
   },
   sectionCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   sectionActive: {
-    borderColor: Colors.primary,
+    borderColor: c.primary,
     borderWidth: 2,
   },
   sectionCardHeader: {
@@ -49,7 +49,7 @@ export const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.sm,
@@ -57,31 +57,31 @@ export const styles = StyleSheet.create({
   letter: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
-    color: Colors.primary,
+    color: c.primary,
   },
   sectionInfo: { flex: 1 },
   sectionTitle: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
-  sectionHint: { fontSize: Typography.size.sm, color: Colors.textSecondary },
+  sectionHint: { fontSize: Typography.size.sm, color: c.textSecondary },
   subLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.2,
     marginBottom: Spacing.xs,
   },
   charCount: {
     fontSize: Typography.size.xs,
-    color: Colors.textMuted,
+    color: c.textMuted,
     textAlign: 'right',
     marginTop: -Spacing.sm,
     marginBottom: Spacing.xs,
   },
   proTip: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
@@ -89,19 +89,19 @@ export const styles = StyleSheet.create({
   proTipLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.primary,
+    color: c.primary,
     letterSpacing: 1,
     marginBottom: Spacing.xs,
   },
   proTipText: {
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     lineHeight: Typography.size.sm * 1.5,
   },
   saveBtn: { width: '100%' },
   savedHint: {
     fontSize: Typography.size.xs,
-    color: Colors.textMuted,
+    color: c.textMuted,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },

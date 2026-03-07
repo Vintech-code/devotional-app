@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { TextInput as PaperInput } from 'react-native-paper';
-import { Colors, Spacing } from '../../theme';
+import { useColors, Spacing } from '../../theme';
 
 interface Props {
   label: string;
@@ -18,8 +18,7 @@ interface Props {
   maxLength?: number;
 }
 
-export default function FormInput({
-  label,
+export default function FormInput({ label,
   value,
   onChangeText,
   placeholder,
@@ -32,6 +31,16 @@ export default function FormInput({
   inputStyle,
   maxLength,
 }: Props) {
+  const colors = useColors();
+  const styles = StyleSheet.create({
+  input: {
+    marginBottom: Spacing.md,
+    backgroundColor: colors.surface,
+  },
+  multiline: {
+    minHeight: 120,
+  },
+});
   const [secure, setSecure] = useState(secureTextEntry);
 
   return (
@@ -47,31 +56,21 @@ export default function FormInput({
       numberOfLines={multiline ? numberOfLines : 1}
       maxLength={maxLength}
       mode="outlined"
-      outlineColor={Colors.border}
-      activeOutlineColor={Colors.primary}
+      outlineColor={colors.border}
+      activeOutlineColor={colors.primary}
       right={
         secureTextEntry
           ? <PaperInput.Icon
               icon={secure ? 'eye-off' : 'eye'}
               onPress={() => setSecure((s) => !s)}
-              color={Colors.textMuted}
+              color={colors.textMuted}
             />
           : undefined
       }
       style={[styles.input, multiline && styles.multiline, style]}
       contentStyle={inputStyle}
-      textColor={Colors.textPrimary}
-      placeholderTextColor={Colors.textMuted}
+      textColor={colors.textPrimary}
+      placeholderTextColor={colors.textMuted}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    marginBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-  },
-  multiline: {
-    minHeight: 120,
-  },
-});

@@ -1,18 +1,20 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './ForgotPassword.styles';
+import { makeStyles } from './ForgotPassword.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 export default function ForgotPasswordScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
 
@@ -26,7 +28,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon source="chevron-left" size={28} color={Colors.textPrimary} />
+          <Icon source="chevron-left" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Reset Password</Text>
         <View style={styles.headerSpacer} />
@@ -39,7 +41,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
       >
         {/* Lock icon */}
         <View style={styles.iconWrap}>
-          <Icon source="lock-alert" size={40} color={Colors.primary} />
+          <Icon source="lock-alert" size={40} color={colors.textPrimary} />
         </View>
 
         <Text style={styles.title}>Forgot your password?</Text>
@@ -60,7 +62,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
         {sent && (
           <View style={styles.sentBanner}>
-            <Icon source="check-circle" size={20} color={Colors.success} />
+            <Icon source="check-circle" size={20} color={colors.success} />
             <Text style={styles.sentText}>Instructions sent! Check your inbox.</Text>
           </View>
         )}
@@ -74,7 +76,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
         {/* Tip */}
         <View style={styles.tipCard}>
-          <Icon source="information" size={16} color={Colors.textMuted} />
+          <Icon source="information" size={16} color={colors.textSecondary} />
           <Text style={styles.tipText}>
             Can't find the email? Check your spam folder or wait a few minutes before trying again.
           </Text>

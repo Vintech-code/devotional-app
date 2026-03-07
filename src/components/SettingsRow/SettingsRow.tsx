@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { List, Icon } from 'react-native-paper';
-import { Colors, Spacing, Radius } from '../../theme';
+import { useColors, Spacing, Radius } from '../../theme';
 
 interface Props {
   icon: string;
@@ -20,8 +20,27 @@ export default function SettingsRow({
   onPress,
   rightElement,
   style,
-  iconBg = Colors.surfaceAlt,
+  iconBg,
 }: Props) {
+  const colors = useColors();
+  const bg = iconBg ?? colors.surfaceAlt;
+  const styles = StyleSheet.create({
+    row: {
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: Radius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      marginLeft: Spacing.md,
+    },
+    title: { color: colors.textPrimary },
+    subtitle: { color: colors.textSecondary },
+  });
   return (
     <List.Item
       title={title}
@@ -31,35 +50,18 @@ export default function SettingsRow({
       titleStyle={styles.title}
       descriptionStyle={styles.subtitle}
       left={() => (
-        <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
-          <Icon source={icon} size={20} color={Colors.textPrimary} />
+        <View style={[styles.iconWrap, { backgroundColor: bg }]}>
+          <Icon source={icon} size={20} color={colors.textPrimary} />
         </View>
       )}
       right={
         rightElement
           ? () => <>{rightElement}</>
           : onPress
-          ? () => <List.Icon icon="chevron-right" color={Colors.textMuted} />
+          ? () => <List.Icon icon="chevron-right" color={colors.textMuted} />
           : undefined
       }
     />
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginLeft: Spacing.md,
-  },
-  title: { color: Colors.textPrimary },
-  subtitle: { color: Colors.textSecondary },
-});

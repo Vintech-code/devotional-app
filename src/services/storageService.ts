@@ -56,6 +56,8 @@ const KEYS = {
   REMINDER_SETTINGS: '@devotional/reminder_settings',
   SELECTED_METHOD: '@devotional/selected_method',
   ONBOARDING_DONE: '@devotional/onboarding_done',
+  DARK_MODE: '@devotional/dark_mode',
+  BIBLE_POSITION: '@devotional/bible_position',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -249,3 +251,25 @@ export async function isOnboardingDone(): Promise<boolean> {
 export async function markOnboardingDone(): Promise<void> {
   await setJson(KEYS.ONBOARDING_DONE, true);
 }
+
+// ─── Theme ───────────────────────────────────────────────────────────────────
+
+export async function getIsDarkMode(): Promise<boolean> {
+  const raw = await AsyncStorage.getItem(KEYS.DARK_MODE);
+  return raw !== 'false'; // defaults to true (dark)
+}
+
+export async function saveIsDarkMode(isDark: boolean): Promise<void> {
+  await AsyncStorage.setItem(KEYS.DARK_MODE, String(isDark));
+}
+
+// ─── Bible Position ───────────────────────────────────────────────────────────
+
+export async function getBiblePosition(): Promise<{ book: string; chapter: number } | null> {
+  return getJson<{ book: string; chapter: number } | null>(KEYS.BIBLE_POSITION, null);
+}
+
+export async function saveBiblePosition(book: string, chapter: number): Promise<void> {
+  await setJson(KEYS.BIBLE_POSITION, { book, chapter });
+}
+

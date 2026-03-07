@@ -1,18 +1,18 @@
-ï»¿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { JournalStackParamList } from '../../navigation/types';
 import { SoapEntry } from '../../types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { saveSoapEntry, refreshProfileProgress } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import JournalSection from '../../components/JournalSection/JournalSection';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './SoapJournal.styles';
+import { makeStyles } from './SoapJournal.styles';
 
 type Props = NativeStackScreenProps<JournalStackParamList, 'SoapJournal'>;
 
@@ -21,6 +21,8 @@ function generateId() {
 }
 
 export default function SoapJournalScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const setSoapEntries = useAppStore((s) => s.setSoapEntries);
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.soapEntries);
@@ -75,11 +77,11 @@ export default function SoapJournalScreen({ navigation }: Props) {
         </View>
         <Text style={styles.pageTitle}>Today's Reflection</Text>
         <Text style={styles.pageDate}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} â€¢{' '}
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} •{' '}
           Morning Session
         </Text>
 
-        {/* S â€” Scripture */}
+        {/* S — Scripture */}
         <View style={[styles.sectionCard, styles.sectionActive]}>
           <View style={styles.sectionCardHeader}>
             <View style={styles.letterBox}>
@@ -109,7 +111,7 @@ export default function SoapJournalScreen({ navigation }: Props) {
           <Text style={styles.charCount}>{fullVerse.length} characters</Text>
         </View>
 
-        {/* O â€” Observation */}
+        {/* O — Observation */}
         <JournalSection
           letter="O"
           title="Observation"
@@ -127,7 +129,7 @@ export default function SoapJournalScreen({ navigation }: Props) {
           <Text style={styles.charCount}>{observation.length} characters</Text>
         </JournalSection>
 
-        {/* A â€” Application */}
+        {/* A — Application */}
         <JournalSection
           letter="A"
           title="Application"
@@ -145,7 +147,7 @@ export default function SoapJournalScreen({ navigation }: Props) {
           <Text style={styles.charCount}>{application.length} characters</Text>
         </JournalSection>
 
-        {/* P â€” Prayer */}
+        {/* P — Prayer */}
         <JournalSection
           letter="P"
           title="Prayer"

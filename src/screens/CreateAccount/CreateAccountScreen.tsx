@@ -1,4 +1,4 @@
-ï»¿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
 import { RegisterForm } from '../../types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { saveUserProfile, markOnboardingDone } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './CreateAccount.styles';
+import { makeStyles } from './CreateAccount.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateAccount'>;
 
@@ -36,6 +36,8 @@ function getStrength(password: string): string {
 }
 
 export default function CreateAccountScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const [form, setForm] = useState<RegisterForm>({
     fullName: '',
     email: '',
@@ -76,7 +78,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         {/* Back */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon source="chevron-left" size={28} color={Colors.textPrimary} />
+          <Icon source="chevron-left" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <Text style={styles.title}>Join the Abide Community</Text>
@@ -105,7 +107,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
           label="Secure Password"
           value={form.password}
           onChangeText={update('password')}
-          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+          placeholder="••••••••"
           secureTextEntry
           autoCapitalize="none"
         />
@@ -124,7 +126,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
             const passed = rule.test(form.password);
             return (
               <View key={rule.key} style={styles.ruleItem}>
-                <Icon source={passed ? 'check-circle' : 'circle-outline'} size={16} color={passed ? Colors.success : Colors.textMuted} />
+                <Icon source={passed ? 'check-circle' : 'circle-outline'} size={16} color={passed ? colors.success : colors.textMuted} />
                 <Text style={[styles.ruleText, passed && styles.ruleTextPassed]}>
                   {rule.label}
                 </Text>
@@ -140,7 +142,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
           activeOpacity={0.8}
         >
           <View style={[styles.checkbox, form.agreedToTerms && styles.checkboxActive]}>
-              {form.agreedToTerms && <Icon source="check" size={14} color={Colors.textOnPrimary} />}
+              {form.agreedToTerms && <Icon source="check" size={14} color={colors.textPrimary} />}
           </View>
           <Text style={styles.termsText}>
             I agree to the{' '}
@@ -176,7 +178,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
         />
 
         <View style={styles.secureRow}>
-          <Icon source="lock" size={14} color={Colors.textMuted} />
+          <Icon source="lock" size={14} color={colors.textSecondary} />
           <Text style={styles.secureText}>ENCRYPTED & SECURE</Text>
         </View>
       </ScrollView>

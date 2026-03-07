@@ -1,4 +1,4 @@
-﻿import React, { useRef } from 'react'; // ✅ import useRef
+import React, { useRef } from 'react'; // ? import useRef
 import {
   View,
   Text,
@@ -10,14 +10,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './Welcome.styles';
+import { makeStyles } from './Welcome.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
 export default function WelcomeScreen({ navigation }: Props) {
-  // ✅ useRef must be here, inside the component
+  const colors = useColors();
+  const styles = makeStyles(colors);
+  // ? useRef must be here, inside the component
   const animationRef = useRef<LottieView>(null);
 
   return (
@@ -29,7 +31,7 @@ export default function WelcomeScreen({ navigation }: Props) {
             <Icon
               source="book-open-variant"
               size={36}
-              color={Colors.textOnPrimary}
+              color={colors.textPrimary}
             />
           </View>
         </View>

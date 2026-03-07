@@ -1,8 +1,8 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   container: { padding: Spacing.md, paddingBottom: 100 },
   titleRow: {
     flexDirection: 'row',
@@ -13,32 +13,32 @@ export const styles = StyleSheet.create({
   pageTitle: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
-  pageDate: { fontSize: Typography.size.sm, color: Colors.textMuted },
+  pageDate: { fontSize: Typography.size.sm, color: c.textMuted },
   pageIndicator: { flexDirection: 'row', gap: Spacing.xs, marginTop: 6 },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: c.border,
   },
-  dotActive: { backgroundColor: Colors.primary },
+  dotActive: { backgroundColor: c.primary },
   methodLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.5,
     marginBottom: Spacing.lg,
   },
   btn: { width: '100%', marginBottom: Spacing.sm },
   hint: {
     fontSize: Typography.size.sm,
-    color: Colors.textMuted,
+    color: c.textMuted,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
-  hintLink: { color: Colors.primary, fontWeight: Typography.weight.semiBold },
+  hintLink: { color: c.primary, fontWeight: Typography.weight.semiBold },
   fab: {
     position: 'absolute',
     bottom: 24,
@@ -46,7 +46,7 @@ export const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: Colors.accent,
+    backgroundColor: c.accent,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

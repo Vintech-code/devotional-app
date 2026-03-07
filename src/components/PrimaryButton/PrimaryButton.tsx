@@ -1,7 +1,7 @@
 import React from 'react';
 import { ViewStyle, TextStyle } from 'react-native';
 import { Button } from 'react-native-paper';
-import { Colors } from '../../theme';
+import { useColors } from '../../theme';
 
 interface Props {
   label: string;
@@ -14,8 +14,7 @@ interface Props {
   rightIcon?: string;
 }
 
-export default function PrimaryButton({
-  label,
+export default function PrimaryButton({ label,
   onPress,
   variant = 'primary',
   loading = false,
@@ -24,6 +23,7 @@ export default function PrimaryButton({
   textStyle,
   rightIcon,
 }: Props) {
+  const colors = useColors();
   const mode =
     variant === 'outline' ? 'outlined' :
     variant === 'ghost'   ? 'text'     : 'contained';
@@ -37,8 +37,8 @@ export default function PrimaryButton({
       contentStyle={{ height: 52, flexDirection: 'row-reverse' }}
       labelStyle={[{ fontSize: 15, fontWeight: '600', letterSpacing: 0.4 }, textStyle]}
       style={[{ borderRadius: 12, width: '100%' }, style]}
-      buttonColor={variant === 'primary' ? Colors.primary : undefined}
-      textColor={variant === 'primary' ? Colors.textOnPrimary : Colors.primary}
+      buttonColor={variant === 'primary' ? colors.primary : undefined}
+      textColor={variant === 'primary' ? colors.textOnPrimary : colors.primary}
       icon={rightIcon ?? undefined}
     >
       {label}

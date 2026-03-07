@@ -13,16 +13,18 @@ export type AuthStackParamList = {
 // ─── Main Tab Bar ─────────────────────────────────────────────────────────────
 
 export type MainTabParamList = {
-  Home: undefined;
-  Bible: undefined;
+  Home:    NavigatorScreenParams<HomeStackParamList>;
+  Bible:   undefined;
   Journal: undefined;
+  History: NavigatorScreenParams<HistoryStackParamList>;
   Profile: undefined;
 };
 
 // ─── Home Stack ───────────────────────────────────────────────────────────────
 
 export type HomeStackParamList = {
-  HomeMain: undefined;
+  HomeMain:   undefined;
+  VerseOfDay: undefined;
 };
 
 // ─── Journal Stack ────────────────────────────────────────────────────────────
@@ -35,12 +37,18 @@ export type JournalStackParamList = {
   SermonNotes: { noteId?: string };
 };
 
+// ─── History Stack ───────────────────────────────────────────────────────────
+
+export type HistoryStackParamList = {
+  HistoryMain:      undefined;
+  DevotionalDetail: { entryId: string; entryType: string };
+};
+
 // ─── Profile Stack ────────────────────────────────────────────────────────────
 
 export type ProfileStackParamList = {
   ProfileMain: undefined;
-  Reminders: undefined;
-  JournalHistory: undefined;
+  Reminders:   undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

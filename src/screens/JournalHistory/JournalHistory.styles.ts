@@ -1,20 +1,20 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
 
   // Consistency
   consistencyPanel: {
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     padding: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: c.border,
   },
   consistencyTitle: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.5,
     marginBottom: Spacing.sm,
   },
@@ -27,7 +27,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: Radius.md,
     padding: Spacing.sm,
     gap: Spacing.sm,
@@ -35,12 +35,12 @@ export const styles = StyleSheet.create({
   statBadgeValue: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   statBadgeLabel: {
     fontSize: 9,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 0.5,
   },
 
@@ -53,21 +53,21 @@ export const styles = StyleSheet.create({
   dayChar: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     marginBottom: 4,
   },
   dayDot: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
-  dayDotDone: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  dayDotToday: { borderColor: Colors.primary, borderWidth: 2 },
+  dayDotDone: { backgroundColor: c.primary, borderColor: c.primary },
+  dayDotToday: { borderColor: c.primary, borderWidth: 2 },
   // Entries
   entriesHeader: {
     flexDirection: 'row',
@@ -80,29 +80,29 @@ export const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.5,
   },
-  entryCount: { fontSize: Typography.size.sm, color: Colors.textMuted },
+  entryCount: { fontSize: Typography.size.sm, color: c.textMuted },
 
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.md,
     height: 44,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
-  searchInput: { flex: 1, fontSize: Typography.size.md, color: Colors.textPrimary },
+  searchInput: { flex: 1, fontSize: Typography.size.md, color: c.textPrimary },
 
   list: { padding: Spacing.md, paddingBottom: Spacing.xxl },
 
   entryCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.md,
@@ -129,9 +129,9 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
   },
-  entryDate: { fontSize: Typography.size.xs, color: Colors.textMuted },
+  entryDate: { fontSize: Typography.size.xs, color: c.textMuted },
   typeBadge: {
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
@@ -146,31 +146,61 @@ export const styles = StyleSheet.create({
   entryTitle: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semiBold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: 4,
   },
   entryExcerpt: {
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     lineHeight: 20,
     marginBottom: Spacing.sm,
   },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   tag: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
   },
-  tagText: { fontSize: 10, color: Colors.textMuted, fontWeight: Typography.weight.medium },
+  tagText: { fontSize: 10, color: c.textMuted, fontWeight: Typography.weight.medium },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl },
   emptyTitle: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: Spacing.sm,
   },
-  emptySubtitle: { fontSize: Typography.size.md, color: Colors.textSecondary, textAlign: 'center' },
+  emptySubtitle: { fontSize: Typography.size.md, color: c.textSecondary, textAlign: 'center' },
+  typeFilterRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+    alignItems: 'center',
+  },
+  typeChip: {
+    height: 32,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeChipActive: {
+    backgroundColor: c.primary,
+    borderColor: c.primary,
+  },
+  typeChipText: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    color: c.textSecondary,
+    letterSpacing: 0.5,
+  },
+  typeChipTextActive: {
+    color: c.textOnPrimary,
+  },
 }
 );

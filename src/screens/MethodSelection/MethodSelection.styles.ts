@@ -1,10 +1,10 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: c.background,
   },
   container: {
     padding: Spacing.lg,
@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
@@ -23,19 +23,19 @@ export const styles = StyleSheet.create({
   badgeText: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.primary,
+    color: c.primary,
     letterSpacing: 1.5,
   },
   title: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extraBold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
     lineHeight: Typography.size.md * 1.6,
     marginBottom: Spacing.lg,
@@ -43,18 +43,18 @@ export const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 1.5,
     marginBottom: Spacing.md,
   },
   selectedCard: {
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: c.primary,
   },
   hintCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
   hintText: {
     flex: 1,
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     lineHeight: Typography.size.sm * 1.5,
   },
   cta: {
@@ -76,11 +76,11 @@ export const styles = StyleSheet.create({
   },
   signInText: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
   },
   signInLink: {
     fontSize: Typography.size.md,
-    color: Colors.primary,
+    color: c.primary,
     fontWeight: Typography.weight.semiBold,
   },
 }

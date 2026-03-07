@@ -15,6 +15,10 @@ interface AppState {
   isOnboardingDone: boolean;
   setOnboardingDone: (done: boolean) => void;
 
+  // Theme
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+
   // Selected method
   selectedMethod: DevotionalMethodId;
   setSelectedMethod: (method: DevotionalMethodId) => void;
@@ -51,6 +55,14 @@ export const useAppStore = create<AppState>((set) => ({
   isOnboardingDone: false,
   setOnboardingDone: (done) => set({ isOnboardingDone: done }),
 
+  isDarkMode: true,
+  toggleTheme: () =>
+    set((s) => {
+      const next = !s.isDarkMode;
+      void storage.saveIsDarkMode(next);
+      return { isDarkMode: next };
+    }),
+
   selectedMethod: 'SOAP',
   setSelectedMethod: (method) => set({ selectedMethod: method }),
 
@@ -77,6 +89,7 @@ export const useAppStore = create<AppState>((set) => ({
 
     const [
       onboardingDone,
+      isDarkMode,
       selectedMethod,
       profile,
       reminderSettings,
@@ -86,6 +99,7 @@ export const useAppStore = create<AppState>((set) => ({
       sermonNotes,
     ] = await Promise.all([
       storage.isOnboardingDone(),
+      storage.getIsDarkMode(),
       storage.getSelectedMethod(),
       storage.getUserProfile(),
       storage.getReminderSettings(),
@@ -97,6 +111,7 @@ export const useAppStore = create<AppState>((set) => ({
 
     set({
       isOnboardingDone: onboardingDone,
+      isDarkMode,
       selectedMethod,
       profile,
       reminderSettings,

@@ -1,76 +1,84 @@
-import { MD3DarkTheme } from 'react-native-paper';
+import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 import { createTheme } from '@rneui/themed';
-import { Colors } from './colors';
+import type { ColorScheme } from './colors';
+import { DarkColors } from './colors';
 
-// ─── React Native Paper (MD3) Theme ─────────────────────────────────────────
-export const paperTheme = {
-  ...MD3DarkTheme,
-  colors: {
-    ...MD3DarkTheme.colors,
-    primary:          Colors.primary,
-    onPrimary:        Colors.textOnPrimary,
-    primaryContainer: Colors.surfaceAlt,
-    secondary:        Colors.accent,
-    onSecondary:      Colors.textOnPrimary,
-    secondaryContainer: '#2A2210',
-    background:       Colors.background,
-    surface:          Colors.surface,
-    onSurface:        Colors.textPrimary,
-    onSurfaceVariant: Colors.textSecondary,
-    outline:          Colors.border,
-    outlineVariant:   Colors.border,
-    error:            Colors.error,
-    onError:          '#FFFFFF',
-    surfaceVariant:   Colors.surfaceAlt,
-    scrim:            Colors.overlay,
-  },
-  roundness: 3, // 1 unit ≈ 4px in MD3, so 3 → 12px border radius
-};
+// ─── Factory: React Native Paper (MD3) Theme ─────────────────────────────────
+export function makePaperTheme(c: ColorScheme, isDark: boolean) {
+  const base = isDark ? MD3DarkTheme : MD3LightTheme;
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary:          c.primary,
+      onPrimary:        c.textOnPrimary,
+      primaryContainer: c.surfaceAlt,
+      secondary:        c.accent,
+      onSecondary:      c.textOnPrimary,
+      secondaryContainer: isDark ? '#28230F' : '#FDF3DC',
+      background:       c.background,
+      surface:          c.surface,
+      onSurface:        c.textPrimary,
+      onSurfaceVariant: c.textSecondary,
+      outline:          c.border,
+      outlineVariant:   c.border,
+      error:            c.error,
+      onError:          '#FFFFFF',
+      surfaceVariant:   c.surfaceAlt,
+      scrim:            c.overlay,
+    },
+    roundness: 3,
+  };
+}
 
-// ─── React Native Elements (RNEUI) Theme ────────────────────────────────────
-export const rneuiTheme = createTheme({
-  lightColors: {
-    primary:    Colors.primary,
-    secondary:  Colors.accent,
-    background: Colors.background,
-    white:      Colors.surface,
-    black:      Colors.textPrimary,
-    grey0:      Colors.textPrimary,
-    grey1:      Colors.textSecondary,
-    grey2:      Colors.textMuted,
-    grey3:      Colors.border,
-    grey4:      Colors.surfaceAlt,
-    grey5:      Colors.background,
-    error:      Colors.error,
-    success:    Colors.success,
-    warning:    Colors.warning,
-    divider:    Colors.border,
-  },
-  components: {
-    Button: {
-      buttonStyle:       { borderRadius: 12, paddingVertical: 14 },
-      titleStyle:        { fontWeight: '600', fontSize: 15 },
-      containerStyle:    { width: '100%' },
+// ─── Factory: React Native Elements (RNEUI) Theme ────────────────────────────
+export function makeRneuiTheme(c: ColorScheme) {
+  return createTheme({
+    lightColors: {
+      primary:    c.primary,
+      secondary:  c.accent,
+      background: c.background,
+      white:      c.surface,
+      black:      c.textPrimary,
+      grey0:      c.textPrimary,
+      grey1:      c.textSecondary,
+      grey2:      c.textMuted,
+      grey3:      c.border,
+      grey4:      c.surfaceAlt,
+      grey5:      c.background,
+      error:      c.error,
+      success:    c.success,
+      warning:    c.warning,
+      divider:    c.border,
     },
-    Input: {
-      inputContainerStyle: {
-        borderBottomWidth: 1,
-        borderColor: Colors.border,
+    components: {
+      Button: {
+        buttonStyle:    { borderRadius: 12, paddingVertical: 14 },
+        titleStyle:     { fontWeight: '600', fontSize: 15 },
+        containerStyle: { width: '100%' },
       },
-      labelStyle: { color: Colors.textSecondary, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
-    },
-    CheckBox: {
-      containerStyle: { backgroundColor: 'transparent', borderWidth: 0, padding: 0 },
-    },
-    Header: {
-      containerStyle: {
-        backgroundColor: Colors.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-        paddingTop: 0,
-        height: 56,
+      Input: {
+        inputContainerStyle: { borderBottomWidth: 1, borderColor: c.border },
+        labelStyle: { color: c.textSecondary, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
       },
-      centerContainerStyle: { flex: 3 },
+      CheckBox: {
+        containerStyle: { backgroundColor: 'transparent', borderWidth: 0, padding: 0 },
+      },
+      Header: {
+        containerStyle: {
+          backgroundColor: c.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: c.border,
+          paddingTop: 0,
+          height: 56,
+        },
+        centerContainerStyle: { flex: 3 },
+      },
     },
-  },
-});
+  });
+}
+
+// ─── Default (dark) instances for backward-compat ────────────────────────────
+export const paperTheme  = makePaperTheme(DarkColors, true);
+export const rneuiTheme  = makeRneuiTheme(DarkColors);
+

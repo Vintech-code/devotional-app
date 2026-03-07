@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,14 +6,14 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { JournalStackParamList } from '../../navigation/types';
 import { SermonNote, SermonTag } from '../../types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { saveSermonNote, refreshProfileProgress } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import FormInput from '../../components/FormInput/FormInput';
 import TagSelector from '../../components/TagSelector/TagSelector';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './SermonNotes.styles';
+import { makeStyles } from './SermonNotes.styles';
 
 type Props = NativeStackScreenProps<JournalStackParamList, 'SermonNotes'>;
 
@@ -26,6 +26,8 @@ const PRESET_TAGS: SermonTag[] = [
 ];
 
 export default function SermonNotesScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const setSermonNotes = useAppStore((s) => s.setSermonNotes);
   const setProfile = useAppStore((s) => s.setProfile);
   const existingNotes = useAppStore((s) => s.sermonNotes);
@@ -91,7 +93,7 @@ export default function SermonNotesScreen({ navigation }: Props) {
         <View style={styles.sermonTitleRow}>
           <Text style={styles.sermonNew}>New Sermon</Text>
           <TouchableOpacity onPress={handleClear} style={styles.clearBtn}>
-            <Text style={styles.clearText}>＋ Clear Form</Text>
+            <Text style={styles.clearText}>+ Clear Form</Text>
           </TouchableOpacity>
         </View>
 
@@ -107,7 +109,7 @@ export default function SermonNotesScreen({ navigation }: Props) {
         {/* Meta row */}
         <View style={styles.metaCard}>
           <View style={styles.metaItem}>
-            <Icon source="account" size={20} color={Colors.primary} />
+            <Icon source="account" size={20} color={colors.textPrimary} />
             <View>
               <Text style={styles.metaLabel}>PREACHER</Text>
               <FormInput
@@ -121,7 +123,7 @@ export default function SermonNotesScreen({ navigation }: Props) {
           </View>
           <View style={styles.dividerLine} />
           <View style={styles.metaItem}>
-            <Icon source="bank" size={20} color={Colors.primary} />
+            <Icon source="bank" size={20} color={colors.textPrimary} />
             <View>
               <Text style={styles.metaLabel}>CHURCH</Text>
               <FormInput
@@ -135,7 +137,7 @@ export default function SermonNotesScreen({ navigation }: Props) {
           </View>
           <View style={styles.dividerLine} />
           <View style={styles.metaItem}>
-            <Icon source="calendar" size={20} color={Colors.primary} />
+            <Icon source="calendar" size={20} color={colors.textPrimary} />
             <View>
               <Text style={styles.metaLabel}>SERVICE DATE</Text>
               <Text style={styles.metaValue}>{serviceDate}</Text>
@@ -169,7 +171,7 @@ export default function SermonNotesScreen({ navigation }: Props) {
         <Text style={styles.fieldLabel}>THEMES & TAGS</Text>
         <TagSelector tags={PRESET_TAGS} activeTags={selectedTags} onToggle={toggleTag} />
         <TouchableOpacity style={styles.customTagBtn}>
-          <Text style={styles.customTagText}>＋ Custom</Text>
+          <Text style={styles.customTagText}>+ Custom</Text>
         </TouchableOpacity>
 
         <PrimaryButton

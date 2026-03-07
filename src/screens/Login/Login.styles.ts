@@ -1,8 +1,8 @@
 ﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
   container: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
@@ -12,27 +12,27 @@ export const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.extraBold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
   fieldLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.2,
     marginBottom: 4,
     marginTop: Spacing.sm,
@@ -49,16 +49,16 @@ export const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.sm,
   },
-  checkboxActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  rememberText: { fontSize: Typography.size.sm, color: Colors.textSecondary },
+  checkboxActive: { backgroundColor: c.primary, borderColor: c.primary },
+  rememberText: { fontSize: Typography.size.sm, color: c.textSecondary },
   forgotText: {
     fontSize: Typography.size.sm,
-    color: Colors.primary,
+    color: c.primary,
     fontWeight: Typography.weight.semiBold,
   },
   divider: {
@@ -66,11 +66,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: Spacing.lg,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerLine: { flex: 1, height: 1, backgroundColor: c.border },
   dividerText: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.2,
     marginHorizontal: Spacing.sm,
   },
@@ -81,14 +81,14 @@ export const styles = StyleSheet.create({
     height: 56,
     borderRadius: Radius.lg,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
     marginBottom: Spacing.md,
   },
   googleText: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semiBold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   secureRow: {
     flexDirection: 'row',
@@ -96,17 +96,16 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Spacing.lg,
   },
-  secureText: { fontSize: Typography.size.sm, color: Colors.textMuted },
+  secureText: { fontSize: Typography.size.sm, color: c.textMuted },
   registerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  registerText: { fontSize: Typography.size.md, color: Colors.textSecondary },
+  registerText: { fontSize: Typography.size.md, color: c.textSecondary },
   registerLink: {
     fontSize: Typography.size.md,
-    color: Colors.primary,
+    color: c.primary,
     fontWeight: Typography.weight.semiBold,
   },
-}
-);
+});

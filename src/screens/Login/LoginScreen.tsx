@@ -1,20 +1,22 @@
-ï»¿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
 import { saveUserProfile, markOnboardingDone } from '../../services/storageService';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './Login.styles';
+import { makeStyles } from './Login.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -52,7 +54,7 @@ export default function LoginScreen({ navigation }: Props) {
         {/* Logo */}
         <View style={styles.logoWrap}>
           <View style={styles.logoCircle}>
-            <Icon source="book-open-variant" size={36} color={Colors.textOnPrimary} />
+            <Icon source="book-open-variant" size={36} color={colors.textPrimary} />
           </View>
         </View>
 
@@ -76,7 +78,7 @@ export default function LoginScreen({ navigation }: Props) {
           label=""
           value={password}
           onChangeText={setPassword}
-          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+          placeholder="••••••••"
           secureTextEntry
           autoCapitalize="none"
         />
@@ -115,12 +117,12 @@ export default function LoginScreen({ navigation }: Props) {
 
         {/* Google */}
         <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8}>
-          <Icon source="google" size={20} color={Colors.primary} />
+          <Icon source="google" size={20} color={colors.textPrimary} />
           <Text style={styles.googleText}>Sign in with Google</Text>
         </TouchableOpacity>
 
         <View style={styles.secureRow}>
-          <Icon source="lock" size={14} color={Colors.textMuted} />
+          <Icon source="lock" size={14} color={colors.textSecondary} />
           <Text style={styles.secureText}>Safe and secure authentication</Text>
         </View>
 

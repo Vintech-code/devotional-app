@@ -1,8 +1,8 @@
-﻿import { StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { StyleSheet } from 'react-native';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
-export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+export const makeStyles = (c: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.background },
 
   // Header
   header: {
@@ -11,24 +11,24 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: c.border,
   },
   greetingLabel: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
   },
   greetingName: {
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   bellBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1.5,
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
@@ -48,10 +48,10 @@ export const styles = StyleSheet.create({
   missionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
     borderRadius: Radius.lg,
     padding: Spacing.md,
-    shadowColor: Colors.primary,
+    shadowColor: c.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -61,7 +61,7 @@ export const styles = StyleSheet.create({
   missionTitle: {
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
-    color: Colors.textOnPrimary,
+    color: c.textOnPrimary,
     marginBottom: 2,
   },
   missionSub: {
@@ -90,32 +90,32 @@ export const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.xs,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: c.border,
   },
   methodCircleActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   methodLabel: {
     fontSize: 10,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 0.5,
   },
-  methodLabelActive: { color: Colors.primary },
+  methodLabelActive: { color: c.primary },
 
   // Verse card
   verseCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.accent,
+    borderLeftColor: c.accent,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -131,14 +131,15 @@ export const styles = StyleSheet.create({
   breadTitle: {
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
-    color: Colors.accent,
+    color: c.accent,
     letterSpacing: 0.5,
   },
-  breadDate: { fontSize: Typography.size.xs, color: Colors.textMuted },
+  breadDate: { fontSize: Typography.size.xs, color: c.textMuted },
   verseText: {
     fontSize: Typography.size.md,
-    color: Colors.textPrimary,
-    lineHeight: 24,
+    fontFamily: Typography.fontFamilySerif,
+    color: c.textPrimary,
+    lineHeight: 28,
     fontStyle: 'italic',
     marginBottom: Spacing.sm,
   },
@@ -150,13 +151,13 @@ export const styles = StyleSheet.create({
   verseRef: {
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semiBold,
-    color: Colors.primary,
+    color: c.primary,
   },
 
   // Progress
   progressCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     shadowColor: '#000',
@@ -169,18 +170,18 @@ export const styles = StyleSheet.create({
   progressNum: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   progressLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 1,
     marginTop: 2,
   },
   progressDivider: {
     width: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: c.border,
     marginVertical: Spacing.xs,
   },
 
@@ -188,7 +189,7 @@ export const styles = StyleSheet.create({
   nextCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     shadowColor: '#000',
@@ -201,7 +202,7 @@ export const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
@@ -210,11 +211,11 @@ export const styles = StyleSheet.create({
   nextTitle: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semiBold,
-    color: Colors.textPrimary,
+    color: c.textPrimary,
   },
   nextSub: {
     fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     marginTop: 2,
   },
 }

@@ -1,18 +1,22 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
-import { MainTabParamList } from '../../navigation/types';
+import { MainTabParamList, HomeStackParamList } from '../../navigation/types';
 import { saveSelectedMethod } from '../../services/storageService';
 import { getDailyVerse } from '../../services/dailyVerseService';
-import { styles } from './Home.styles';
+import { makeStyles } from './Home.styles';
 
-type Nav = BottomTabNavigationProp<MainTabParamList>;
+type Nav = CompositeNavigationProp<
+  NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 const GUIDED_METHODS = [
   { id: 'SOAP',  icon: 'pencil',            label: 'SOAP'  },
@@ -23,6 +27,8 @@ const GUIDED_METHODS = [
 ];
 
 export default function HomeScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const profile = useAppStore((s) => s.profile);
   const selectedMethod = useAppStore((s) => s.selectedMethod);
@@ -42,6 +48,11 @@ export default function HomeScreen() {
     if (hour < 17) return 'Afternoon Devotional';
     return 'Evening Reflection';
   })();
+
+  const METHOD_DURATIONS: Record<string, string> = {
+    SOAP: '15 min', MCPWA: '20 min', SWORD: '15 min',
+  };
+  const methodDuration = METHOD_DURATIONS[selectedMethod] ?? '15 min';
 
   const today = new Date().toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
@@ -66,14 +77,14 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* â”€â”€â”€ Header â”€â”€â”€ */}
+      {/* ─── Header ─── */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greetingLabel}>{greeting},</Text>
           <Text style={styles.greetingName}>{profile?.name ?? 'Friend'}</Text>
         </View>
-        <TouchableOpacity style={styles.bellBtn}>
-          <Icon source="bell" size={20} color={Colors.textPrimary} />
+        <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Profile')}>
+          <Icon source="bell" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -81,7 +92,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        {/* â”€â”€â”€ Today's Mission â”€â”€â”€ */}
+        {/* ─── Today's Mission ─── */}
         <Text style={styles.sectionLabel}>TODAY'S MISSION</Text>
         <TouchableOpacity
           style={styles.missionCard}
@@ -90,14 +101,14 @@ export default function HomeScreen() {
         >
           <View style={styles.missionLeft}>
             <Text style={styles.missionTitle}>Start Daily Devotional</Text>
-            <Text style={styles.missionSub}>{selectedMethod} Method {'\u00B7'} 15 min</Text>
+            <Text style={styles.missionSub}>{selectedMethod} Method {'\u00B7'} {methodDuration}</Text>
           </View>
           <View style={styles.missionArrow}>
-            <Icon source="chevron-right" size={18} color={Colors.textOnPrimary} />
+            <Icon source="chevron-right" size={18} color={colors.textPrimary} />
           </View>
         </TouchableOpacity>
 
-        {/* â”€â”€â”€ Guided Methods â”€â”€â”€ */}
+        {/* ─── Guided Methods ─── */}
         <Text style={styles.sectionLabel}>GUIDED METHODS</Text>
         <ScrollView
           horizontal
@@ -117,7 +128,7 @@ export default function HomeScreen() {
                 styles.methodCircle,
                 m.id === selectedMethod && styles.methodCircleActive,
               ]}>
-                <Icon source={m.icon} size={22} color={m.id === selectedMethod ? Colors.textOnPrimary : Colors.textPrimary} />
+                <Icon source={m.icon} size={22} color={m.id === selectedMethod ? colors.textOnPrimary : colors.textPrimary} />
               </View>
               <Text style={[
                 styles.methodLabel,
@@ -129,9 +140,9 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* â”€â”€â”€ Inspiration â”€â”€â”€ */}
+        {/* ─── Inspiration ─── */}
         <Text style={styles.sectionLabel}>INSPIRATION</Text>
-        <View style={styles.verseCard}>
+        <TouchableOpacity style={styles.verseCard} activeOpacity={0.85} onPress={() => navigation.navigate('VerseOfDay')}>
           <View style={styles.verseMeta}>
             <Text style={styles.breadTitle}>Daily Bread</Text>
             <Text style={styles.breadDate}>{today}</Text>
@@ -141,27 +152,25 @@ export default function HomeScreen() {
           </Text>
           <View style={styles.verseRefRow}>
             <Text style={styles.verseRef}>{verse.reference}</Text>
-            <Icon source="heart-outline" size={16} color={Colors.accent} />
+            <Icon source="heart-outline" size={16} color={colors.textPrimary} />
           </View>
-        </View>
-
-        {/* â”€â”€â”€ My Progress â”€â”€â”€ */}
+        </TouchableOpacity>
         <Text style={styles.sectionLabel}>MY PROGRESS</Text>
         <View style={styles.progressCard}>
           <View style={styles.progressItem}>
-            <Icon source="fire" size={26} color={Colors.primary} />
+            <Icon source="fire" size={26} color={colors.textPrimary} />
             <Text style={styles.progressNum}>{profile?.dayStreak ?? 0}</Text>
             <Text style={styles.progressLabel}>DAY STREAK</Text>
           </View>
           <View style={styles.progressDivider} />
           <View style={styles.progressItem}>
-            <Icon source="book-multiple" size={26} color={Colors.primary} />
+            <Icon source="book-multiple" size={26} color={colors.textPrimary} />
             <Text style={styles.progressNum}>{profile?.completedCount ?? 0}</Text>
             <Text style={styles.progressLabel}>COMPLETED</Text>
           </View>
         </View>
 
-        {/* â”€â”€â”€ Next Session â”€â”€â”€ */}
+        {/* ─── Next Session ─── */}
         <Text style={styles.sectionLabel}>NEXT SESSION</Text>
         <TouchableOpacity
           style={styles.nextCard}
@@ -169,13 +178,13 @@ export default function HomeScreen() {
           onPress={() => navigation.navigate('Journal')}
         >
           <View style={styles.nextIconWrap}>
-            <Icon source="moon-waning-crescent" size={24} color={Colors.primary} />
+            <Icon source="moon-waning-crescent" size={24} color={colors.textPrimary} />
           </View>
           <View style={styles.nextBody}>
             <Text style={styles.nextTitle}>{nextSession}</Text>
             <Text style={styles.nextSub}>Keep your streak going!</Text>
           </View>
-          <Icon source="chevron-right" size={20} color={Colors.textMuted} />
+          <Icon source="chevron-right" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

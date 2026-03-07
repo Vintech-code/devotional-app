@@ -1,10 +1,10 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { ReminderSettings } from '../../types';
 import { getReminderSettings } from '../../services/storageService';
 import { enableAlarm, disableAlarm, updateAlarmTime } from '../../services/alarmService';
@@ -14,7 +14,7 @@ import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import ToggleCard from '../../components/ToggleCard/ToggleCard';
 import SettingsRow from '../../components/SettingsRow/SettingsRow';
-import { styles } from './Reminders.styles';
+import { makeStyles } from './Reminders.styles';
 
 const QUICK_TIMES = ['06:00 AM', '07:30 AM', '08:15 AM', '10:00 PM'];
 const ALERT_SOUNDS = ['Gentle Morning Chime', 'Soft Bells', 'Classic Alarm'];
@@ -40,6 +40,8 @@ function to12(time24: string): string {
 const DAYS_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export default function RemindersScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const navigation = useNavigation();
   const storeSettings = useAppStore((s) => s.reminderSettings);
   const setReminderSettings = useAppStore((s) => s.setReminderSettings);
@@ -143,7 +145,7 @@ export default function RemindersScreen() {
           {settings.dailyEnabled && (
             <>
               <View style={styles.timeHeader}>
-                <Icon source="clock-outline" size={18} color={Colors.textSecondary} />
+                <Icon source="clock-outline" size={18} color={colors.textPrimary} />
                 <Text style={styles.timeLabel}>Scheduled For</Text>
               </View>
               <Text style={styles.bigTime}>{to12(settings.scheduledTime)}</Text>
@@ -201,7 +203,7 @@ export default function RemindersScreen() {
         <View style={styles.previewCard}>
           <View style={styles.previewInner}>
             <View style={styles.previewIcon}>
-              <Icon source="bell-ring" size={20} color={Colors.primary} />
+              <Icon source="bell-ring" size={20} color={colors.textPrimary} />
             </View>
             <View style={styles.previewContent}>
               <Text style={styles.previewApp}>ABIDE</Text>

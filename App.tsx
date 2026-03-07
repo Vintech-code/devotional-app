@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -8,11 +8,16 @@ import { ThemeProvider } from '@rneui/themed';
 
 import RootNavigator from './src/navigation/RootNavigator';
 import { useAppStore } from './src/store/useAppStore';
-import { Colors, paperTheme, rneuiTheme } from './src/theme';
+import { DarkColors, LightColors, makePaperTheme, makeRneuiTheme } from './src/theme';
 
 function AppContent() {
   const hydrate = useAppStore((s) => s.hydrate);
+  const isDarkMode = useAppStore((s) => s.isDarkMode);
   const [ready, setReady] = useState(false);
+
+  const colors = isDarkMode ? DarkColors : LightColors;
+  const appPaperTheme = useMemo(() => makePaperTheme(colors, isDarkMode), [colors, isDarkMode]);
+  const appRneuiTheme = useMemo(() => makeRneuiTheme(colors), [colors]);
 
   useEffect(() => {
     async function init() {
@@ -24,30 +29,28 @@ function AppContent() {
 
   if (!ready) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <>
-      <StatusBar style="dark" />
-      <RootNavigator />
-    </>
+    <PaperProvider theme={appPaperTheme}>
+      <ThemeProvider theme={appRneuiTheme}>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <RootNavigator />
+      </ThemeProvider>
+    </PaperProvider>
   );
 }
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <PaperProvider theme={paperTheme}>
-        <ThemeProvider theme={rneuiTheme}>
-          <NavigationContainer>
-            <AppContent />
-          </NavigationContainer>
-        </ThemeProvider>
-      </PaperProvider>
+      <NavigationContainer>
+        <AppContent />
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }

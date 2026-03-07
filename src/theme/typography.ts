@@ -1,9 +1,11 @@
 import { Platform } from 'react-native';
 
 const base = Platform.OS === 'ios' ? 'San Francisco' : 'Roboto';
+const serif = Platform.OS === 'ios' ? 'Georgia' : 'serif';
 
 export const Typography = {
   fontFamily: base,
+  fontFamilySerif: serif,
 
   // Sizes
   size: {

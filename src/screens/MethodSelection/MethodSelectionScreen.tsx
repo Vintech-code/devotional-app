@@ -1,17 +1,17 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
-import { Colors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { DevotionalMethod, DevotionalMethodId } from '../../types';
 import { saveSelectedMethod, markOnboardingDone } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import MethodCard from '../../components/MethodCard/MethodCard';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
-import { styles } from './MethodSelection.styles';
+import { makeStyles } from './MethodSelection.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'MethodSelection'>;
 
@@ -49,6 +49,8 @@ const ICON_MAP: Record<DevotionalMethodId, string> = {
 };
 
 export default function MethodSelectionScreen({ navigation }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const [selected, setSelected] = useState<DevotionalMethodId>('SOAP');
   const [loading, setLoading] = useState(false);
   const setSelectedMethod = useAppStore((s) => s.setSelectedMethod);
@@ -68,7 +70,7 @@ export default function MethodSelectionScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.container}>
         {/* Badge */}
         <View style={styles.badge}>
-          <Icon source="auto-fix" size={14} color={Colors.primary} />
+          <Icon source="auto-fix" size={14} color={colors.textPrimary} />
           <Text style={styles.badgeText}>METHODS</Text>
         </View>
 
@@ -93,7 +95,7 @@ export default function MethodSelectionScreen({ navigation }: Props) {
 
         {/* Hint */}
         <View style={styles.hintCard}>
-          <Icon source="lightbulb-on" size={18} color={Colors.accent} />
+          <Icon source="lightbulb-on" size={18} color={colors.textPrimary} />
           <Text style={styles.hintText}>
             You can switch between these methods anytime in your settings.
           </Text>

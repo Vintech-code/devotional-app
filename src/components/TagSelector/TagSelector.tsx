@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Chip } from 'react-native-paper';
-import { Colors, Spacing } from '../../theme';
+import { useColors, Spacing } from '../../theme';
 
 interface Props {
   tags: string[];
@@ -10,6 +10,29 @@ interface Props {
 }
 
 export default function TagSelector({ tags, activeTags, onToggle }: Props) {
+  const colors = useColors();
+  const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  chip: {
+    borderRadius: 99,
+  },
+  chipActive: {
+    backgroundColor: colors.tagActive,
+  },
+  chipInactive: {
+    backgroundColor: colors.tagInactive,
+  },
+  textActive: {
+    color: colors.tagTextActive,
+  },
+  textInactive: {
+    color: colors.tagTextInactive,
+  },
+});
   return (
     <View style={styles.container}>
       {tags.map((tag) => {
@@ -31,25 +54,3 @@ export default function TagSelector({ tags, activeTags, onToggle }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  chip: {
-    borderRadius: 99,
-  },
-  chipActive: {
-    backgroundColor: Colors.tagActive,
-  },
-  chipInactive: {
-    backgroundColor: Colors.tagInactive,
-  },
-  textActive: {
-    color: Colors.tagTextActive,
-  },
-  textInactive: {
-    color: Colors.tagTextInactive,
-  },
-});
