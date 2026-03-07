@@ -1,20 +1,53 @@
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { ThemeProvider } from '@rneui/themed';
 
-export default function App() {
+import RootNavigator from './src/navigation/RootNavigator';
+import { useAppStore } from './src/store/useAppStore';
+import { Colors, paperTheme, rneuiTheme } from './src/theme';
+
+function AppContent() {
+  const hydrate = useAppStore((s) => s.hydrate);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    async function init() {
+      await hydrate();
+      setReady(true);
+    }
+    init();
+  }, []);
+
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <>
+      <StatusBar style="dark" />
+      <RootNavigator />
+    </>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <PaperProvider theme={paperTheme}>
+        <ThemeProvider theme={rneuiTheme}>
+          <NavigationContainer>
+            <AppContent />
+          </NavigationContainer>
+        </ThemeProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
+  );
+}

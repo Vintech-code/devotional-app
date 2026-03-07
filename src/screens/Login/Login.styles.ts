@@ -1,0 +1,112 @@
+﻿import { StyleSheet } from 'react-native';
+import { Colors, Typography, Spacing, Radius } from '../../theme';
+
+export const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.background },
+  container: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  logoWrap: { alignItems: 'center', marginBottom: Spacing.lg, marginTop: Spacing.md },
+  logoCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.extraBold,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    fontSize: Typography.size.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+  },
+  fieldLabel: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    color: Colors.textMuted,
+    letterSpacing: 1.2,
+    marginBottom: 4,
+    marginTop: Spacing.sm,
+  },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: Spacing.md,
+  },
+  rememberLeft: { flexDirection: 'row', alignItems: 'center' },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  checkboxActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  rememberText: { fontSize: Typography.size.sm, color: Colors.textSecondary },
+  forgotText: {
+    fontSize: Typography.size.sm,
+    color: Colors.primary,
+    fontWeight: Typography.weight.semiBold,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerText: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    color: Colors.textMuted,
+    letterSpacing: 1.2,
+    marginHorizontal: Spacing.sm,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 56,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.md,
+  },
+  googleText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: Colors.textPrimary,
+  },
+  secureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+  },
+  secureText: { fontSize: Typography.size.sm, color: Colors.textMuted },
+  registerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  registerText: { fontSize: Typography.size.md, color: Colors.textSecondary },
+  registerLink: {
+    fontSize: Typography.size.md,
+    color: Colors.primary,
+    fontWeight: Typography.weight.semiBold,
+  },
+}
+);
