@@ -99,7 +99,6 @@ const cs = StyleSheet.create({
   sLabel: { fontSize: 8, fontWeight: '700', letterSpacing: 2, marginBottom: 5 },
   sText:  { fontSize: 12, lineHeight: 19, marginBottom: 14 },
   verseBox: {
-    borderLeftWidth: 3,
     borderRadius: 6,
     padding: 12,
     marginBottom: 14,

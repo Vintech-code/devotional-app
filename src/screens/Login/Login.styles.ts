@@ -25,14 +25,6 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
-  fieldLabel: {
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.bold,
-    color: c.textMuted,
-    letterSpacing: 1.2,
-    marginBottom: 4,
-    marginTop: Spacing.sm,
-  },
   rememberRow: {
     flexDirection: 'row',
     alignItems: 'center',

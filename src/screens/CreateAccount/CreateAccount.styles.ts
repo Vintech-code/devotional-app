@@ -1,85 +1,113 @@
 import { StyleSheet } from 'react-native';
-import { type ColorScheme, Typography, Spacing } from '../../theme';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
 export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.background },
-  container: { padding: Spacing.lg, paddingBottom: Spacing.xxl },
-  backBtn: { marginBottom: Spacing.lg },
+  container: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.xxl },
+
+  backBtn: { marginBottom: Spacing.xl },
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: c.surfaceAlt,
+    borderRadius: Radius.full,
+    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    gap: 5,
+    marginBottom: Spacing.sm,
+  },
+  headerBadgeText: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.semiBold,
+    color: c.primary,
+    letterSpacing: 1,
+  },
   title: {
-    fontSize: Typography.size.xl,
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extraBold,
     color: c.textPrimary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: Typography.size.md,
     color: c.textSecondary,
-    lineHeight: Typography.size.md * 1.5,
-    marginBottom: Spacing.lg,
+    lineHeight: Typography.size.md * 1.55,
+    marginBottom: Spacing.xl,
   },
-  strengthWrap: {
+
+  // ── Strength bar ─────────────────────────────────────────────────────────
+  strengthRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
-  },
-  strengthLabel: { fontSize: Typography.size.sm, color: c.textMuted },
-  strengthValue: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semiBold,
-    color: c.success,
-  },
-  rulesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: Spacing.md,
+    alignItems: 'center',
     gap: Spacing.sm,
+    marginTop: -Spacing.xs,
+    marginBottom: Spacing.md,
   },
-  ruleItem: { flexDirection: 'row', alignItems: 'center', width: '46%' },
-  ruleText: { fontSize: Typography.size.sm, color: c.textMuted },
-  ruleTextPassed: { color: c.textPrimary },
+  strengthTrack: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: c.border,
+    overflow: 'hidden',
+  },
+  strengthFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  strengthLabel: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.semiBold,
+    minWidth: 44,
+    textAlign: 'right',
+  },
+
+  // ── Terms ────────────────────────────────────────────────────────────────
   termsRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.xs,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: 5,
     borderWidth: 1.5,
     borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Spacing.sm,
-    marginTop: 2,
   },
   checkboxActive: { backgroundColor: c.primary, borderColor: c.primary },
-  termsText: { flex: 1, fontSize: Typography.size.sm, color: c.textPrimary },
+  termsText: { flex: 1, fontSize: Typography.size.sm, color: c.textSecondary, lineHeight: 20 },
   termsLink: { color: c.primary, fontWeight: Typography.weight.semiBold },
-  termsNote: {
-    fontSize: Typography.size.xs,
-    color: c.textMuted,
-    marginBottom: Spacing.lg,
+
+  // ── Error ────────────────────────────────────────────────────────────────
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: c.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
   },
-  cta: { width: '100%', marginBottom: Spacing.lg },
+  errorText: { flex: 1, fontSize: Typography.size.sm, color: c.error },
+
+  // ── CTA ──────────────────────────────────────────────────────────────────
+  cta: { width: '100%', marginBottom: Spacing.xl },
+
+  // ── Divider ──────────────────────────────────────────────────────────────
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.sm,
     marginBottom: Spacing.md,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: c.border },
-  dividerText: {
-    fontSize: Typography.size.xs,
-    color: c.textMuted,
-    paddingHorizontal: Spacing.sm,
-    letterSpacing: 1,
-  },
-  signInBtn: { width: '100%', marginBottom: Spacing.lg },
-  secureRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  secureText: {
-    fontSize: Typography.size.xs,
-    color: c.textMuted,
-    letterSpacing: 1,
-  },
-}
-);
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: c.border },
+  dividerText: { fontSize: Typography.size.xs, color: c.textMuted },
+
+  signInBtn: { width: '100%' },
+});

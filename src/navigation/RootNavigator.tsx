@@ -76,13 +76,13 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
 function AuthNavigator() {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <AuthStack.Screen name="MethodSelection" component={MethodSelectionScreen} />
       <AuthStack.Screen name="CreateAccount" component={CreateAccountScreen} />
       <AuthStack.Screen name="AllSet" component={AllSetScreen} />
+      <AuthStack.Screen name="MethodSelection" component={MethodSelectionScreen} />
     </AuthStack.Navigator>
   );
 }
@@ -96,6 +96,7 @@ function JournalNavigator() {
     <JournalStack.Navigator
       screenOptions={{
         headerShown: false,
+        animation: 'slide_from_right',
       }}
     >
       <JournalStack.Screen name="JournalHome" component={JournalHomeScreen} />
@@ -113,7 +114,7 @@ const BibleStack = createNativeStackNavigator<BibleStackParamList>();
 
 function BibleNavigator() {
   return (
-    <BibleStack.Navigator screenOptions={{ headerShown: false }}>
+    <BibleStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <BibleStack.Screen name="Books"    component={BooksScreen} />
       <BibleStack.Screen name="Chapters" component={ChaptersScreen} />
       <BibleStack.Screen name="Verses"   component={VersesScreen} />
@@ -127,7 +128,7 @@ const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeNavigator() {
   return (
-    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+    <HomeStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
     </HomeStack.Navigator>
   );
@@ -139,7 +140,7 @@ const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
 
 function HistoryNavigator() {
   return (
-    <HistoryStack.Navigator screenOptions={{ headerShown: false }}>
+    <HistoryStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <HistoryStack.Screen name="HistoryMain" component={JournalHistoryScreen} />
       <HistoryStack.Screen name="DevotionalDetail" component={DevotionalDetailScreen} />
     </HistoryStack.Navigator>
@@ -152,7 +153,7 @@ const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 function ProfileNavigator() {
   return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+    <ProfileStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="Reminders" component={RemindersScreen} />
     </ProfileStack.Navigator>
@@ -183,6 +184,7 @@ function MainNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        animation: 'fade',
         tabBarIcon: ({ focused }) => <TabIcon label={route.name} focused={focused} />,
         tabBarLabel: ({ focused }) => (
           <Text
@@ -216,7 +218,7 @@ export default function RootNavigator() {
   const isOnboardingDone = useAppStore((s) => s.isOnboardingDone);
 
   return (
-    <Root.Navigator screenOptions={{ headerShown: false }}>
+    <Root.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       {!isOnboardingDone ? (
         <Root.Screen name="Auth" component={AuthNavigator} />
       ) : (

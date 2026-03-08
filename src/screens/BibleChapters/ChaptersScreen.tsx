@@ -8,18 +8,19 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  ActivityIndicator, StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { useColors, Typography, Spacing, Radius } from '../../theme';
+import { useColors } from '../../theme';
 import { getChapters } from '../../services/bibleService';
 import { useAppStore } from '../../store/useAppStore';
 import type { ChapterSummary } from '../../types/bible';
 import type { BibleStackParamList } from '../../navigation/types';
+import { makeStyles } from './Chapters.styles';
 
 type Nav   = NativeStackNavigationProp<BibleStackParamList, 'Chapters'>;
 type Route = RouteProp<BibleStackParamList, 'Chapters'>;
@@ -106,49 +107,3 @@ export default function ChaptersScreen() {
     </SafeAreaView>
   );
 }
-
-const makeStyles = (c: ReturnType<typeof useColors>) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: c.background },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-    gap: 12,
-  },
-  backBtn:     { padding: 4 },
-  headerText:  { flex: 1 },
-  headerTitle: { fontSize: Typography.size.lg, fontWeight: Typography.weight.bold, color: c.textPrimary },
-  headerSub:   { fontSize: Typography.size.sm, color: c.textMuted },
-
-  loadingBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
-    backgroundColor: c.surfaceAlt,
-  },
-  loadingText: { fontSize: Typography.size.sm, color: c.textMuted },
-
-  grid: { padding: Spacing.md, gap: 10 },
-
-  cell: {
-    flex: 1,
-    margin: 5,
-    aspectRatio: 1,
-    backgroundColor: c.surface,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: c.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cellCached: {
-    borderColor: c.primary,
-    borderWidth: 1.5,
-  },
-  cellNum:   { fontSize: Typography.size.md, fontWeight: Typography.weight.semiBold, color: c.textPrimary },
-  cellVerse: { fontSize: 9, color: c.primary, marginTop: 2 },
-});

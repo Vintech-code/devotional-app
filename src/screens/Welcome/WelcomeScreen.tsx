@@ -3,14 +3,14 @@ import {
   View,
   Text,
   ScrollView,
+  Image,
 } from 'react-native';
 import LottieView from 'lottie-react-native';
-import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
-import { useColors, Typography, Spacing, Radius } from '../../theme';
+import { useColors } from '../../theme';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
 import { makeStyles } from './Welcome.styles';
 
@@ -27,13 +27,12 @@ export default function WelcomeScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.container} bounces={false}>
         {/* Logo */}
         <View style={styles.logoWrap}>
-          <View style={styles.logoCircle}>
-            <Icon
-              source="book-open-variant"
-              size={36}
-              color={colors.textPrimary}
-            />
-          </View>
+          {/* eslint-disable-next-line @typescript-eslint/no-var-requires */}
+          <Image
+            source={require('../../../assets/logotransparent.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Headline */}
@@ -64,13 +63,11 @@ export default function WelcomeScreen({ navigation }: Props) {
           <View style={styles.dot} />
         </View>
 
-        <View style={styles.spacer} />
-
         {/* CTA */}
         <PrimaryButton
           label="Start My Journey"
           rightIcon="chevron-right"
-          onPress={() => navigation.navigate('MethodSelection')}
+          onPress={() => navigation.navigate('CreateAccount')}
           style={styles.cta}
         />
 
@@ -83,6 +80,9 @@ export default function WelcomeScreen({ navigation }: Props) {
             Log in
           </Text>
         </Text>
+
+        {/* Credits */}
+        <Text style={styles.credits}>Made with ♥ by Clark Vincent Cabatuan</Text>
       </ScrollView>
     </SafeAreaView>
   );

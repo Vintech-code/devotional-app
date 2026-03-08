@@ -1,113 +1,123 @@
-import { StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
+
+const { width: W } = Dimensions.get('window');
+
+// Number of slides — keep in sync with SLIDES array in AllSetScreen.tsx
+export const SLIDE_COUNT = 3;
 
 export const makeStyles = (c: ColorScheme) =>
   StyleSheet.create({
-    safe: {
-      flex: 1,
-      backgroundColor: c.background,
-    },
-    container: {
-      flexGrow: 1,
+    safe: { flex: 1, backgroundColor: c.background },
+
+    // ── Top bar ─────────────────────────────────────────────────────────────
+    topBar: {
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.xl,
-      paddingBottom: Spacing.xl,
+      height: 52,
+    },
+    nameTag: {
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semiBold,
+      color: c.primary,
+    },
+    skipLabel: {
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semiBold,
+      color: c.textSecondary,
     },
 
-    // ── Top icon ────────────────────────────────────────────────────────────
-    iconRing: {
-      width: 100,
-      height: 100,
-      borderRadius: 50,
-      backgroundColor: c.surface,
-      borderWidth: 3,
-      borderColor: c.primary,
+    // ── Horizontal slide rail ────────────────────────────────────────────────
+    railClip: {
+      flex: 1,
+      overflow: 'hidden',
+    },
+    rail: {
+      flexDirection: 'row',
+      width: W * SLIDE_COUNT,
+    },
+    slide: {
+      width: W,
       alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: Spacing.lg,
-      shadowColor: c.primary,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.35,
-      shadowRadius: 16,
-      elevation: 8,
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.sm,
     },
 
-    // ── Headline ────────────────────────────────────────────────────────────
-    headline: {
+    // ── Lottie container ─────────────────────────────────────────────────────
+    lottie: {
+      width: W * 0.70,
+      height: W * 0.70,
+    },
+
+    // ── Slide text ───────────────────────────────────────────────────────────
+    slideTitle: {
       fontSize: Typography.size.xxl,
-      fontWeight: Typography.weight.bold as '700',
+      fontWeight: Typography.weight.bold,
       color: c.textPrimary,
+      textAlign: 'center',
+      marginTop: Spacing.sm,
+      marginBottom: 6,
+    },
+    greetingText: {
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semiBold,
+      color: c.primary,
       textAlign: 'center',
       marginBottom: Spacing.xs,
     },
-    nameText: {
-      fontSize: Typography.size.xl,
-      fontWeight: Typography.weight.semiBold as '600',
-      color: c.primary,
-      textAlign: 'center',
-      marginBottom: Spacing.md,
-    },
-    subtitle: {
+    slideSub: {
       fontSize: Typography.size.md,
       color: c.textSecondary,
       textAlign: 'center',
       lineHeight: Typography.size.md * 1.65,
-      marginBottom: Spacing.xl,
-      paddingHorizontal: Spacing.md,
+      paddingHorizontal: Spacing.xs,
     },
 
-    // ── Feature list ────────────────────────────────────────────────────────
-    featureList: {
-      width: '100%',
-      gap: Spacing.sm,
-      marginBottom: Spacing.xl,
-    },
-    featureRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+    // ── Verse card (last slide only) ──────────────────────────────────────────
+    verseCard: {
+      marginTop: Spacing.lg,
       backgroundColor: c.surface,
-      borderRadius: Radius.md,
-      paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.md,
-      gap: Spacing.sm,
+      borderRadius: Radius.lg,
+      padding: Spacing.md,
+      width: '100%',
       borderWidth: 1,
       borderColor: c.border,
     },
-    featureText: {
-      flex: 1,
-      fontSize: Typography.size.sm,
-      color: c.textPrimary,
-      lineHeight: Typography.size.sm * 1.5,
-    },
-
-    // ── Verse callout ───────────────────────────────────────────────────────
-    verseCard: {
-      width: '100%',
-      backgroundColor: c.surface,
-      borderRadius: Radius.lg,
-      padding: Spacing.lg,
-      borderLeftWidth: 4,
-      borderLeftColor: c.primary,
-      marginBottom: Spacing.xl,
-    },
     verseText: {
-      fontSize: Typography.size.md,
+      fontSize: Typography.size.sm,
       fontStyle: 'italic',
       color: c.textSecondary,
-      lineHeight: Typography.size.md * 1.6,
+      textAlign: 'center',
+      lineHeight: Typography.size.sm * 1.7,
       marginBottom: Spacing.xs,
     },
     verseRef: {
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.semiBold as '600',
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semiBold,
       color: c.primary,
+      textAlign: 'right',
     },
 
-    // ── CTA ─────────────────────────────────────────────────────────────────
-    spacer: { flex: 1 },
-    cta: {
-      width: '100%',
-      marginTop: Spacing.md,
+    // ── Page dot indicator ───────────────────────────────────────────────────
+    dotsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: Spacing.md,
+    },
+    dot: {
+      height: 8,
+      borderRadius: 4,
+    },
+    dotActive:   { backgroundColor: c.primary },
+    dotInactive: { backgroundColor: c.border },
+
+    // ── CTA ──────────────────────────────────────────────────────────────────
+    ctaWrap: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.lg,
     },
   });

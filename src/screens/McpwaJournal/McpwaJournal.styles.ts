@@ -38,8 +38,6 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     marginBottom: Spacing.sm,
-    borderLeftWidth: 2,
-    borderLeftColor: c.primary,
   },
   sectionScripText: {
     flex: 1,

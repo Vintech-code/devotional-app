@@ -188,7 +188,7 @@ export default function JournalHistoryScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0 }}
+        style={styles.typeFilterScroll}
         contentContainerStyle={styles.typeFilterRow}
       >
         {(['', 'SOAP', 'MCPWA', 'SWORD', 'Sermon'] as const).map((type) => (

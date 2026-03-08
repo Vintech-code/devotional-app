@@ -7,7 +7,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { DevotionalMethod, DevotionalMethodId } from '../../types';
-import { saveSelectedMethod } from '../../services/storageService';
+import { saveSelectedMethod, markOnboardingDone } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import MethodCard from '../../components/MethodCard/MethodCard';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
@@ -54,13 +54,15 @@ export default function MethodSelectionScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<DevotionalMethodId>('SOAP');
   const [loading, setLoading] = useState(false);
   const setSelectedMethod = useAppStore((s) => s.setSelectedMethod);
+  const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
 
   async function handleStart() {
     setLoading(true);
     await saveSelectedMethod(selected);
     setSelectedMethod(selected);
+    await markOnboardingDone();
+    setOnboardingDone(true);
     setLoading(false);
-    navigation.navigate('AllSet');
   }
 
   return (

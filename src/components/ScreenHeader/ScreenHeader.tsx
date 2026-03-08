@@ -9,9 +9,10 @@ interface Props {
   rightLabel?: string;
   onRightPress?: () => void;
   rightIcon?: string;
+  prominentTitle?: boolean;
 }
 
-export default function ScreenHeader({ title, onBack, rightLabel, onRightPress, rightIcon }: Props) {
+export default function ScreenHeader({ title, onBack, rightLabel, onRightPress, rightIcon, prominentTitle }: Props) {
   const colors = useColors();
   const styles = StyleSheet.create({
   header: {
@@ -21,8 +22,8 @@ export default function ScreenHeader({ title, onBack, rightLabel, onRightPress, 
     elevation: 0,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: prominentTitle ? 20 : 17,
+    fontWeight: prominentTitle ? '700' : '600',
     color: colors.textPrimary,
   },
   rightBtn: {

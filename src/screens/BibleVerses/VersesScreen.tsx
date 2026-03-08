@@ -12,11 +12,9 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   Share,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -28,13 +26,14 @@ import { RouteProp, useNavigation, useRoute, CompositeNavigationProp } from '@re
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
-import { Spacing, Typography, useColors } from '../../theme';
+import { DarkColors, useColors } from '../../theme';
 import type { ColorScheme } from '../../theme/colors';
 import { getVerses } from '../../services/bibleService';
 import { useAppStore } from '../../store/useAppStore';
 import { saveBiblePosition } from '../../services/storageService';
 import type { BibleVerse } from '../../types/bible';
 import type { BibleStackParamList, MainTabParamList } from '../../navigation/types';
+import { buildStyles } from './Verses.styles';
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<BibleStackParamList, 'Verses'>,
@@ -46,8 +45,6 @@ type Route = RouteProp<BibleStackParamList, 'Verses'>;
 // BG, SURFACE, etc. are declared inside the component below
 
 const SEL_TINT = 'rgba(78,205,196,0.20)'; // subtle tint while selected but no color chosen yet
-
-const SERIF = Platform.OS === 'ios' ? 'Georgia' : 'serif';
 
 const HIGHLIGHT_COLORS = [
   { key: 'yellow', swatch: '#FFD60A', bg: 'rgba(255,214,10,0.40)' },
@@ -65,15 +62,15 @@ export default function VersesScreen() {
   const insets = useSafeAreaInsets();
   const { bookId, bookName, chapter } = route.params;
 
-  // Theme-adaptive palette
-  const colors = useColors();
-  const BG       = colors.background;
-  const SURFACE  = colors.surface;
-  const SURFACE2 = colors.surfaceAlt;
-  const BORDER   = colors.border;
-  const TEXT     = colors.textPrimary;
-  const TEXT_MUTED = colors.textSecondary;
-  const VNUM_CLR = colors.primary;
+  // Always-dark charcoal reader palette (fixed, regardless of app light/dark theme)
+  const colors   = useColors();
+  const BG       = '#111111';
+  const SURFACE  = '#1A1A1A';
+  const SURFACE2 = '#222222';
+  const BORDER   = '#2A2A2A';
+  const TEXT     = '#F0F0F0';
+  const TEXT_MUTED = '#888888';
+  const VNUM_CLR = colors.primary; // keep app-theme teal accent
 
   const bibleTranslation = useAppStore((s) => s.bibleTranslation);
 
@@ -82,23 +79,22 @@ export default function VersesScreen() {
   const [error,     setError]     = useState<string | null>(null);
   const [retryKey,  setRetryKey]  = useState(0);
   const [selected,  setSelected]  = useState<Set<number>>(new Set());
-  // Whether the highlight-color picker sheet is open
   const [pickerOpen, setPickerOpen] = useState(false);
-  // verse number -> currently applied highlight bg color
   const [highlights, setHighlights] = useState<Record<number, string>>({});
 
   useEffect(() => {
     setLoading(true);
     setError(null);
     setSelected(new Set());
+
     getVerses(bookId, chapter, bibleTranslation)
       .then(setVerses)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
+
     void saveBiblePosition(`${bookName} ${chapter}`, chapter);
   }, [bookId, bookName, chapter, retryKey, bibleTranslation]);
 
-  // Toggle a verse in/out of the selection set
   const toggleVerse = useCallback((verseNum: number) => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -110,7 +106,6 @@ export default function VersesScreen() {
 
   const hasSelection = selected.size > 0;
 
-  // Apply one color to ALL selected verses
   function applyHighlight(key: HLKey) {
     const color = HIGHLIGHT_COLORS.find((c) => c.key === key);
     if (!color) return;
@@ -123,7 +118,6 @@ export default function VersesScreen() {
     setPickerOpen(false);
   }
 
-  // Remove highlights from all selected verses
   function removeHighlights() {
     setHighlights((prev) => {
       const next = { ...prev };
@@ -134,7 +128,6 @@ export default function VersesScreen() {
     setPickerOpen(false);
   }
 
-  // Build a combined reference + text string for the selected verses
   const selectedVerseTexts = useMemo(() => {
     const sorted = [...selected].sort((a, b) => a - b);
     return sorted
@@ -163,7 +156,9 @@ export default function VersesScreen() {
     if (!selectedVerseTexts) return;
     try {
       await Share.share({ message: `"${selectedVerseTexts}" — ${selectedReference} (KJV)` });
-    } catch { /* dismissed */ }
+    } catch {
+      /* dismissed */
+    }
     setSelected(new Set());
   }
 
@@ -171,7 +166,6 @@ export default function VersesScreen() {
     if (!selectedVerseTexts) return;
     const prefill = { reference: selectedReference, text: selectedVerseTexts };
     setSelected(new Set());
-    // Navigate cross-tab to Journal → JournalHome with the verse prefilled
     navigation.navigate('Journal', {
       screen: 'JournalHome',
       params: { prefill },
@@ -185,17 +179,19 @@ export default function VersesScreen() {
     navigation.replace('Verses', { bookId, bookName, chapter: chapter + 1 });
   }
 
-  // Are ALL currently-selected verses already highlighted?
   const anySelectedHighlighted = useMemo(
     () => [...selected].some((v) => highlights[v] !== undefined),
-    [selected, highlights]
+    [selected, highlights],
   );
 
-  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const readerColors = useMemo(
+    () => ({ ...DarkColors, primary: colors.primary, primaryLight: colors.primaryLight } as ColorScheme),
+    [colors.primary, colors.primaryLight],
+  );
+  const styles = useMemo(() => buildStyles(readerColors), [readerColors]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.navBtn} onPress={() => { setSelected(new Set()); navigation.goBack(); }}>
           <Icon source="arrow-left" size={22} color={TEXT} />
@@ -215,7 +211,6 @@ export default function VersesScreen() {
         </View>
       </View>
 
-      {/* ── Content ────────────────────────────────────────────────────────── */}
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={VNUM_CLR} />
@@ -251,7 +246,6 @@ export default function VersesScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            /* ── Flowing paragraph ──────────────────────────────────────────── */
             <Text style={styles.paragraph}>
               {verses.map((v) => {
                 const hlBg  = highlights[v.verse];
@@ -283,7 +277,6 @@ export default function VersesScreen() {
         </ScrollView>
       )}
 
-      {/* ── Bottom chapter navigation ───────────────────────────────────────── */}
       {!hasSelection && (
         <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 10 }]}>
           <TouchableOpacity
@@ -304,22 +297,18 @@ export default function VersesScreen() {
         </View>
       )}
 
-      {/* ── Selection toolbar (replaces chapter nav while verses are selected) ── */}
       {hasSelection && (
         <View style={[styles.toolbar, { paddingBottom: insets.bottom + 6 }]}>
-          {/* Selection count badge */}
           <Text style={styles.toolbarCount}>
             {selected.size} verse{selected.size > 1 ? 's' : ''} selected
           </Text>
 
           <View style={styles.toolbarActions}>
-            {/* Highlight */}
             <TouchableOpacity style={styles.toolBtn} onPress={() => setPickerOpen(true)}>
               <Icon source="marker" size={20} color={TEXT} />
               <Text style={styles.toolBtnLabel}>Highlight</Text>
             </TouchableOpacity>
 
-            {/* Remove highlight — only if any selected verse has one */}
             {anySelectedHighlighted && (
               <TouchableOpacity style={styles.toolBtn} onPress={removeHighlights}>
                 <Icon source="eraser-variant" size={20} color={TEXT} />
@@ -327,19 +316,16 @@ export default function VersesScreen() {
               </TouchableOpacity>
             )}
 
-            {/* Copy */}
             <TouchableOpacity style={styles.toolBtn} onPress={handleCopy}>
               <Icon source="content-copy" size={20} color={TEXT} />
               <Text style={styles.toolBtnLabel}>Copy</Text>
             </TouchableOpacity>
 
-            {/* Share */}
             <TouchableOpacity style={styles.toolBtn} onPress={handleShare}>
               <Icon source="share-variant-outline" size={20} color={TEXT} />
               <Text style={styles.toolBtnLabel}>Share</Text>
             </TouchableOpacity>
 
-            {/* Journal */}
             <TouchableOpacity style={styles.toolBtn} onPress={handleJournal}>
               <Icon source="notebook-edit-outline" size={20} color={VNUM_CLR} />
               <Text style={[styles.toolBtnLabel, { color: VNUM_CLR }]}>Journal</Text>
@@ -348,7 +334,6 @@ export default function VersesScreen() {
         </View>
       )}
 
-      {/* ── Color picker Modal (appears over everything when "Highlight" tapped) ── */}
       <Modal
         visible={pickerOpen}
         transparent
@@ -382,164 +367,4 @@ export default function VersesScreen() {
       </Modal>
     </SafeAreaView>
   );
-}
-
-function buildStyles(c: ColorScheme) {
-  return StyleSheet.create({
-  safe: { flex: 1, backgroundColor: c.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-
-  // ── Header ─────────────────────────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 10,
-    backgroundColor: c.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  navBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  titleBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  headerTitle: { fontSize: 16, fontWeight: '600', color: c.textPrimary, fontFamily: SERIF },
-
-  // ── Scroll content ──────────────────────────────────────────────────────────
-  content: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 80 },
-  bookLabel: {
-    fontSize: 12,
-    color: c.textSecondary,
-    fontFamily: SERIF,
-    textAlign: 'center',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  chapterNum: {
-    fontSize: 88,
-    fontWeight: '800',
-    color: c.textPrimary,
-    fontFamily: SERIF,
-    textAlign: 'center',
-    lineHeight: 96,
-    marginBottom: 24,
-  },
-
-  // ── Verse text ──────────────────────────────────────────────────────────────
-  paragraph: { fontSize: 19, fontFamily: SERIF, color: c.textPrimary, lineHeight: 35, letterSpacing: 0.15 },
-  verseNum: { fontSize: 11, fontWeight: '700', color: c.primary, fontFamily: SERIF, lineHeight: 35 },
-  verseNumSelected: { color: c.primary, fontWeight: '800' },
-  verseText: { fontSize: 19, fontFamily: SERIF, color: c.textPrimary, lineHeight: 35 },
-  // Dotted underline when selected but not yet highlighted (iOS: dotted; Android: plain underline)
-  verseTextSelected: {
-    textDecorationLine: 'underline',
-    textDecorationStyle: 'dotted',
-    textDecorationColor: c.primary,
-  },
-
-  // ── Empty / error state ─────────────────────────────────────────────────────
-  emptyWrap: { alignItems: 'center', paddingTop: 52, gap: 14 },
-  emptyText: { fontSize: 16, fontWeight: '600', color: c.textSecondary, textAlign: 'center' },
-  emptySub: { fontSize: 13, color: c.textSecondary, textAlign: 'center', lineHeight: 20 },
-  loadingHint: { fontSize: 13, color: c.textSecondary, marginTop: 10 },
-  retryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: c.primary,
-    marginTop: 4,
-  },
-  retryBtnLabel: { fontSize: 14, fontWeight: '600', color: c.primary },
-
-  // ── Chapter pagination bar (visible when nothing is selected) ───────────────
-  bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: c.surface,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: c.border,
-    paddingHorizontal: Spacing.sm,
-    paddingTop: 10,
-  },
-  bottomBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: c.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bottomBtnDisabled: { opacity: 0.3 },
-  bottomCenter: { flex: 1, alignItems: 'center' },
-  bottomLabel: { fontSize: 15, fontWeight: '700', color: c.textPrimary },
-
-  // ── Multi-select sticky toolbar (replaces bottomBar while verses are selected)
-  toolbar: {
-    backgroundColor: c.surface,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: c.border,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    gap: 8,
-  },
-  toolbarCount: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: c.primary,
-    letterSpacing: 0.5,
-    textAlign: 'center',
-  },
-  toolbarActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-  },
-  toolBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: 52,
-  },
-  toolBtnLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: c.textPrimary,
-    letterSpacing: 0.2,
-  },
-
-  // ── Color picker bottom sheet ────────────────────────────────────────────────
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
-  panel: {
-    backgroundColor: c.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: c.border,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    gap: 14,
-  },
-  panelHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  panelRef: { fontSize: 14, fontWeight: '700', color: c.primary, letterSpacing: 0.3 },
-  panelSectionLabel: { fontSize: 11, fontWeight: '700', color: c.textSecondary, letterSpacing: 1.5 },
-  swatchRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingBottom: 4 },
-  swatch: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  });
 }

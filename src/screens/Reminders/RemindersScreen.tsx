@@ -59,9 +59,10 @@ export default function RemindersScreen() {
   async function toggleDaily(enabled: boolean) {
     if (!settings) return;
     await requestNotificationPermissions();
-    if (enabled) await enableAlarm(settings);
-    else await disableAlarm();
     const updated = { ...settings, dailyEnabled: enabled };
+    await saveReminderSettings(updated);
+    if (enabled) await enableAlarm(updated);
+    else await disableAlarm();
     setSettings(updated);
     setReminderSettings(updated);
   }
@@ -69,8 +70,13 @@ export default function RemindersScreen() {
   async function selectTime(time12: string) {
     if (!settings) return;
     const t24 = to24(time12);
-    await updateAlarmTime(t24);
     const updated = { ...settings, scheduledTime: t24 };
+    await saveReminderSettings(updated);
+    // Update the alarm schedule if reminders are enabled.
+    if (updated.dailyEnabled) {
+      await updateAlarmTime(t24);
+      await enableAlarm(updated);
+    }
     setSettings(updated);
     setReminderSettings(updated);
   }
@@ -81,14 +87,6 @@ export default function RemindersScreen() {
       ? settings.repeatDays.filter((d) => d !== day)
       : [...settings.repeatDays, day];
     const updated = { ...settings, repeatDays };
-    await saveReminderSettings(updated);
-    setSettings(updated);
-    setReminderSettings(updated);
-  }
-
-  async function toggleWeekly(enabled: boolean) {
-    if (!settings) return;
-    const updated = { ...settings, weeklyReviewEnabled: enabled };
     await saveReminderSettings(updated);
     setSettings(updated);
     setReminderSettings(updated);
@@ -122,13 +120,29 @@ export default function RemindersScreen() {
     setReminderSettings(updated);
   }
 
+  async function handleSave() {
+    if (!settings) return;
+    await saveReminderSettings(settings);
+    // Ensure the alarm state matches the saved settings.
+    if (settings.dailyEnabled) {
+      await requestNotificationPermissions();
+      await enableAlarm(settings);
+    } else {
+      await disableAlarm();
+    }
+    navigation.goBack();
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScreenHeader
         title="Reminders"
         onBack={() => navigation.goBack()}
         rightLabel="Save"
-        onRightPress={() => navigation.goBack()}
+        prominentTitle
+        onRightPress={() => {
+          void handleSave();
+        }}
       />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Daily engagement */}
@@ -184,35 +198,6 @@ export default function RemindersScreen() {
               </View>
             </>
           )}
-        </View>
-
-        {/* Weekly reflection */}
-        <Text style={styles.sectionLabel}>WEEKLY REFLECTION</Text>
-        <View style={styles.card}>
-          <ToggleCard
-            icon="calendar"
-            title="Weekly Review"
-            description="Reflect on God's work over the past week."
-            value={settings.weeklyReviewEnabled}
-            onValueChange={toggleWeekly}
-          />
-        </View>
-
-        {/* Notification preview */}
-        <Text style={styles.sectionLabel}>NOTIFICATION PREVIEW</Text>
-        <View style={styles.previewCard}>
-          <View style={styles.previewInner}>
-            <View style={styles.previewIcon}>
-              <Icon source="bell-ring" size={20} color={colors.textPrimary} />
-            </View>
-            <View style={styles.previewContent}>
-              <Text style={styles.previewApp}>DEVOVERSE</Text>
-              <Text style={styles.previewTitle}>Time for Morning Devotional</Text>
-              <Text style={styles.previewBody}>"Thy word is a lamp unto my feet..."</Text>
-            </View>
-            <Text style={styles.previewTime}>Now</Text>
-          </View>
-          <Text style={styles.previewMode}>Preview Mode</Text>
         </View>
 
         {/* System preferences */}

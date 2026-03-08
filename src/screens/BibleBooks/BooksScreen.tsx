@@ -10,7 +10,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity,
-  TextInput, ActivityIndicator, StyleSheet, SectionList,
+  TextInput, ActivityIndicator, SectionList,
   Modal, FlatList, Pressable,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
@@ -18,12 +18,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { useColors, Typography, Spacing, Radius } from '../../theme';
+import { useColors } from '../../theme';
 import { getBooks } from '../../services/bibleService';
 import { BIBLE_TRANSLATIONS, getTranslationById } from '../../data/bibleTranslations';
 import { useAppStore } from '../../store/useAppStore';
 import type { BibleBook } from '../../types/bible';
 import type { BibleStackParamList } from '../../navigation/types';
+import { makeStyles } from './Books.styles';
 
 type Nav = NativeStackNavigationProp<BibleStackParamList, 'Books'>;
 
@@ -212,140 +213,4 @@ export default function BooksScreen() {
     </SafeAreaView>
   );
 }
-
-const makeStyles = (c: ReturnType<typeof useColors>) => StyleSheet.create({
-  safe:         { flex: 1, backgroundColor: c.background },
-  center:       { alignItems: 'center', justifyContent: 'center', gap: 12 },
-  loadingText:  { color: c.textSecondary, marginTop: 8 },
-  errorText:    { color: c.error, fontSize: Typography.size.lg, fontWeight: Typography.weight.bold },
-  errorSub:     { color: c.textMuted, textAlign: 'center', paddingHorizontal: Spacing.xl },
-
-  header: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitle: { fontSize: Typography.size.xl, fontWeight: Typography.weight.bold, color: c.textPrimary },
-  headerSub:   { fontSize: Typography.size.sm, color: c.textMuted, marginTop: 2 },
-
-  transBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 6,
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: c.primary,
-    backgroundColor: c.primary + '15',
-  },
-  transBtnLabel: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
-    color: c.primary,
-    letterSpacing: 0.5,
-  },
-
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: c.surfaceAlt,
-    margin: Spacing.md,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    gap: 8,
-  },
-  searchInput: { flex: 1, fontSize: Typography.size.md, color: c.textPrimary },
-
-  list: { paddingBottom: Spacing.xl },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    backgroundColor: c.background,
-  },
-  sectionTitle: { fontSize: Typography.size.xs, fontWeight: Typography.weight.bold, color: c.textMuted, letterSpacing: 1 },
-  sectionCount: { fontSize: Typography.size.xs, color: c.textMuted },
-
-  bookRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    backgroundColor: c.surface,
-    gap: 12,
-  },
-  bookBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bookBadgeText: { fontSize: Typography.size.xs, fontWeight: Typography.weight.bold },
-  bookInfo:     { flex: 1 },
-  bookName:     { fontSize: Typography.size.md, fontWeight: Typography.weight.semiBold, color: c.textPrimary },
-  bookMeta:     { fontSize: Typography.size.sm, color: c.textMuted, marginTop: 1 },
-  separator:    { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginLeft: 60 },
-
-  // ── Translation picker sheet ─────────────────────────────────────────────────
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.50)' },
-  sheet: {
-    backgroundColor: c.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: c.border,
-    maxHeight: '75%',
-    paddingBottom: 24,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xs,
-  },
-  sheetTitle: { fontSize: Typography.size.lg, fontWeight: Typography.weight.bold, color: c.textPrimary },
-  sheetSub:   { fontSize: Typography.size.sm, color: c.textMuted, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm },
-  sheetSep:   { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginLeft: 64 },
-
-  transRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  transRowActive: { backgroundColor: c.primary + '10' },
-  transBadge: {
-    width: 44,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: c.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  transBadgeActive: { backgroundColor: c.primary + '20', borderColor: c.primary },
-  transBadgeText:       { fontSize: 10, fontWeight: Typography.weight.bold, color: c.textMuted, letterSpacing: 0.5 },
-  transBadgeTextActive: { color: c.primary },
-  transName:       { fontSize: Typography.size.sm, fontWeight: Typography.weight.semiBold, color: c.textPrimary },
-  transNameActive: { color: c.primary },
-  transLang:       { fontSize: Typography.size.xs, color: c.textMuted, marginTop: 2 },
-});
 

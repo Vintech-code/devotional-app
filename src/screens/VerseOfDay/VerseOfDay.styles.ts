@@ -37,8 +37,6 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.sm,
-    borderLeftWidth: 4,
-    borderLeftColor: c.primary,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },

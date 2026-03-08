@@ -14,15 +14,11 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   logoWrap: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs,
   },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: c.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    width: 180,
+    height: 72,
   },
   headline: {
     fontSize: Typography.size.xxl,
@@ -62,9 +58,6 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     width: 24,
     backgroundColor: c.primary,
   },
-  spacer: {
-    flex: 1,
-  },
   cta: {
     width: '100%',
     marginBottom: Spacing.md,
@@ -76,6 +69,13 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   signInLink: {
     color: c.primary,
     fontWeight: Typography.weight.semiBold,
+  },
+  credits: {
+    fontSize: Typography.size.xs,
+    color: c.textMuted,
+    marginTop: Spacing.lg,
+    textAlign: 'center',
+    letterSpacing: 0.4,
   },
   lottie: {
     width: 320,

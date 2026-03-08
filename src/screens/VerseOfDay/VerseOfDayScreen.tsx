@@ -238,7 +238,7 @@ export default function VerseOfDayScreen() {
           </View>
 
           {/* Main verse card */}
-          <View style={[styles.verseCard, { borderLeftColor: accentColor }]}>
+          <View style={styles.verseCard}>
             <Text style={[styles.quoteDecor, { color: accentColor }]}>"</Text>
             <Text style={styles.verseText}>{todayVerse.text}"</Text>
             <View style={styles.verseRefRow}>

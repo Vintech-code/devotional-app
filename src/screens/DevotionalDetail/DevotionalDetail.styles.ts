@@ -55,8 +55,6 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     backgroundColor: c.surface,
     borderRadius: Radius.md,
     padding: Spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: c.primary,
   },
   verseContent: {
     fontSize: Typography.size.md,
@@ -67,8 +65,6 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     padding: Spacing.md,
     fontFamily: Typography.fontFamilySerif,
     fontStyle: 'italic',
-    borderLeftWidth: 3,
-    borderLeftColor: c.accent,
   },
 
   tagRow: {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
 import { RegisterForm } from '../../types';
-import { useColors, Typography, Spacing, Radius } from '../../theme';
+import { useColors } from '../../theme';
 import { saveUserProfile } from '../../services/storageService';
+import { createUserWithEmail, friendlyAuthError } from '../../services/authService';
 import { useAppStore } from '../../store/useAppStore';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
@@ -20,19 +21,16 @@ import { makeStyles } from './CreateAccount.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateAccount'>;
 
-const PASSWORD_RULES = [
-  { key: '8chars', label: '8+ Characters', test: (p: string) => p.length >= 8 },
-  { key: 'mixed', label: 'Mixed cases', test: (p: string) => /[a-z]/.test(p) && /[A-Z]/.test(p) },
-  { key: 'symbol', label: 'One symbol', test: (p: string) => /[^a-zA-Z0-9]/.test(p) },
-  { key: 'number', label: 'Numbers', test: (p: string) => /[0-9]/.test(p) },
-];
-
-function getStrength(password: string): string {
-  const passed = PASSWORD_RULES.filter((r) => r.test(password)).length;
-  if (passed <= 1) return 'Weak';
-  if (passed === 2) return 'Fair';
-  if (passed === 3) return 'Good';
-  return 'Strong';
+function getStrength(p: string): { label: string; pct: number; color: string } {
+  let score = 0;
+  if (p.length >= 8) score++;
+  if (/[a-z]/.test(p) && /[A-Z]/.test(p)) score++;
+  if (/[^a-zA-Z0-9]/.test(p)) score++;
+  if (/[0-9]/.test(p)) score++;
+  if (score <= 1) return { label: 'Weak',   pct: 0.25, color: '#ef4444' };
+  if (score === 2) return { label: 'Fair',   pct: 0.50, color: '#f97316' };
+  if (score === 3) return { label: 'Good',   pct: 0.75, color: '#eab308' };
+  return               { label: 'Strong', pct: 1.00, color: '#22c55e' };
 }
 
 export default function CreateAccountScreen({ navigation }: Props) {
@@ -45,45 +43,62 @@ export default function CreateAccountScreen({ navigation }: Props) {
     agreedToTerms: false,
   });
   const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
 
   const setProfile = useAppStore((s) => s.setProfile);
-
-  const strength = getStrength(form.password);
+  const strength   = getStrength(form.password);
 
   async function handleCreate() {
     if (!form.fullName || !form.email || !form.password || !form.agreedToTerms) return;
+    setError(null);
     setLoading(true);
-    const profile = {
-      name: form.fullName,
-      memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-      level: 1,
-      levelTitle: 'Faith Seeker',
-      completedCount: 0,
-      dayStreak: 0,
-    };
-    await saveUserProfile(profile);
-    setProfile(profile);
-    setLoading(false);
-    navigation.navigate('AllSet', { name: form.fullName });
+    try {
+      await createUserWithEmail(form.email, form.password, form.fullName);
+      const profile = {
+        name: form.fullName,
+        memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        level: 1,
+        levelTitle: 'Faith Seeker',
+        completedCount: 0,
+        dayStreak: 0,
+      };
+      await saveUserProfile(profile);
+      setProfile(profile);
+      navigation.navigate('AllSet', { name: form.fullName });
+    } catch (e) {
+      setError(friendlyAuthError(e));
+    } finally {
+      setLoading(false);
+    }
   }
 
   function update(field: keyof RegisterForm) {
     return (value: string) => setForm((f) => ({ ...f, [field]: value }));
   }
 
+  const canSubmit = !!(form.fullName && form.email && form.password && form.agreedToTerms);
+
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Back */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon source="chevron-left" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Join the DevoVerse Community</Text>
-        <Text style={styles.subtitle}>
-          Begin your journey of daily devotion and spiritual growth today.
-        </Text>
+        {/* Header */}
+        <View style={styles.headerBadge}>
+          <Icon source="account-plus" size={14} color={colors.primary} />
+          <Text style={styles.headerBadgeText}>NEW ACCOUNT</Text>
+        </View>
+        <Text style={styles.title}>Create Your Account</Text>
+        <Text style={styles.subtitle}>Join the community and begin your devotional journey.</Text>
 
+        {/* Fields */}
         <FormInput
           label="Full Name"
           value={form.fullName}
@@ -102,36 +117,30 @@ export default function CreateAccountScreen({ navigation }: Props) {
         />
 
         <FormInput
-          label="Secure Password"
+          label="Password"
           value={form.password}
           onChangeText={update('password')}
-          placeholder="��������"
+          placeholder="Create a strong password"
           secureTextEntry
           autoCapitalize="none"
         />
 
-        {/* Strength */}
+        {/* Strength bar */}
         {form.password.length > 0 && (
-          <View style={styles.strengthWrap}>
-            <Text style={styles.strengthLabel}>Security Strength</Text>
-            <Text style={styles.strengthValue}>{strength}</Text>
+          <View style={styles.strengthRow}>
+            <View style={styles.strengthTrack}>
+              <View
+                style={[
+                  styles.strengthFill,
+                  { width: `${strength.pct * 100}%` as unknown as number, backgroundColor: strength.color },
+                ]}
+              />
+            </View>
+            <Text style={[styles.strengthLabel, { color: strength.color }]}>
+              {strength.label}
+            </Text>
           </View>
         )}
-
-        {/* Rules */}
-        <View style={styles.rulesGrid}>
-          {PASSWORD_RULES.map((rule) => {
-            const passed = rule.test(form.password);
-            return (
-              <View key={rule.key} style={styles.ruleItem}>
-                <Icon source={passed ? 'check-circle' : 'circle-outline'} size={16} color={passed ? colors.success : colors.textMuted} />
-                <Text style={[styles.ruleText, passed && styles.ruleTextPassed]}>
-                  {rule.label}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
 
         {/* Terms */}
         <TouchableOpacity
@@ -140,45 +149,47 @@ export default function CreateAccountScreen({ navigation }: Props) {
           activeOpacity={0.8}
         >
           <View style={[styles.checkbox, form.agreedToTerms && styles.checkboxActive]}>
-              {form.agreedToTerms && <Icon source="check" size={14} color={colors.textPrimary} />}
+            {form.agreedToTerms && <Icon source="check" size={12} color="#fff" />}
           </View>
           <Text style={styles.termsText}>
             I agree to the{' '}
             <Text style={styles.termsLink}>Terms of Service</Text>
-            {' and '}
+            {' '}and{' '}
             <Text style={styles.termsLink}>Privacy Policy</Text>
-            {'.'}
           </Text>
         </TouchableOpacity>
-        <Text style={styles.termsNote}>We value your privacy and spiritual journey.</Text>
 
+        {/* Error */}
+        {error ? (
+          <View style={styles.errorRow}>
+            <Icon source="alert-circle-outline" size={15} color={colors.error} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
+
+        {/* CTA */}
         <PrimaryButton
           label="Create My Account"
           rightIcon="arrow-right"
           onPress={handleCreate}
           loading={loading}
-          disabled={!form.fullName || !form.email || !form.password || !form.agreedToTerms}
+          disabled={!canSubmit}
           style={styles.cta}
         />
 
         {/* Divider */}
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>ALREADY HAVE AN ACCOUNT?</Text>
+          <Text style={styles.dividerText}>Already have an account?</Text>
           <View style={styles.dividerLine} />
         </View>
 
         <PrimaryButton
-          label="Sign In to DevoVerse"
+          label="Sign In"
           variant="outline"
           onPress={() => navigation.navigate('Login')}
           style={styles.signInBtn}
         />
-
-        <View style={styles.secureRow}>
-          <Icon source="lock" size={14} color={colors.textSecondary} />
-          <Text style={styles.secureText}>ENCRYPTED & SECURE</Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );

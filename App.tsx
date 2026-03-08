@@ -5,14 +5,17 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { ThemeProvider } from '@rneui/themed';
+import { onAuthStateChanged } from 'firebase/auth';
 
 import RootNavigator from './src/navigation/RootNavigator';
 import { useAppStore } from './src/store/useAppStore';
 import { DarkColors, LightColors, makePaperTheme, makeRneuiTheme } from './src/theme';
+import { auth } from './src/services/firebase';
 
 function AppContent() {
   const hydrate = useAppStore((s) => s.hydrate);
   const isDarkMode = useAppStore((s) => s.isDarkMode);
+  const setFirebaseUid = useAppStore((s) => s.setFirebaseUid);
   const [ready, setReady] = useState(false);
 
   const colors = isDarkMode ? DarkColors : LightColors;
@@ -20,11 +23,14 @@ function AppContent() {
   const appRneuiTheme = useMemo(() => makeRneuiTheme(colors), [colors]);
 
   useEffect(() => {
-    async function init() {
-      await hydrate();
-      setReady(true);
-    }
-    init();
+    // Hydrate local state first, then mark ready
+    hydrate().then(() => setReady(true));
+
+    // Keep the store in sync with Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUid(user ? user.uid : null);
+    });
+    return unsubscribe;
   }, []);
 
   if (!ready) {

@@ -9,11 +9,20 @@ import {
   SermonNote,
 } from '../types';
 import * as storage from '../services/storageService';
+import { signOut as firebaseSignOut } from '../services/authService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AppState {
   // Auth / onboarding
   isOnboardingDone: boolean;
   setOnboardingDone: (done: boolean) => void;
+
+  // Firebase UID of the signed-in user (null = signed out)
+  firebaseUid: string | null;
+  setFirebaseUid: (uid: string | null) => void;
+
+  // Sign the user out and reset to the auth flow
+  signOut: () => Promise<void>;
 
   // Theme
   isDarkMode: boolean;
@@ -58,6 +67,35 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   isOnboardingDone: false,
   setOnboardingDone: (done) => set({ isOnboardingDone: done }),
+
+  firebaseUid: null,
+  setFirebaseUid: (uid) => set({ firebaseUid: uid }),
+
+  signOut: async () => {
+    await firebaseSignOut();
+    // Wipe every user-scoped key so the next sign-in starts completely fresh
+    await AsyncStorage.multiRemove([
+      '@devotional/onboarding_done',
+      '@devotional/user_profile',
+      '@devotional/soap_entries',
+      '@devotional/mcpwa_entries',
+      '@devotional/sword_entries',
+      '@devotional/sermon_notes',
+      '@devotional/reminder_settings',
+      '@devotional/selected_method',
+    ]);
+    set({
+      isOnboardingDone: false,
+      profile: null,
+      firebaseUid: null,
+      soapEntries: [],
+      mcpwaEntries: [],
+      swordEntries: [],
+      sermonNotes: [],
+      reminderSettings: null,
+      selectedMethod: 'SOAP',
+    });
+  },
 
   isDarkMode: true,
   toggleTheme: () =>

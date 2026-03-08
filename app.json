@@ -3,6 +3,7 @@
     "name": "devotional-app",
     "slug": "devotional-app",
     "version": "1.0.0",
+    "scheme": "devotionalapp",
     "orientation": "portrait",
     "icon": "./assets/appicon.png",
     "userInterfaceStyle": "light",

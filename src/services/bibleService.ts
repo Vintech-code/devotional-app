@@ -121,17 +121,35 @@ export async function getVerses(
   try {
     resp = await fetch(url);
   } catch (e: unknown) {
-    throw new Error(`Network error — check your connection (${String(e)})`);
+    // Distinguish offline vs other network errors
+    const msg = String(e).toLowerCase();
+    if (
+      msg.includes('network request failed') ||
+      msg.includes('failed to fetch') ||
+      msg.includes('networkerror') ||
+      msg.includes('typeerror')
+    ) {
+      throw new Error('No internet connection. Previously read chapters are available offline.');
+    }
+    throw new Error('Network error — check your connection.');
   }
 
+  if (resp.status === 404) {
+    throw new Error(`${book.name} ${chapter} is not available in the ${translation.toUpperCase()} translation.`);
+  }
   if (!resp.ok) {
-    throw new Error(`Bible API returned ${resp.status} for ${book.name} ${chapter}`);
+    throw new Error(`Could not load ${book.name} ${chapter} (server error ${resp.status}).`);
   }
 
-  const data: { verses?: ApiVerse[] } = await resp.json();
+  const data: { verses?: ApiVerse[]; error?: string } = await resp.json();
+
+  // Some translations return a JSON error field instead of 404
+  if (data.error) {
+    throw new Error(`${book.name} ${chapter} is not available in the ${translation.toUpperCase()} translation.`);
+  }
 
   if (!Array.isArray(data.verses) || data.verses.length === 0) {
-    throw new Error(`No verses returned for ${book.name} ${chapter} (${translation.toUpperCase()})`);
+    throw new Error(`No verses returned for ${book.name} ${chapter} (${translation.toUpperCase()}). This translation may not include this book.`);
   }
 
   // 3. Persist to local cache inside one transaction (fast bulk insert)

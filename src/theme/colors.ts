@@ -32,7 +32,7 @@ export const DarkColors: ColorScheme = {
   // Primary – teal (user preference)
   primary: '#428a9b',
   primaryDark: '#008A88',
-  primaryLight: '#33BCBA',
+  primaryLight: '#058583',
 
   // Accent – warm bronze gold
   accent: '#C8A86A',
@@ -40,14 +40,14 @@ export const DarkColors: ColorScheme = {
 
   // Backgrounds
   background: '#111111',
-  surface: '#1A1A1A',
+  surface: '#201e1e',
   surfaceAlt: '#222222',
 
   // Text
   textPrimary: '#F0F0F0',
   textSecondary: '#888888',
   textMuted: '#444444',
-  textOnPrimary: '#ffffff',
+  textOnPrimary: '#fffefe',
 
   // Border
   border: '#2A2A2A',
