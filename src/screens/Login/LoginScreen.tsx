@@ -7,7 +7,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { useColors } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
-import { saveUserProfile, markOnboardingDone } from '../../services/storageService';
+import { saveUserProfile, markOnboardingDone, setActiveUid } from '../../services/storageService';
 import {
   signInWithEmail,
   Google,
@@ -43,6 +43,7 @@ export default function LoginScreen({ navigation }: Props) {
     setLoading(true);
     signInWithGoogleIdToken(idToken)
       .then(async (user) => {
+        setActiveUid(user.uid);
         const name = user.displayName ?? user.email?.split('@')[0] ?? 'Friend';
         const profile = {
           name,
@@ -68,6 +69,8 @@ export default function LoginScreen({ navigation }: Props) {
     setLoading(true);
     try {
       const user = await signInWithEmail(email, password);
+      // Scope storage to this user before any writes
+      setActiveUid(user.uid);
       const name = user.displayName ?? email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       const profile = {
         name,

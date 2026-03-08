@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import {
   DevotionalMethodId,
   UserProfile,
@@ -10,7 +10,6 @@ import {
 } from '../types';
 import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AppState {
   // Auth / onboarding
@@ -24,11 +23,11 @@ interface AppState {
   // Sign the user out and reset to the auth flow
   signOut: () => Promise<void>;
 
-  // Theme
+  // Theme (global — not per-user)
   isDarkMode: boolean;
   toggleTheme: () => void;
 
-  // Selected method
+  // Selected devotional method
   selectedMethod: DevotionalMethodId;
   setSelectedMethod: (method: DevotionalMethodId) => void;
 
@@ -40,28 +39,25 @@ interface AppState {
   reminderSettings: ReminderSettings | null;
   setReminderSettings: (settings: ReminderSettings) => void;
 
-  // SOAP entries
+  // Journal entries
   soapEntries: SoapEntry[];
   setSoapEntries: (entries: SoapEntry[]) => void;
-
-  // MCPWA entries
   mcpwaEntries: McpwaEntry[];
   setMcpwaEntries: (entries: McpwaEntry[]) => void;
-
-  // SWORD entries
   swordEntries: SwordEntry[];
   setSwordEntries: (entries: SwordEntry[]) => void;
-
-  // Sermon notes
   sermonNotes: SermonNote[];
   setSermonNotes: (notes: SermonNote[]) => void;
 
-  // Bible translation
+  // Bible
   bibleTranslation: string;
   setBibleTranslation: (id: string) => void;
 
   // Hydration
+  // Load global (device-level) settings — call once on app start.
   hydrate: () => Promise<void>;
+  // Load per-user data scoped to the given UID — call after Firebase auth resolves.
+  hydrateForUser: (uid: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -72,18 +68,13 @@ export const useAppStore = create<AppState>((set) => ({
   setFirebaseUid: (uid) => set({ firebaseUid: uid }),
 
   signOut: async () => {
+    // 1. Clear all UID-scoped AsyncStorage keys for this user
+    await storage.clearUserData();
+    // 2. Sign out of Firebase
     await firebaseSignOut();
-    // Wipe every user-scoped key so the next sign-in starts completely fresh
-    await AsyncStorage.multiRemove([
-      '@devotional/onboarding_done',
-      '@devotional/user_profile',
-      '@devotional/soap_entries',
-      '@devotional/mcpwa_entries',
-      '@devotional/sword_entries',
-      '@devotional/sermon_notes',
-      '@devotional/reminder_settings',
-      '@devotional/selected_method',
-    ]);
+    // 3. Clear active UID from storage service
+    storage.setActiveUid(null);
+    // 4. Reset in-memory store
     set({
       isOnboardingDone: false,
       profile: null,
@@ -116,13 +107,10 @@ export const useAppStore = create<AppState>((set) => ({
 
   soapEntries: [],
   setSoapEntries: (entries) => set({ soapEntries: entries }),
-
   mcpwaEntries: [],
   setMcpwaEntries: (entries) => set({ mcpwaEntries: entries }),
-
   swordEntries: [],
   setSwordEntries: (entries) => set({ swordEntries: entries }),
-
   sermonNotes: [],
   setSermonNotes: (notes) => set({ sermonNotes: notes }),
 
@@ -132,12 +120,22 @@ export const useAppStore = create<AppState>((set) => ({
     set({ bibleTranslation: id });
   },
 
+  // ── hydrate: global / device-level settings only ─────────────────────────
   hydrate: async () => {
-    await storage.refreshProfileProgress();
+    const [isDarkMode, bibleTranslation] = await Promise.all([
+      storage.getIsDarkMode(),
+      storage.getBibleTranslation(),
+    ]);
+    set({ isDarkMode, bibleTranslation });
+  },
+
+  // ── hydrateForUser: load all UID-scoped data for the signed-in user ───────
+  hydrateForUser: async (uid: string) => {
+    // Scope the storage service to this user FIRST
+    storage.setActiveUid(uid);
 
     const [
       onboardingDone,
-      isDarkMode,
       selectedMethod,
       profile,
       reminderSettings,
@@ -145,10 +143,8 @@ export const useAppStore = create<AppState>((set) => ({
       mcpwaEntries,
       swordEntries,
       sermonNotes,
-      bibleTranslation,
     ] = await Promise.all([
       storage.isOnboardingDone(),
-      storage.getIsDarkMode(),
       storage.getSelectedMethod(),
       storage.getUserProfile(),
       storage.getReminderSettings(),
@@ -156,20 +152,22 @@ export const useAppStore = create<AppState>((set) => ({
       storage.getMcpwaEntries(),
       storage.getSwordEntries(),
       storage.getSermonNotes(),
-      storage.getBibleTranslation(),
     ]);
+
+    // Attach avatarUri to the profile object
+    const avatarUri = await storage.getAvatarUri();
+    const profileWithAvatar: UserProfile = { ...profile, avatarUri: avatarUri ?? undefined };
 
     set({
       isOnboardingDone: onboardingDone,
-      isDarkMode,
       selectedMethod,
-      profile,
+      profile: profileWithAvatar,
       reminderSettings,
       soapEntries,
       mcpwaEntries,
       swordEntries,
       sermonNotes,
-      bibleTranslation,
+      firebaseUid: uid,
     });
   },
 }));

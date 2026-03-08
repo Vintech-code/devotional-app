@@ -5,6 +5,7 @@
  */
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { initializeAuth, getAuth, Auth, Persistence, ReactNativeAsyncStorage } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Metro resolves @firebase/auth with the react-native export condition at
@@ -30,6 +31,7 @@ const firebaseConfig = {
 // Guard against hot-reload re-initialization
 let app: FirebaseApp;
 let auth: Auth;
+let db: Firestore;
 
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
@@ -42,5 +44,9 @@ if (getApps().length === 0) {
   auth = getAuth(app);
 }
 
-export { auth };
+// Firestore — using default in-memory cache (works with Firebase JS SDK in RN).
+// Writes are queued by the SDK when offline and auto-sent when connectivity returns.
+db = getFirestore(app);
+
+export { auth, db };
 export default app;

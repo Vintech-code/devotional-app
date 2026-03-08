@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+﻿import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SoapEntry,
   McpwaEntry,
@@ -8,6 +8,27 @@ import {
   ReminderSettings,
   DevotionalMethodId,
 } from '../types';
+
+// ─── Active User ──────────────────────────────────────────────────────────────
+// Call setActiveUid() whenever auth state changes so all per-user reads/writes
+// are automatically scoped to the signed-in account.
+
+let _uid: string | null = null;
+
+export function setActiveUid(uid: string | null): void {
+  _uid = uid;
+}
+
+export function getActiveUid(): string | null {
+  return _uid;
+}
+
+/** Returns a UID-scoped key for per-user data. */
+function uk(base: string): string {
+  return _uid ? `${base}/${_uid}` : base;
+}
+
+// ─── Level helpers ────────────────────────────────────────────────────────────
 
 const LEVEL_TITLES = [
   'Faith Seeker',
@@ -25,11 +46,9 @@ function getDayKey(timestamp: number): string {
 
 function calculateCurrentStreak(timestamps: number[]): number {
   if (timestamps.length === 0) return 0;
-
   const days = new Set(timestamps.map(getDayKey));
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
-
   let streak = 0;
   while (days.has(cursor.toISOString().slice(0, 10))) {
     streak += 1;
@@ -39,29 +58,31 @@ function calculateCurrentStreak(timestamps: number[]): number {
 }
 
 function calculateLevel(completedCount: number): { level: number; levelTitle: string } {
-  // Every 10 completed entries advances a level.
   const level = Math.max(1, Math.floor(completedCount / 10) + 1);
   const levelTitle = LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)];
   return { level, levelTitle };
 }
 
-// ─── Keys ────────────────────────────────────────────────────────────────────
+// ─── Base key names (raw, not UID-scoped) ─────────────────────────────────────
 
-const KEYS = {
-  SOAP_ENTRIES: '@devotional/soap_entries',
-  MCPWA_ENTRIES: '@devotional/mcpwa_entries',
-  SWORD_ENTRIES: '@devotional/sword_entries',
-  SERMON_NOTES: '@devotional/sermon_notes',
-  USER_PROFILE: '@devotional/user_profile',
-  REMINDER_SETTINGS: '@devotional/reminder_settings',
-  SELECTED_METHOD: '@devotional/selected_method',
-  ONBOARDING_DONE: '@devotional/onboarding_done',
-  DARK_MODE: '@devotional/dark_mode',
-  BIBLE_POSITION:    '@devotional/bible_position',
-  BIBLE_TRANSLATION: '@devotional/bible_translation',
+const K = {
+  // Per-user (wrapped with uk() in every function below)
+  SOAP:       '@devotional/soap_entries',
+  MCPWA:      '@devotional/mcpwa_entries',
+  SWORD:      '@devotional/sword_entries',
+  SERMONS:    '@devotional/sermon_notes',
+  PROFILE:    '@devotional/user_profile',
+  REMINDERS:  '@devotional/reminder_settings',
+  METHOD:     '@devotional/selected_method',
+  ONBOARDING: '@devotional/onboarding_done',
+  AVATAR:     '@devotional/avatar_uri',
+  // Global / device-level (NOT UID-scoped)
+  DARK_MODE:   '@devotional/dark_mode',
+  BIBLE_POS:   '@devotional/bible_position',
+  BIBLE_XLAT:  '@devotional/bible_translation',
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── JSON helpers ─────────────────────────────────────────────────────────────
 
 async function getJson<T>(key: string, fallback: T): Promise<T> {
   try {
@@ -77,87 +98,83 @@ async function setJson<T>(key: string, value: T): Promise<void> {
   await AsyncStorage.setItem(key, JSON.stringify(value));
 }
 
-// ─── SOAP ────────────────────────────────────────────────────────────────────
+// ─── SOAP ─────────────────────────────────────────────────────────────────────
 
 export async function getSoapEntries(): Promise<SoapEntry[]> {
-  return getJson<SoapEntry[]>(KEYS.SOAP_ENTRIES, []);
+  return getJson<SoapEntry[]>(uk(K.SOAP), []);
 }
 
 export async function saveSoapEntry(entry: SoapEntry): Promise<void> {
   const entries = await getSoapEntries();
   const idx = entries.findIndex((e) => e.id === entry.id);
-  if (idx >= 0) entries[idx] = entry;
-  else entries.unshift(entry);
-  await setJson(KEYS.SOAP_ENTRIES, entries);
+  if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
+  await setJson(uk(K.SOAP), entries);
   await refreshProfileProgress();
 }
 
 export async function deleteSoapEntry(id: string): Promise<void> {
   const entries = await getSoapEntries();
-  await setJson(KEYS.SOAP_ENTRIES, entries.filter((e) => e.id !== id));
+  await setJson(uk(K.SOAP), entries.filter((e) => e.id !== id));
   await refreshProfileProgress();
 }
 
-// ─── MCPWA ───────────────────────────────────────────────────────────────────
+// ─── MCPWA ────────────────────────────────────────────────────────────────────
 
 export async function getMcpwaEntries(): Promise<McpwaEntry[]> {
-  return getJson<McpwaEntry[]>(KEYS.MCPWA_ENTRIES, []);
+  return getJson<McpwaEntry[]>(uk(K.MCPWA), []);
 }
 
 export async function saveMcpwaEntry(entry: McpwaEntry): Promise<void> {
   const entries = await getMcpwaEntries();
   const idx = entries.findIndex((e) => e.id === entry.id);
-  if (idx >= 0) entries[idx] = entry;
-  else entries.unshift(entry);
-  await setJson(KEYS.MCPWA_ENTRIES, entries);
+  if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
+  await setJson(uk(K.MCPWA), entries);
   await refreshProfileProgress();
 }
 
 export async function deleteMcpwaEntry(id: string): Promise<void> {
   const entries = await getMcpwaEntries();
-  await setJson(KEYS.MCPWA_ENTRIES, entries.filter((e) => e.id !== id));
+  await setJson(uk(K.MCPWA), entries.filter((e) => e.id !== id));
   await refreshProfileProgress();
 }
 
-// ─── SWORD ───────────────────────────────────────────────────────────────────
+// ─── SWORD ────────────────────────────────────────────────────────────────────
 
 export async function getSwordEntries(): Promise<SwordEntry[]> {
-  return getJson<SwordEntry[]>(KEYS.SWORD_ENTRIES, []);
+  return getJson<SwordEntry[]>(uk(K.SWORD), []);
 }
 
 export async function saveSwordEntry(entry: SwordEntry): Promise<void> {
   const entries = await getSwordEntries();
   const idx = entries.findIndex((e) => e.id === entry.id);
-  if (idx >= 0) entries[idx] = entry;
-  else entries.unshift(entry);
-  await setJson(KEYS.SWORD_ENTRIES, entries);
+  if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
+  await setJson(uk(K.SWORD), entries);
   await refreshProfileProgress();
 }
 
 export async function deleteSwordEntry(id: string): Promise<void> {
   const entries = await getSwordEntries();
-  await setJson(KEYS.SWORD_ENTRIES, entries.filter((e) => e.id !== id));
+  await setJson(uk(K.SWORD), entries.filter((e) => e.id !== id));
   await refreshProfileProgress();
 }
 
-// ─── Sermon Notes ────────────────────────────────────────────────────────────
+// ─── Sermon Notes ─────────────────────────────────────────────────────────────
 
 export async function getSermonNotes(): Promise<SermonNote[]> {
-  return getJson<SermonNote[]>(KEYS.SERMON_NOTES, []);
+  return getJson<SermonNote[]>(uk(K.SERMONS), []);
 }
 
 export async function saveSermonNote(note: SermonNote): Promise<void> {
   const notes = await getSermonNotes();
   const idx = notes.findIndex((n) => n.id === note.id);
-  if (idx >= 0) notes[idx] = note;
-  else notes.unshift(note);
-  await setJson(KEYS.SERMON_NOTES, notes);
+  if (idx >= 0) notes[idx] = note; else notes.unshift(note);
+  await setJson(uk(K.SERMONS), notes);
   await refreshProfileProgress();
 }
 
 export async function deleteSermonNote(id: string): Promise<void> {
   const notes = await getSermonNotes();
-  await setJson(KEYS.SERMON_NOTES, notes.filter((n) => n.id !== id));
+  await setJson(uk(K.SERMONS), notes.filter((n) => n.id !== id));
   await refreshProfileProgress();
 }
 
@@ -173,15 +190,15 @@ const DEFAULT_PROFILE: UserProfile = {
 };
 
 export async function getUserProfile(): Promise<UserProfile> {
-  return getJson<UserProfile>(KEYS.USER_PROFILE, DEFAULT_PROFILE);
+  return getJson<UserProfile>(uk(K.PROFILE), DEFAULT_PROFILE);
 }
 
 export async function saveUserProfile(profile: UserProfile): Promise<void> {
-  await setJson(KEYS.USER_PROFILE, profile);
+  await setJson(uk(K.PROFILE), profile);
 }
 
 export async function refreshProfileProgress(): Promise<UserProfile> {
-  const [soapEntries, mcpwaEntries, swordEntries, sermonNotes, profile] = await Promise.all([
+  const [soap, mcpwa, sword, sermons, profile] = await Promise.all([
     getSoapEntries(),
     getMcpwaEntries(),
     getSwordEntries(),
@@ -189,31 +206,36 @@ export async function refreshProfileProgress(): Promise<UserProfile> {
     getUserProfile(),
   ]);
 
-  const completedCount =
-    soapEntries.length + mcpwaEntries.length + swordEntries.length + sermonNotes.length;
-
-  const allTimestamps = [
-    ...soapEntries.map((e) => e.createdAt),
-    ...mcpwaEntries.map((e) => e.createdAt),
-    ...swordEntries.map((e) => e.createdAt),
-    ...sermonNotes.map((e) => e.createdAt),
+  const completedCount = soap.length + mcpwa.length + sword.length + sermons.length;
+  const allTs = [
+    ...soap.map((e) => e.createdAt),
+    ...mcpwa.map((e) => e.createdAt),
+    ...sword.map((e) => e.createdAt),
+    ...sermons.map((e) => e.createdAt),
   ];
-
   const { level, levelTitle } = calculateLevel(completedCount);
-
-  const nextProfile: UserProfile = {
+  const next: UserProfile = {
     ...profile,
     completedCount,
-    dayStreak: calculateCurrentStreak(allTimestamps),
+    dayStreak: calculateCurrentStreak(allTs),
     level,
     levelTitle,
   };
-
-  await saveUserProfile(nextProfile);
-  return nextProfile;
+  await saveUserProfile(next);
+  return next;
 }
 
-// ─── Reminder Settings ───────────────────────────────────────────────────────
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
+export async function getAvatarUri(): Promise<string | null> {
+  return getJson<string | null>(uk(K.AVATAR), null);
+}
+
+export async function saveAvatarUri(uri: string | null): Promise<void> {
+  await setJson(uk(K.AVATAR), uri);
+}
+
+// ─── Reminder Settings ────────────────────────────────────────────────────────
 
 const DEFAULT_REMINDERS: ReminderSettings = {
   dailyEnabled: true,
@@ -226,62 +248,128 @@ const DEFAULT_REMINDERS: ReminderSettings = {
 };
 
 export async function getReminderSettings(): Promise<ReminderSettings> {
-  return getJson<ReminderSettings>(KEYS.REMINDER_SETTINGS, DEFAULT_REMINDERS);
+  return getJson<ReminderSettings>(uk(K.REMINDERS), DEFAULT_REMINDERS);
 }
 
 export async function saveReminderSettings(settings: ReminderSettings): Promise<void> {
-  await setJson(KEYS.REMINDER_SETTINGS, settings);
+  await setJson(uk(K.REMINDERS), settings);
 }
 
-// ─── Selected Method ─────────────────────────────────────────────────────────
+// ─── Selected Method ──────────────────────────────────────────────────────────
 
 export async function getSelectedMethod(): Promise<DevotionalMethodId> {
-  return getJson<DevotionalMethodId>(KEYS.SELECTED_METHOD, 'SOAP');
+  return getJson<DevotionalMethodId>(uk(K.METHOD), 'SOAP');
 }
 
 export async function saveSelectedMethod(method: DevotionalMethodId): Promise<void> {
-  await setJson(KEYS.SELECTED_METHOD, method);
+  await setJson(uk(K.METHOD), method);
 }
 
-// ─── Onboarding ──────────────────────────────────────────────────────────────
+// ─── Onboarding ───────────────────────────────────────────────────────────────
 
 export async function isOnboardingDone(): Promise<boolean> {
-  return getJson<boolean>(KEYS.ONBOARDING_DONE, false);
+  return getJson<boolean>(uk(K.ONBOARDING), false);
 }
 
 export async function markOnboardingDone(): Promise<void> {
-  await setJson(KEYS.ONBOARDING_DONE, true);
+  await setJson(uk(K.ONBOARDING), true);
 }
 
-// ─── Theme ───────────────────────────────────────────────────────────────────
+// ─── Theme (global — not per-user) ───────────────────────────────────────────
 
 export async function getIsDarkMode(): Promise<boolean> {
-  const raw = await AsyncStorage.getItem(KEYS.DARK_MODE);
-  return raw !== 'false'; // defaults to true (dark)
+  const raw = await AsyncStorage.getItem(K.DARK_MODE);
+  return raw !== 'false'; // defaults dark
 }
 
 export async function saveIsDarkMode(isDark: boolean): Promise<void> {
-  await AsyncStorage.setItem(KEYS.DARK_MODE, String(isDark));
+  await AsyncStorage.setItem(K.DARK_MODE, String(isDark));
 }
 
-// ─── Bible Position ───────────────────────────────────────────────────────────
+// ─── Bible position (global) ─────────────────────────────────────────────────
 
 export async function getBiblePosition(): Promise<{ book: string; chapter: number } | null> {
-  return getJson<{ book: string; chapter: number } | null>(KEYS.BIBLE_POSITION, null);
+  return getJson<{ book: string; chapter: number } | null>(K.BIBLE_POS, null);
 }
 
 export async function saveBiblePosition(book: string, chapter: number): Promise<void> {
-  await setJson(KEYS.BIBLE_POSITION, { book, chapter });
+  await setJson(K.BIBLE_POS, { book, chapter });
 }
 
-// ─── Bible Translation ────────────────────────────────────────────────────────
+// ─── Bible translation (global) ──────────────────────────────────────────────
 
 export async function getBibleTranslation(): Promise<string> {
-  const raw = await AsyncStorage.getItem(KEYS.BIBLE_TRANSLATION);
+  const raw = await AsyncStorage.getItem(K.BIBLE_XLAT);
   return raw ?? 'kjv';
 }
 
-export async function saveBibleTranslation(translationId: string): Promise<void> {
-  await AsyncStorage.setItem(KEYS.BIBLE_TRANSLATION, translationId);
+export async function saveBibleTranslation(id: string): Promise<void> {
+  await AsyncStorage.setItem(K.BIBLE_XLAT, id);
 }
 
+// ─── Data export / import (for cloud sync) ───────────────────────────────────
+
+export interface LocalUserData {
+  profile: UserProfile;
+  soapEntries: SoapEntry[];
+  mcpwaEntries: McpwaEntry[];
+  swordEntries: SwordEntry[];
+  sermonNotes: SermonNote[];
+  reminderSettings: ReminderSettings;
+  selectedMethod: DevotionalMethodId;
+  avatarUri: string | null;
+}
+
+export async function exportUserData(): Promise<LocalUserData> {
+  const [profile, soap, mcpwa, sword, sermons, reminders, method, avatar] = await Promise.all([
+    getUserProfile(),
+    getSoapEntries(),
+    getMcpwaEntries(),
+    getSwordEntries(),
+    getSermonNotes(),
+    getReminderSettings(),
+    getSelectedMethod(),
+    getAvatarUri(),
+  ]);
+  return {
+    profile,
+    soapEntries:    soap,
+    mcpwaEntries:   mcpwa,
+    swordEntries:   sword,
+    sermonNotes:    sermons,
+    reminderSettings: reminders,
+    selectedMethod: method,
+    avatarUri:      avatar,
+  };
+}
+
+export async function importUserData(data: Partial<LocalUserData>): Promise<void> {
+  const ops: Promise<void>[] = [];
+  if (data.profile)          ops.push(saveUserProfile(data.profile));
+  if (data.soapEntries)      ops.push(setJson(uk(K.SOAP), data.soapEntries));
+  if (data.mcpwaEntries)     ops.push(setJson(uk(K.MCPWA), data.mcpwaEntries));
+  if (data.swordEntries)     ops.push(setJson(uk(K.SWORD), data.swordEntries));
+  if (data.sermonNotes)      ops.push(setJson(uk(K.SERMONS), data.sermonNotes));
+  if (data.reminderSettings) ops.push(saveReminderSettings(data.reminderSettings));
+  if (data.selectedMethod)   ops.push(saveSelectedMethod(data.selectedMethod));
+  if (data.avatarUri !== undefined) ops.push(saveAvatarUri(data.avatarUri));
+  await Promise.all(ops);
+}
+
+// ─── Clear all user-scoped data (called on sign-out) ─────────────────────────
+
+export async function clearUserData(): Promise<void> {
+  if (!_uid) return;
+  const uid = _uid;
+  await AsyncStorage.multiRemove([
+    `${K.SOAP}/${uid}`,
+    `${K.MCPWA}/${uid}`,
+    `${K.SWORD}/${uid}`,
+    `${K.SERMONS}/${uid}`,
+    `${K.PROFILE}/${uid}`,
+    `${K.REMINDERS}/${uid}`,
+    `${K.METHOD}/${uid}`,
+    `${K.ONBOARDING}/${uid}`,
+    `${K.AVATAR}/${uid}`,
+  ]);
+}

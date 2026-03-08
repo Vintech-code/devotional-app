@@ -1,10 +1,13 @@
-import React, { useRef } from 'react'; // ? import useRef
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Image,
+  Linking,
+  TouchableOpacity,
 } from 'react-native';
+import { Icon } from 'react-native-paper';
 import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -83,6 +86,31 @@ export default function WelcomeScreen({ navigation }: Props) {
 
         {/* Credits */}
         <Text style={styles.credits}>Made with ♥ by Clark Vincent Cabatuan</Text>
+
+        {/* Social icon buttons */}
+        <View style={styles.socialRow}>
+          <TouchableOpacity
+            style={[styles.socialBtn, { backgroundColor: '#1877F2' }]}
+            onPress={() => void Linking.openURL('https://www.facebook.com/search/top?q=Clark%20Vincent%20Cabatuan')}
+            activeOpacity={0.8}
+          >
+            <Icon source="facebook" size={18} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.socialBtn, { backgroundColor: '#EA4335' }]}
+            onPress={() => void Linking.openURL('mailto:clarkcabatuan09@gmail.com')}
+            activeOpacity={0.8}
+          >
+            <Icon source="gmail" size={18} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.socialBtn, { backgroundColor: '#E1306C' }]}
+            onPress={() => void Linking.openURL('https://instagram.com/it_vinceee')}
+            activeOpacity={0.8}
+          >
+            <Icon source="instagram" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

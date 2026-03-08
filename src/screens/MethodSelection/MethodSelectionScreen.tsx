@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -48,7 +48,7 @@ const ICON_MAP: Record<DevotionalMethodId, string> = {
   SWORD: 'sword',
 };
 
-export default function MethodSelectionScreen({ navigation }: Props) {
+export default function MethodSelectionScreen(_props: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
   const [selected, setSelected] = useState<DevotionalMethodId>('SOAP');
@@ -119,12 +119,7 @@ export default function MethodSelectionScreen({ navigation }: Props) {
           style={styles.cta}
         />
 
-        <View style={styles.signInRow}>
-          <Text style={styles.signInText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.signInLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
+
       </ScrollView>
     </SafeAreaView>
   );

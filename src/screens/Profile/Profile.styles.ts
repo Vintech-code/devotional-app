@@ -30,6 +30,13 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     borderWidth: 2,
     borderColor: c.border,
   },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: c.primary,
+  },
   avatarInitials: {
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,

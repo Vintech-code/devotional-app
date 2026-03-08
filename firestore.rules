@@ -1,0 +1,50 @@
+// ─── DevoVerse Firestore Security Rules ─────────────────────────────────────
+//
+// Copy-paste these rules into:
+//   Firebase Console → Firestore Database → Rules tab
+//
+// Rules summary:
+//   users/{uid}         → readable/writable by the owner UID (app data sync)
+//                         readable/writable by admin (account management)
+//   feedbacks/{id}      → any authenticated user can create
+//                         readable by the owner or admin
+//                         updatable only by admin (for replies + status)
+// ─────────────────────────────────────────────────────────────────────────────
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper — true when the caller is the app admin
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.email == 'clarkcabatuan09@gmail.com';
+    }
+
+    // ── User data (per-user devotional sync + account metadata) ─────────────
+    match /users/{userId} {
+      // User can read/write their own document
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+
+      // Admin can read/write any user document (for oversight + disabling)
+      allow read, write: if isAdmin();
+    }
+
+    // ── Feedback submissions ─────────────────────────────────────────────────
+    match /feedbacks/{feedbackId} {
+      // Any signed-in user may submit feedback
+      allow create: if request.auth != null;
+
+      // The owner or admin may read a feedback item
+      allow read: if request.auth != null
+                  && (resource.data.uid == request.auth.uid || isAdmin());
+
+      // Only admin may update (e.g. add adminReply, change status)
+      allow update: if isAdmin();
+
+      // Deletion not allowed from the app
+      allow delete: if false;
+    }
+  }
+}

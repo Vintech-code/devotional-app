@@ -62,6 +62,8 @@ export type HistoryStackParamList = {
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   Reminders:   undefined;
+  Feedback:    undefined;
+  Admin:       undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

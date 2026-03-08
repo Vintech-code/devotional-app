@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Modal, Linking, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as ImagePicker from 'expo-image-picker';
+import { copyAsync, documentDirectory } from 'expo-file-system/legacy';
 
 import { ProfileStackParamList } from '../../navigation/types';
 import { useColors, Typography, Spacing, Radius } from '../../theme';
@@ -11,6 +13,8 @@ import { useAppStore } from '../../store/useAppStore';
 import SettingsRow from '../../components/SettingsRow/SettingsRow';
 import ToggleCard from '../../components/ToggleCard/ToggleCard';
 import { makeStyles } from './Profile.styles';
+import { saveAvatarUri, getActiveUid } from '../../services/storageService';
+import { auth } from '../../services/firebase';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -22,14 +26,17 @@ export default function ProfileScreen() {
   const isDarkMode = useAppStore((s) => s.isDarkMode);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
   const signOut = useAppStore((s) => s.signOut);
+  const setProfile = useAppStore((s) => s.setProfile);
   const soapEntries   = useAppStore((s) => s.soapEntries);
   const mcpwaEntries  = useAppStore((s) => s.mcpwaEntries);
   const swordEntries  = useAppStore((s) => s.swordEntries);
   const sermonNotes   = useAppStore((s) => s.sermonNotes);
 
   const [showSignOutModal,  setShowSignOutModal]  = useState(false);
-  const [showSupportModal,  setShowSupportModal]  = useState(false);
   const [signingOut,        setSigningOut]         = useState(false);
+  const [avatarLoading,     setAvatarLoading]      = useState(false);
+
+  const isAdmin = auth.currentUser?.email === 'clarkcabatuan09@gmail.com';
 
   const lastMonthCount = useMemo(() => {
     const now = new Date();
@@ -49,15 +56,34 @@ export default function ProfileScreen() {
     }
   }
 
-  function handleEmailSupport() {
-    void Linking.openURL('mailto:clarkcabatuan09@gmail.com?subject=DevoVerse%20Support%20%26%20Feedback');
-  }
+  async function handlePickAvatar() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photo library to set a profile picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (result.canceled) return;
 
-  function handleFacebookSupport() {
-    // Deep-link to the Facebook app; fall back to browser
-    void Linking.openURL('fb://search/?q=Clark+Vincent+Cabatuan').catch(() =>
-      Linking.openURL('https://www.facebook.com/search/top?q=Clark%20Vincent%20Cabatuan'),
-    );
+    setAvatarLoading(true);
+    try {
+      const src = result.assets[0].uri;
+      const uid = getActiveUid() ?? 'local';
+      const dest = `${documentDirectory ?? ''}avatar_${uid}.jpg`;
+      await copyAsync({ from: src, to: dest });
+      await saveAvatarUri(dest);
+      const updated = { ...(profile ?? {}), avatarUri: dest } as typeof profile & { avatarUri: string };
+      setProfile(updated as NonNullable<typeof profile>);
+    } catch {
+      Alert.alert('Error', 'Could not save the photo. Please try again.');
+    } finally {
+      setAvatarLoading(false);
+    }
   }
 
   return (
@@ -70,17 +96,27 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Avatar */}
-        <View style={styles.avatarWrap}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarInitials}>
-              {(profile?.name ?? 'U')[0].toUpperCase()}
-            </Text>
-          </View>
+        {/* Avatar — tap the pencil badge to pick a photo */}
+        <TouchableOpacity
+          style={styles.avatarWrap}
+          onPress={() => { void handlePickAvatar(); }}
+          activeOpacity={0.8}
+        >
+          {profile?.avatarUri ? (
+            <Image source={{ uri: profile.avatarUri }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarInitials}>
+                {(profile?.name ?? 'U')[0].toUpperCase()}
+              </Text>
+            </View>
+          )}
           <View style={styles.editBadge}>
-            <Icon source="pencil" size={12} color={colors.textPrimary} />
+            {avatarLoading
+              ? <ActivityIndicator size="small" color={colors.primary} />
+              : <Icon source="camera" size={12} color={colors.primary} />}
           </View>
-        </View>
+        </TouchableOpacity>
 
         <Text style={styles.name}>{profile?.name ?? 'New Member'}</Text>
         <Text style={styles.memberSince}>
@@ -132,11 +168,25 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="help-circle-outline"
             title="Support & Feedback"
-            subtitle="Get help or send us your feedback"
-            onPress={() => setShowSupportModal(true)}
+            subtitle="Send us your suggestions or report a bug"
+            onPress={() => navigation.navigate('Feedback')}
             style={styles.lastRow}
           />
         </View>
+
+        {/* Admin — only visible to Clark */}
+        {isAdmin && (
+          <View style={styles.card}>
+            <SettingsRow
+              icon="shield-account"
+              title="Admin Dashboard"
+              subtitle="Monitor users · Reply to feedback"
+              onPress={() => navigation.navigate('Admin')}
+              iconBg="rgba(66,138,155,0.15)"
+              style={styles.lastRow}
+            />
+          </View>
+        )}
 
         {/* Sign out */}
         <View style={styles.card}>
@@ -192,65 +242,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* ── Support & Feedback Modal ────────────────────────────────────── */}
-      <Modal
-        visible={showSupportModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowSupportModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalIconWrap}>
-              <Icon source="help-circle-outline" size={28} color={colors.primary} />
-            </View>
-            <Text style={styles.modalTitle}>Support & Feedback</Text>
-            <Text style={styles.modalBody}>
-              Have a question, bug report, or idea? We'd love to hear from you! Your feedback helps us improve the app and create a better experience for everyone.
-            </Text>
-
-            {/* Email */}
-            <TouchableOpacity
-              style={styles.contactRow}
-              onPress={handleEmailSupport}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.contactIconWrap, { backgroundColor: '#EFF6FF' }]}>
-                <Icon source="email-outline" size={20} color="#3B82F6" />
-              </View>
-              <View style={styles.contactTextWrap}>
-                <Text style={styles.contactLabel}>Email</Text>
-                <Text style={styles.contactValue}>clarkcabatuan09@gmail.com</Text>
-              </View>
-              <Icon source="open-in-new" size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            {/* Facebook */}
-            <TouchableOpacity
-              style={[styles.contactRow, { marginBottom: 0 }]}
-              onPress={handleFacebookSupport}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.contactIconWrap, { backgroundColor: '#EEF2FF' }]}>
-                <Icon source="facebook" size={20} color="#4F46E5" />
-              </View>
-              <View style={styles.contactTextWrap}>
-                <Text style={styles.contactLabel}>Facebook</Text>
-                <Text style={styles.contactValue}>Clark Vincent Cabatuan</Text>
-              </View>
-              <Icon source="open-in-new" size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalBtn, styles.modalBtnCancel, { marginTop: Spacing.xl, width: '100%' }]}
-              onPress={() => setShowSupportModal(false)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.modalBtnCancelText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }

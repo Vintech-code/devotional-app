@@ -77,6 +77,19 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.4,
   },
+  socialRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+    justifyContent: 'center',
+  },
+  socialBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   lottie: {
     width: 320,
     height: 320,

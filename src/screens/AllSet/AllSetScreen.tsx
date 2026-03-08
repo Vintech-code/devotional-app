@@ -7,7 +7,7 @@
  * Navigation:  "Next" button advances slides; last slide shows "Begin My Journey".
  *              "Skip" in the top-right jumps straight to the final slide.
  */
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -19,6 +19,8 @@ import {
 import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Icon } from 'react-native-paper';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 import type { AuthStackParamList } from '../../navigation/types';
 import { useColors } from '../../theme';
@@ -67,21 +69,27 @@ if (SLIDES.length !== SLIDE_COUNT) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function AllSetScreen({ navigation, route }: Props) {
-  const colors          = useColors();
-  const styles          = makeStyles(colors);
-  const name            = route.params?.name;
+  const colors         = useColors();
+  const styles         = makeStyles(colors);
+  const name           = route.params?.name;
 
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage,  setCurrentPage]  = useState(0);
+  // confettiRound: 1-3 drives re-mount of cannon via key; 0 = idle
+  const [confettiRound, setConfettiRound] = useState(0);
+  const [showNotif,    setShowNotif]    = useState(false);
+  const notifFired = useRef(false);
 
   // Horizontal slide rail
-  const railX = useRef(new Animated.Value(0)).current;
+  const railX   = useRef(new Animated.Value(0)).current;
+  // Notification slides down from above the screen
+  const notifY  = useRef(new Animated.Value(-180)).current;
 
   // One Animated.Value per dot; index 0 starts at pill width (24), rest at 8
   const dotWidths = useRef(
     SLIDES.map((_, i) => new Animated.Value(i === 0 ? 24 : 8)),
   ).current;
 
-  // ── Navigate to a page ───────────────────────────────────────────────────
+  // ── Navigate to a page ───────────────────────────────────────────
   function goToPage(next: number) {
     const prev = currentPage;
     if (next === prev || next < 0 || next >= SLIDES.length) return;
@@ -119,7 +127,40 @@ export default function AllSetScreen({ navigation, route }: Props) {
   function handleEnter() {
     navigation.navigate('MethodSelection');
   }
+  // ── Celebration ─────────────────────────────────────────────────
+  function dismissNotif() {
+    Animated.timing(notifY, {
+      toValue:  -180,
+      duration: 280,
+      easing:   Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => setShowNotif(false));
+  }
 
+  // Fire on first render — confetti shoots 3 times, notification slides in once
+  useEffect(() => {
+    // Start first confetti shot after a brief moment
+    const t1 = setTimeout(() => setConfettiRound(1), 300);
+
+    // Show notification toaster at ~400 ms
+    if (!notifFired.current) {
+      notifFired.current = true;
+      const t2 = setTimeout(() => {
+        setShowNotif(true);
+        Animated.spring(notifY, {
+          toValue:         0,
+          useNativeDriver: true,
+          tension:         62,
+          friction:        10,
+        }).start();
+        // Auto-dismiss after 5 s
+        setTimeout(() => dismissNotif(), 5000);
+      }, 400);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+    return () => clearTimeout(t1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const isLast = currentPage === SLIDES.length - 1;
 
   return (
@@ -209,6 +250,49 @@ export default function AllSetScreen({ navigation, route }: Props) {
           />
         )}
       </View>
+
+      {/* ── Confetti cannon — re-mounts via key for 3 sequential shots ───── */}
+      {confettiRound > 0 && (
+        <ConfettiCannon
+          key={confettiRound}
+          count={180}
+          origin={{ x: W / 2, y: -20 }}
+          explosionSpeed={220}
+          fallSpeed={4200}
+          fadeOut
+          colors={['#428a9b', '#C8A86A', '#7EC8D3', '#E1A3F7', '#F0C040', '#FF8FAB', '#FFFFFF', '#B8E4D0']}
+          onAnimationEnd={() => {
+            if (confettiRound < 3) {
+              // Brief gap between shots (800 ms)
+              setTimeout(() => setConfettiRound((r) => r + 1), 800);
+            }
+          }}
+        />
+      )}
+
+      {/* ── Congratulations notification card — slides down from top ────── */}
+      {showNotif && (
+        <Animated.View
+          style={[styles.celebNotif, { transform: [{ translateY: notifY }] }]}
+        >
+          <View style={styles.celebGlow}>
+            <Text style={styles.celebEmoji}>🎉</Text>
+          </View>
+          <View style={styles.celebBody}>
+            <Text style={styles.celebTitle}>Congratulations!</Text>
+            <Text style={styles.celebSub}>
+              Your devotional journey starts now.{'\n'}God has great things ahead for you!
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.celebDismiss}
+            onPress={dismissNotif}
+            activeOpacity={0.7}
+          >
+            <Icon source="close" size={14} color={colors.textMuted} />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
     </SafeAreaView>
   );

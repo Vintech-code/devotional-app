@@ -35,6 +35,8 @@ import VersesScreen from '../screens/BibleVerses/VersesScreen';
 import BibleScreen from '../screens/Bible/BibleScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import RemindersScreen from '../screens/Reminders/RemindersScreen';
+import FeedbackScreen from '../screens/Feedback/FeedbackScreen';
+import AdminScreen from '../screens/Admin/AdminScreen';
 import JournalHistoryScreen from '../screens/JournalHistory/JournalHistoryScreen';
 import DevotionalDetailScreen from '../screens/DevotionalDetail/DevotionalDetailScreen';
 
@@ -155,7 +157,9 @@ function ProfileNavigator() {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
-      <ProfileStack.Screen name="Reminders" component={RemindersScreen} />
+      <ProfileStack.Screen name="Reminders"   component={RemindersScreen} />
+      <ProfileStack.Screen name="Feedback"    component={FeedbackScreen} />
+      <ProfileStack.Screen name="Admin"       component={AdminScreen} />
     </ProfileStack.Navigator>
   );
 }
@@ -184,7 +188,6 @@ function MainNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        animation: 'fade',
         tabBarIcon: ({ focused }) => <TabIcon label={route.name} focused={focused} />,
         tabBarLabel: ({ focused }) => (
           <Text
@@ -197,8 +200,6 @@ function MainNavigator() {
           </Text>
         ),
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
       })}
     >
       <Tab.Screen name="Home"    component={HomeNavigator} />

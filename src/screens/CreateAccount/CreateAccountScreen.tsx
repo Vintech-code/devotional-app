@@ -13,6 +13,7 @@ import { AuthStackParamList } from '../../navigation/types';
 import { RegisterForm } from '../../types';
 import { useColors } from '../../theme';
 import { saveUserProfile } from '../../services/storageService';
+import { setActiveUid } from '../../services/storageService';
 import { createUserWithEmail, friendlyAuthError } from '../../services/authService';
 import { useAppStore } from '../../store/useAppStore';
 import FormInput from '../../components/FormInput/FormInput';
@@ -53,7 +54,9 @@ export default function CreateAccountScreen({ navigation }: Props) {
     setError(null);
     setLoading(true);
     try {
-      await createUserWithEmail(form.email, form.password, form.fullName);
+      const user = await createUserWithEmail(form.email, form.password, form.fullName);
+      // Scope storage to this new user before writing profile
+      setActiveUid(user.uid);
       const profile = {
         name: form.fullName,
         memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
