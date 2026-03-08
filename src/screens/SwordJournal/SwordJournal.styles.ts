@@ -39,21 +39,5 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   hintLink: { color: c.primary, fontWeight: Typography.weight.semiBold },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 0,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: c.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
-  },
 }
 );

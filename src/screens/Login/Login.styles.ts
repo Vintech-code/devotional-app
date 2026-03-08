@@ -8,13 +8,9 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   logoWrap: { alignItems: 'center', marginBottom: Spacing.lg, marginTop: Spacing.md },
-  logoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: c.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    width: 180,
+    height: 90,
   },
   title: {
     fontSize: Typography.size.xl,

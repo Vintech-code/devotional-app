@@ -106,7 +106,7 @@ function VerseShareCard({ reference, text, date }: { reference: string; text: st
   return (
     <View style={vcs.card}>
       <View style={vcs.band}>
-        <Text style={vcs.bandLeft}>✦ ABIDE</Text>
+        <Text style={vcs.bandLeft}>✦ DEVOVERSE</Text>
         <Text style={vcs.bandRight}>VERSE OF THE DAY</Text>
       </View>
       <View style={vcs.body}>
@@ -117,7 +117,7 @@ function VerseShareCard({ reference, text, date }: { reference: string; text: st
       </View>
       <View style={vcs.footer}>
         <Text style={vcs.footerLeft}>{date}</Text>
-        <Text style={vcs.footerRight}>ABIDE</Text>
+        <Text style={vcs.footerRight}>DEVOVERSE</Text>
       </View>
     </View>
   );

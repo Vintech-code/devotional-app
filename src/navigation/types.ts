@@ -8,33 +8,46 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   MethodSelection: undefined;
   CreateAccount: undefined;
+  AllSet: { name?: string } | undefined;
 };
 
 // ─── Main Tab Bar ─────────────────────────────────────────────────────────────
 
 export type MainTabParamList = {
   Home:    NavigatorScreenParams<HomeStackParamList>;
-  Bible:   undefined;
-  Journal: undefined;
+  Bible:   NavigatorScreenParams<BibleStackParamList>;
+  Journal: NavigatorScreenParams<JournalStackParamList>;
   History: NavigatorScreenParams<HistoryStackParamList>;
   Profile: undefined;
+};
+
+// ─── Bible Stack ─────────────────────────────────────────────────────────────
+
+export type BibleStackParamList = {
+  Books:    undefined;
+  Chapters: { bookId: number; bookName: string; totalChapters: number };
+  Verses:   { bookId: number; bookName: string; chapter: number };
 };
 
 // ─── Home Stack ───────────────────────────────────────────────────────────────
 
 export type HomeStackParamList = {
-  HomeMain:   undefined;
-  VerseOfDay: undefined;
+  HomeMain: undefined;
 };
 
 // ─── Journal Stack ────────────────────────────────────────────────────────────
 
 export type JournalStackParamList = {
-  JournalHome: undefined;
-  SoapJournal: { entryId?: string };
-  McpwaJournal: { entryId?: string };
-  SwordJournal: { entryId?: string };
+  JournalHome: { prefill?: JournalPrefill } | undefined;
+  SoapJournal: { entryId?: string; prefill?: JournalPrefill };
+  McpwaJournal: { entryId?: string; prefill?: JournalPrefill };
+  SwordJournal: { entryId?: string; prefill?: JournalPrefill };
   SermonNotes: { noteId?: string };
+};
+
+export type JournalPrefill = {
+  reference: string;
+  text: string;
 };
 
 // ─── History Stack ───────────────────────────────────────────────────────────

@@ -147,7 +147,7 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
   return (
     <View style={[cs.card, { backgroundColor: t.bg }]}>
       <View style={[cs.cardHeader, { backgroundColor: t.header }]}>
-        <Text style={cs.appName}>✦ ABIDE</Text>
+        <Text style={cs.appName}>✦ DevoVerse</Text>
         <View style={cs.typePill}>
           <Text style={cs.typePillText}>{entryType.toUpperCase()}</Text>
         </View>
@@ -218,8 +218,8 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
       </View>
 
       <View style={[cs.cardFooter, { backgroundColor: t.surface, borderTopColor: t.border }]}>
-        <Text style={[cs.footerLeft,  { color: t.muted   }]}>Abide Devotional App</Text>
-        <Text style={[cs.footerRight, { color: t.label_  }]}>ABIDE</Text>
+        <Text style={[cs.footerLeft,  { color: t.muted   }]}>DevoVerse Devotional App</Text>
+        <Text style={[cs.footerRight, { color: t.label_  }]}>DEVOVERSE</Text>
       </View>
     </View>
   );

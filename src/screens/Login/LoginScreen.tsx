@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -53,9 +53,12 @@ export default function LoginScreen({ navigation }: Props) {
       >
         {/* Logo */}
         <View style={styles.logoWrap}>
-          <View style={styles.logoCircle}>
-            <Icon source="book-open-variant" size={36} color={colors.textPrimary} />
-          </View>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            source={require('../../../assets/logotransparent.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.title}>Welcome Back</Text>
@@ -78,7 +81,7 @@ export default function LoginScreen({ navigation }: Props) {
           label=""
           value={password}
           onChangeText={setPassword}
-          placeholder="••••••••"
+          placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
           secureTextEntry
           autoCapitalize="none"
         />

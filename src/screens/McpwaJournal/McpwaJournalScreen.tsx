@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
+import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -30,14 +31,15 @@ const SECTIONS = [
 
 type FieldKey = 'message' | 'command' | 'promise' | 'warning' | 'application';
 
-export default function McpwaJournalScreen({ navigation }: Props) {
+export default function McpwaJournalScreen({ navigation, route }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
   const setMcpwaEntries = useAppStore((s) => s.setMcpwaEntries);
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.mcpwaEntries);
+  const prefill = route.params?.prefill;
 
-  const [scripture, setScripture] = useState('');
+  const [scripture, setScripture] = useState(prefill?.reference ?? '');
   const [fields, setFields] = useState<Record<FieldKey, string>>({
     message: '',
     command: '',
@@ -93,6 +95,17 @@ export default function McpwaJournalScreen({ navigation }: Props) {
 
         {SECTIONS.map((s) => (
           <JournalSection key={s.key} letter={s.letter} title={s.title} subtitle={s.subtitle}>
+            {/* Auto-filled scripture reference — mirrors the main Scripture field for M, C, P, W */}
+            {s.key !== 'application' && (
+              <View style={styles.sectionScripBadge}>
+                <Icon source="book-open-outline" size={13} color={colors.primary} />
+                <Text style={styles.sectionScripText} numberOfLines={1}>
+                  {scripture.trim()
+                    ? scripture.trim()
+                    : '— Enter Scripture reference above —'}
+                </Text>
+              </View>
+            )}
             <FormInput
               label=""
               value={fields[s.key]}

@@ -12,7 +12,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { RegisterForm } from '../../types';
 import { useColors, Typography, Spacing, Radius } from '../../theme';
-import { saveUserProfile, markOnboardingDone } from '../../services/storageService';
+import { saveUserProfile } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
@@ -46,7 +46,6 @@ export default function CreateAccountScreen({ navigation }: Props) {
   });
   const [loading, setLoading] = useState(false);
 
-  const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
   const setProfile = useAppStore((s) => s.setProfile);
 
   const strength = getStrength(form.password);
@@ -63,10 +62,9 @@ export default function CreateAccountScreen({ navigation }: Props) {
       dayStreak: 0,
     };
     await saveUserProfile(profile);
-    await markOnboardingDone();
     setProfile(profile);
-    setOnboardingDone(true);
     setLoading(false);
+    navigation.navigate('AllSet', { name: form.fullName });
   }
 
   function update(field: keyof RegisterForm) {
@@ -81,7 +79,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
           <Icon source="chevron-left" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Join the Abide Community</Text>
+        <Text style={styles.title}>Join the DevoVerse Community</Text>
         <Text style={styles.subtitle}>
           Begin your journey of daily devotion and spiritual growth today.
         </Text>
@@ -107,7 +105,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
           label="Secure Password"
           value={form.password}
           onChangeText={update('password')}
-          placeholder="••••••••"
+          placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
           secureTextEntry
           autoCapitalize="none"
         />
@@ -171,7 +169,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
         </View>
 
         <PrimaryButton
-          label="Sign In to Abide"
+          label="Sign In to DevoVerse"
           variant="outline"
           onPress={() => navigation.navigate('Login')}
           style={styles.signInBtn}

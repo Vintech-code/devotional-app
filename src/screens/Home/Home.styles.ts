@@ -10,19 +10,14 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     backgroundColor: c.surface,
     borderBottomWidth: 1,
     borderBottomColor: c.border,
   },
-  greetingLabel: {
-    fontSize: Typography.size.md,
-    color: c.textSecondary,
-  },
-  greetingName: {
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-    color: c.textPrimary,
+  headerLogo: {
+    width: 44,
+    height: 44,
   },
   bellBtn: {
     width: 44,
@@ -109,18 +104,22 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   },
   methodLabelActive: { color: c.primary },
 
-  // Verse card
+  // Verse card (image background)
   verseCard: {
-    backgroundColor: c.surface,
     borderRadius: Radius.lg,
-    padding: Spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: c.accent,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  verseCardImg: {
+    borderRadius: Radius.lg,
+  },
+  verseCardOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.60)',
+    padding: Spacing.md,
   },
   verseMeta: {
     flexDirection: 'row',
@@ -131,14 +130,14 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   breadTitle: {
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
-    color: c.accent,
+    color: '#F0C060',   // warm gold — always visible on dark overlay
     letterSpacing: 0.5,
   },
-  breadDate: { fontSize: Typography.size.xs, color: c.textMuted },
+  breadDate: { fontSize: Typography.size.xs, color: 'rgba(255,255,255,0.65)' },
   verseText: {
     fontSize: Typography.size.md,
     fontFamily: Typography.fontFamilySerif,
-    color: c.textPrimary,
+    color: '#F5F5F5',   // always white — overlay is always dark
     lineHeight: 28,
     fontStyle: 'italic',
     marginBottom: Spacing.sm,
@@ -151,7 +150,7 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   verseRef: {
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semiBold,
-    color: c.primary,
+    color: '#5CD6D4',   // always light teal — visible on dark overlay in both themes
   },
 
   // Progress

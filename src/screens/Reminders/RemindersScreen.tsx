@@ -206,7 +206,7 @@ export default function RemindersScreen() {
               <Icon source="bell-ring" size={20} color={colors.textPrimary} />
             </View>
             <View style={styles.previewContent}>
-              <Text style={styles.previewApp}>ABIDE</Text>
+              <Text style={styles.previewApp}>DEVOVERSE</Text>
               <Text style={styles.previewTitle}>Time for Morning Devotional</Text>
               <Text style={styles.previewBody}>"Thy word is a lamp unto my feet..."</Text>
             </View>

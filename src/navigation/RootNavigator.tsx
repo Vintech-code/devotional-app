@@ -9,6 +9,7 @@ import {
   AuthStackParamList,
   MainTabParamList,
   HomeStackParamList,
+  BibleStackParamList,
   HistoryStackParamList,
   JournalStackParamList,
   ProfileStackParamList,
@@ -21,13 +22,16 @@ import { useAppStore } from '../store/useAppStore';
 // ─── Screens ──────────────────────────────────────────────────────────────────
 
 import WelcomeScreen from '../screens/Welcome/WelcomeScreen';
+import AllSetScreen from '../screens/AllSet/AllSetScreen';
 import LoginScreen from '../screens/Login/LoginScreen';
 import ForgotPasswordScreen from '../screens/ForgotPassword/ForgotPasswordScreen';
 import MethodSelectionScreen from '../screens/MethodSelection/MethodSelectionScreen';
 import CreateAccountScreen from '../screens/CreateAccount/CreateAccountScreen';
 
 import HomeScreen from '../screens/Home/HomeScreen';
-import VerseOfDayScreen from '../screens/VerseOfDay/VerseOfDayScreen';
+import BooksScreen from '../screens/BibleBooks/BooksScreen';
+import ChaptersScreen from '../screens/BibleChapters/ChaptersScreen';
+import VersesScreen from '../screens/BibleVerses/VersesScreen';
 import BibleScreen from '../screens/Bible/BibleScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import RemindersScreen from '../screens/Reminders/RemindersScreen';
@@ -78,6 +82,7 @@ function AuthNavigator() {
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <AuthStack.Screen name="MethodSelection" component={MethodSelectionScreen} />
       <AuthStack.Screen name="CreateAccount" component={CreateAccountScreen} />
+      <AuthStack.Screen name="AllSet" component={AllSetScreen} />
     </AuthStack.Navigator>
   );
 }
@@ -102,6 +107,20 @@ function JournalNavigator() {
   );
 }
 
+// ─── Bible Stack ──────────────────────────────────────────────────────────────
+
+const BibleStack = createNativeStackNavigator<BibleStackParamList>();
+
+function BibleNavigator() {
+  return (
+    <BibleStack.Navigator screenOptions={{ headerShown: false }}>
+      <BibleStack.Screen name="Books"    component={BooksScreen} />
+      <BibleStack.Screen name="Chapters" component={ChaptersScreen} />
+      <BibleStack.Screen name="Verses"   component={VersesScreen} />
+    </BibleStack.Navigator>
+  );
+}
+
 // ─── Home Stack ──────────────────────────────────────────────────────────────
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -110,7 +129,6 @@ function HomeNavigator() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
-      <HomeStack.Screen name="VerseOfDay" component={VerseOfDayScreen} />
     </HomeStack.Navigator>
   );
 }
@@ -181,8 +199,8 @@ function MainNavigator() {
         tabBarInactiveTintColor: colors.textMuted,
       })}
     >
-      <Tab.Screen name="Home" component={HomeNavigator} />
-      <Tab.Screen name="Bible" component={BibleScreen} />
+      <Tab.Screen name="Home"    component={HomeNavigator} />
+      <Tab.Screen name="Bible"   component={BibleNavigator} />
       <Tab.Screen name="Journal" component={JournalNavigator} />
       <Tab.Screen name="History" component={HistoryNavigator} />
       <Tab.Screen name="Profile" component={ProfileNavigator} />

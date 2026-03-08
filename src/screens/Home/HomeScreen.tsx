@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ImageBackground, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
@@ -12,6 +12,24 @@ import { MainTabParamList, HomeStackParamList } from '../../navigation/types';
 import { saveSelectedMethod } from '../../services/storageService';
 import { getDailyVerse } from '../../services/dailyVerseService';
 import { makeStyles } from './Home.styles';
+
+const DAILY_BREAD_IMAGES = [
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('../../../assets/dailybread/Create_a_serene_minimal_and_cinematic_landscape_background_for_a_devotional_ap_20260308075354_01.png') as number,
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('../../../assets/dailybread/Create_a_serene_minimal_and_cinematic_landscape_background_for_a_devotional_ap_20260308075354_02.png') as number,
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('../../../assets/dailybread/Create_a_serene_minimal_and_cinematic_landscape_background_for_a_devotional_ap_20260308075356_03.png') as number,
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('../../../assets/dailybread/Create_a_serene_minimal_landscape_background_for_a_devotional_app_called_Daily_20260308075100_01.png') as number,
+];
+
+function getDailyBreadImage(): number {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000);
+  return DAILY_BREAD_IMAGES[dayOfYear % DAILY_BREAD_IMAGES.length];
+}
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>,
@@ -60,29 +78,31 @@ export default function HomeScreen() {
 
   async function handleMethodPress(methodId: string) {
     if (methodId === 'BIBLE') {
-      navigation.navigate('Bible');
+      navigation.navigate('Bible', { screen: 'Books' });
       return;
     }
 
     if (methodId === 'SERM') {
-      navigation.navigate('Journal');
+      navigation.navigate('Journal', { screen: 'JournalHome' });
       return;
     }
 
     const nextMethod = methodId as 'SOAP' | 'MCPWA' | 'SWORD';
     setSelectedMethod(nextMethod);
     await saveSelectedMethod(nextMethod);
-    navigation.navigate('Journal');
+    navigation.navigate('Journal', { screen: 'JournalHome' });
   }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* ─── Header ─── */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greetingLabel}>{greeting},</Text>
-          <Text style={styles.greetingName}>{profile?.name ?? 'Friend'}</Text>
-        </View>
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          source={require('../../../assets/logotransparent.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
         <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Profile')}>
           <Icon source="bell" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
@@ -97,7 +117,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.missionCard}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('Journal')}
+          onPress={() => navigation.navigate('Journal', { screen: 'JournalHome' })}
         >
           <View style={styles.missionLeft}>
             <Text style={styles.missionTitle}>Start Daily Devotional</Text>
@@ -142,19 +162,26 @@ export default function HomeScreen() {
 
         {/* ─── Inspiration ─── */}
         <Text style={styles.sectionLabel}>INSPIRATION</Text>
-        <TouchableOpacity style={styles.verseCard} activeOpacity={0.85} onPress={() => navigation.navigate('VerseOfDay')}>
-          <View style={styles.verseMeta}>
-            <Text style={styles.breadTitle}>Daily Bread</Text>
-            <Text style={styles.breadDate}>{today}</Text>
+        <ImageBackground
+          source={getDailyBreadImage()}
+          style={styles.verseCard}
+          imageStyle={styles.verseCardImg}
+          resizeMode="cover"
+        >
+          <View style={styles.verseCardOverlay}>
+            <View style={styles.verseMeta}>
+              <Text style={styles.breadTitle}>Daily Bread</Text>
+              <Text style={styles.breadDate}>{today}</Text>
+            </View>
+            <Text style={styles.verseText}>
+              {`"${verse.text}"`}
+            </Text>
+            <View style={styles.verseRefRow}>
+              <Text style={styles.verseRef}>{verse.reference}</Text>
+              <Icon source="heart-outline" size={16} color="rgba(255,255,255,0.85)" />
+            </View>
           </View>
-          <Text style={styles.verseText}>
-            {`"${verse.text}"`}
-          </Text>
-          <View style={styles.verseRefRow}>
-            <Text style={styles.verseRef}>{verse.reference}</Text>
-            <Icon source="heart-outline" size={16} color={colors.textPrimary} />
-          </View>
-        </TouchableOpacity>
+        </ImageBackground>
         <Text style={styles.sectionLabel}>MY PROGRESS</Text>
         <View style={styles.progressCard}>
           <View style={styles.progressItem}>
@@ -175,7 +202,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.nextCard}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('Journal')}
+          onPress={() => navigation.navigate('Journal', { screen: 'JournalHome' })}
         >
           <View style={styles.nextIconWrap}>
             <Icon source="moon-waning-crescent" size={24} color={colors.textPrimary} />

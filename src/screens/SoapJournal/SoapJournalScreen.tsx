@@ -20,12 +20,13 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-export default function SoapJournalScreen({ navigation }: Props) {
+export default function SoapJournalScreen({ navigation, route }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
   const setSoapEntries = useAppStore((s) => s.setSoapEntries);
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.soapEntries);
+  const prefill = route.params?.prefill;
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -33,8 +34,9 @@ export default function SoapJournalScreen({ navigation }: Props) {
     day: 'numeric',
   });
 
-  const [scripture, setScripture] = useState('Philippians 4:6-7');
+  const [scripture, setScripture] = useState(prefill?.reference ?? 'Philippians 4:6-7');
   const [fullVerse, setFullVerse] = useState(
+    prefill?.text ??
     'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.'
   );
   const [observation, setObservation] = useState('');
@@ -77,11 +79,11 @@ export default function SoapJournalScreen({ navigation }: Props) {
         </View>
         <Text style={styles.pageTitle}>Today's Reflection</Text>
         <Text style={styles.pageDate}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} •{' '}
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} ï¿½{' '}
           Morning Session
         </Text>
 
-        {/* S — Scripture */}
+        {/* S ï¿½ Scripture */}
         <View style={[styles.sectionCard, styles.sectionActive]}>
           <View style={styles.sectionCardHeader}>
             <View style={styles.letterBox}>
@@ -111,7 +113,7 @@ export default function SoapJournalScreen({ navigation }: Props) {
           <Text style={styles.charCount}>{fullVerse.length} characters</Text>
         </View>
 
-        {/* O — Observation */}
+        {/* O ï¿½ Observation */}
         <JournalSection
           letter="O"
           title="Observation"
@@ -129,7 +131,7 @@ export default function SoapJournalScreen({ navigation }: Props) {
           <Text style={styles.charCount}>{observation.length} characters</Text>
         </JournalSection>
 
-        {/* A — Application */}
+        {/* A ï¿½ Application */}
         <JournalSection
           letter="A"
           title="Application"
@@ -147,7 +149,7 @@ export default function SoapJournalScreen({ navigation }: Props) {
           <Text style={styles.charCount}>{application.length} characters</Text>
         </JournalSection>
 
-        {/* P — Prayer */}
+        {/* P ï¿½ Prayer */}
         <JournalSection
           letter="P"
           title="Prayer"

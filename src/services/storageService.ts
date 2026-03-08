@@ -57,7 +57,8 @@ const KEYS = {
   SELECTED_METHOD: '@devotional/selected_method',
   ONBOARDING_DONE: '@devotional/onboarding_done',
   DARK_MODE: '@devotional/dark_mode',
-  BIBLE_POSITION: '@devotional/bible_position',
+  BIBLE_POSITION:    '@devotional/bible_position',
+  BIBLE_TRANSLATION: '@devotional/bible_translation',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -271,5 +272,16 @@ export async function getBiblePosition(): Promise<{ book: string; chapter: numbe
 
 export async function saveBiblePosition(book: string, chapter: number): Promise<void> {
   await setJson(KEYS.BIBLE_POSITION, { book, chapter });
+}
+
+// ─── Bible Translation ────────────────────────────────────────────────────────
+
+export async function getBibleTranslation(): Promise<string> {
+  const raw = await AsyncStorage.getItem(KEYS.BIBLE_TRANSLATION);
+  return raw ?? 'kjv';
+}
+
+export async function saveBibleTranslation(translationId: string): Promise<void> {
+  await AsyncStorage.setItem(KEYS.BIBLE_TRANSLATION, translationId);
 }
 

@@ -39,17 +39,18 @@ const PLACEHOLDERS: Record<FieldKey, string> = {
   dailyLiving: 'Today, I will practice...',
 };
 
-export default function SwordJournalScreen({ navigation }: Props) {
+export default function SwordJournalScreen({ navigation, route }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
   const setSwordEntries = useAppStore((s) => s.setSwordEntries);
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.swordEntries);
+  const prefill = route.params?.prefill;
 
   const [fields, setFields] = useState<Record<FieldKey, string>>({
-    scripture: '',
+    scripture: prefill?.reference ?? '',
     word: '',
-    observation: '',
+    observation: prefill?.text ? `Based on: "${prefill.text}"` : '',
     response: '',
     dailyLiving: '',
   });
@@ -122,10 +123,7 @@ export default function SwordJournalScreen({ navigation }: Props) {
           <Text style={styles.hintLink}>Journal History</Text>.
         </Text>
 
-        {/* FAB placeholder */}
-        <TouchableOpacity style={styles.fab} onPress={() => {}}>
-          <Icon source="plus" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );

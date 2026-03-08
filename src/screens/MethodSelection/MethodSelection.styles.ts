@@ -10,6 +10,8 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
+  logoWrap: { alignItems: 'center', marginBottom: Spacing.md, marginTop: Spacing.xs },
+  logo: { width: 180, height: 80 },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',

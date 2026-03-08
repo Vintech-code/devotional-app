@@ -30,7 +30,7 @@ export type ColorScheme = {
 
 export const DarkColors: ColorScheme = {
   // Primary – teal (user preference)
-  primary: '#00ACAA',
+  primary: '#428a9b',
   primaryDark: '#008A88',
   primaryLight: '#33BCBA',
 
@@ -47,7 +47,7 @@ export const DarkColors: ColorScheme = {
   textPrimary: '#F0F0F0',
   textSecondary: '#888888',
   textMuted: '#444444',
-  textOnPrimary: '#111111',
+  textOnPrimary: '#ffffff',
 
   // Border
   border: '#2A2A2A',

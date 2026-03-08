@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { type ColorScheme, Typography, Spacing } from '../../theme';
+import { type ColorScheme, Typography, Spacing, Radius } from '../../theme';
 
 export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.background },
@@ -27,6 +27,26 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
+  },
+  // ── Per-section scripture reference badge (M, C, P, W auto-filled from main scripture) ─
+  sectionScripBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: c.surfaceAlt,
+    borderRadius: Radius.sm,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginBottom: Spacing.sm,
+    borderLeftWidth: 2,
+    borderLeftColor: c.primary,
+  },
+  sectionScripText: {
+    flex: 1,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.semiBold,
+    color: c.primary,
+    fontStyle: 'italic',
   },
 }
 );

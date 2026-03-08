@@ -1,106 +1,195 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { JournalStackParamList } from '../../navigation/types';
-import { useColors, Typography, Spacing, Radius } from '../../theme';
+import { useColors, Spacing } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
 import { makeStyles } from './JournalHome.styles';
 
 type Nav = NativeStackNavigationProp<JournalStackParamList>;
+type JournalHomeRoute = RouteProp<JournalStackParamList, 'JournalHome'>;
 
-interface JournalOption {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: string;
-  screen: keyof JournalStackParamList;
-}
-
-const OPTIONS: JournalOption[] = [
+const METHODS = [
   {
-    id: 'soap',
-    title: 'SOAP Journal',
-    subtitle: 'Scripture, Observation, Application, Prayer',
-    icon: 'pencil',
-    screen: 'SoapJournal',
+    key: 'SOAP',
+    screen: 'SoapJournal' as keyof JournalStackParamList,
+    title: 'SOAP Method',
+    acronym: 'S · O · A · P',
+    steps: 'Scripture  ·  Observation  ·  Application  ·  Prayer',
+    duration: '10–15 min',
+    accent: '#00ACAA',
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    image: require('../../../assets/cards/soap.png') as number,
   },
   {
-    id: 'mcpwa',
-    title: 'MCPWA Journal',
-    subtitle: 'Message, Command, Promise, Warning, Application',
-    icon: 'shield',
-    screen: 'McpwaJournal',
+    key: 'MCPWA',
+    screen: 'McpwaJournal' as keyof JournalStackParamList,
+    title: 'MCPWA Method',
+    acronym: 'M · C · P · W · A',
+    steps: 'Message  ·  Command  ·  Promise  ·  Warning  ·  Application',
+    duration: '15–20 min',
+    accent: '#5A82B8',
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    image: require('../../../assets/cards/mcpwa.jpg') as number,
   },
   {
-    id: 'sword',
-    title: 'SWORD Journal',
-    subtitle: 'Scripture, Word, Observation, Response, Daily Living',
-    icon: 'sword',
-    screen: 'SwordJournal',
+    key: 'SWORD',
+    screen: 'SwordJournal' as keyof JournalStackParamList,
+    title: 'SWORD Method',
+    acronym: 'S · W · O · R · D',
+    steps: 'Scripture  ·  Word  ·  Observation  ·  Response  ·  Daily Living',
+    duration: '15–20 min',
+    accent: '#C8A86A',
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    image: require('../../../assets/cards/sword.png') as number,
   },
   {
-    id: 'sermon',
+    key: 'SERMON',
+    screen: 'SermonNotes' as keyof JournalStackParamList,
     title: 'Sermon Notes',
-    subtitle: 'Capture key takeaways from Sunday messages',
-    icon: 'microphone',
-    screen: 'SermonNotes',
+    acronym: 'N · O · T · E',
+    steps: 'Title & Preacher  ·  Main Scripture  ·  Key Points  ·  Application',
+    duration: '5–10 min',
+    accent: '#8B7BF0',
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    image: require('../../../assets/cards/sermon.png') as number,
   },
 ];
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function JournalHomeScreen() {
   const colors = useColors();
   const styles = makeStyles(colors);
   const navigation = useNavigation<Nav>();
-  const soapEntries = useAppStore((s) => s.soapEntries);
+  const route = useRoute<JournalHomeRoute>();
+  const prefill      = route.params?.prefill;
+  const soapEntries  = useAppStore((s) => s.soapEntries);
   const mcpwaEntries = useAppStore((s) => s.mcpwaEntries);
   const swordEntries = useAppStore((s) => s.swordEntries);
-  const sermonNotes = useAppStore((s) => s.sermonNotes);
-  const profile = useAppStore((s) => s.profile);
+  const sermonNotes  = useAppStore((s) => s.sermonNotes);
+  const profile      = useAppStore((s) => s.profile);
 
   const totalEntries = soapEntries.length + mcpwaEntries.length + swordEntries.length + sermonNotes.length;
 
-  return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Journal</Text>
-        <Text style={styles.subtitle}>Record your spiritual journey</Text>
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric',
+  });
 
-        {OPTIONS.map((opt) => (
+  const recentEntries = useMemo(() => {
+    const all = [
+      ...soapEntries.map((e)  => ({ id: e.id, method: 'SOAP',   label: e.scripture || e.date,       createdAt: e.createdAt, color: '#00ACAA' })),
+      ...mcpwaEntries.map((e) => ({ id: e.id, method: 'MCPWA',  label: e.scripture || e.date,       createdAt: e.createdAt, color: '#5A82B8' })),
+      ...swordEntries.map((e) => ({ id: e.id, method: 'SWORD',  label: e.scripture || e.date,       createdAt: e.createdAt, color: '#C8A86A' })),
+      ...sermonNotes.map((e)  => ({ id: e.id, method: 'Sermon', label: e.title || e.serviceDate,    createdAt: e.createdAt, color: '#8B7BF0' })),
+    ];
+    return all.sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
+  }, [soapEntries, mcpwaEntries, swordEntries, sermonNotes]);
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
+        {/* ── Bible verse prefill banner ───────────────────────────────────── */}
+        {prefill && (
+          <View style={styles.prefillBanner}>
+            <Icon source="book-open-variant" size={16} color={colors.primary} />
+            <Text style={styles.prefillRef} numberOfLines={1}>{prefill.reference}</Text>
+            <Text style={styles.prefillHint}>· Choose a method to journal</Text>
+          </View>
+        )}
+
+        {/* ── Header ──────────────────────────────────────────────────────── */}
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.dateLabel}>{today.toUpperCase()}</Text>
+            <Text style={styles.heading}>Devotional Journal</Text>
+            <Text style={styles.greeting}>{getGreeting()}, {profile?.name ?? 'Friend'}</Text>
+          </View>
+          <View style={styles.streakBox}>
+            <Text style={styles.streakFire}>🔥</Text>
+            <Text style={styles.streakNum}>{profile?.dayStreak ?? 0}</Text>
+            <Text style={styles.streakCaption}>day streak</Text>
+          </View>
+        </View>
+
+        {/* ── Quick stats ─────────────────────────────────────────────────── */}
+        <View style={styles.statsRow}>
+          {[
+            { n: totalEntries,          l: 'Total'   },
+            { n: soapEntries.length,    l: 'SOAP'    },
+            { n: mcpwaEntries.length,   l: 'MCPWA'   },
+            { n: swordEntries.length,   l: 'SWORD'   },
+            { n: sermonNotes.length,    l: 'Sermons' },
+          ].map(({ n, l }) => (
+            <View key={l} style={styles.statChip}>
+              <Text style={styles.statChipNum}>{n}</Text>
+              <Text style={styles.statChipLabel}>{l}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* ── Method cards (image-based) ─────────────────────────────────── */}
+        <Text style={styles.sectionLabel}>CHOOSE A METHOD</Text>
+        {METHODS.map((m) => (
           <TouchableOpacity
-            key={opt.id}
-            activeOpacity={0.85}
-            style={styles.card}
-            onPress={() => navigation.navigate(opt.screen as 'SoapJournal', {})}
+            key={m.key}
+            activeOpacity={0.88}
+            style={styles.imageCardWrap}
+            onPress={() =>
+              navigation.navigate(
+                m.screen as 'SoapJournal',
+                prefill ? { prefill } : {}
+              )
+            }
           >
-            <View style={styles.iconWrap}>
-              <Icon source={opt.icon} size={22} color={colors.textPrimary} />
-            </View>
-            <View style={styles.cardBody}>
-              <Text style={styles.cardTitle}>{opt.title}</Text>
-              <Text style={styles.cardSubtitle}>{opt.subtitle}</Text>
-            </View>
-            <Icon source="chevron-right" size={22} color={colors.textSecondary} />
+            <ImageBackground
+              source={m.image}
+              style={styles.imageCard}
+              imageStyle={styles.imageCardImg}
+              resizeMode="cover"
+            >
+              {/* Full dark overlay covering whole image */}
+              <View style={styles.imageCardOverlay}>
+                <Text style={styles.imageCardTitle}>{m.title}</Text>
+                <Text style={styles.imageCardSteps} numberOfLines={1}>{m.steps}</Text>
+                <View style={styles.imageCardFooter}>
+                  <View style={styles.imageCardDurationPill}>
+                    <Icon source="clock-outline" size={11} color="rgba(255,255,255,0.7)" />
+                    <Text style={styles.imageCardDuration}>{m.duration}</Text>
+                  </View>
+                  <Text style={[styles.imageCardBegin, { color: m.accent }]}>Begin  →</Text>
+                </View>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
         ))}
 
-        {/* Quick stats */}
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>This Month</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNum}>{totalEntries}</Text>
-              <Text style={styles.statLabel}>Total Entries</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNum}>{profile?.dayStreak ?? 0}</Text>
-              <Text style={styles.statLabel}>Day Streak</Text>
-            </View>
-          </View>
-        </View>
+        {/* ── Recent entries ───────────────────────────────────────────────── */}
+        {recentEntries.length > 0 && (
+          <>
+            <Text style={[styles.sectionLabel, { marginTop: Spacing.md }]}>RECENT ENTRIES</Text>
+            {recentEntries.map((entry) => (
+              <View key={entry.id} style={styles.recentRow}>
+                <View style={[styles.recentDot, { backgroundColor: entry.color }]} />
+                <View style={[styles.methodTag, { backgroundColor: entry.color + '22' }]}>
+                  <Text style={[styles.methodTagText, { color: entry.color }]}>{entry.method}</Text>
+                </View>
+                <Text style={styles.recentLabel} numberOfLines={1}>{entry.label}</Text>
+              </View>
+            ))}
+          </>
+        )}
+
       </ScrollView>
     </SafeAreaView>
   );

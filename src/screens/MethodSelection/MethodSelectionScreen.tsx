@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -7,7 +7,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { DevotionalMethod, DevotionalMethodId } from '../../types';
-import { saveSelectedMethod, markOnboardingDone } from '../../services/storageService';
+import { saveSelectedMethod } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
 import MethodCard from '../../components/MethodCard/MethodCard';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
@@ -54,20 +54,28 @@ export default function MethodSelectionScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<DevotionalMethodId>('SOAP');
   const [loading, setLoading] = useState(false);
   const setSelectedMethod = useAppStore((s) => s.setSelectedMethod);
-  const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
 
   async function handleStart() {
     setLoading(true);
     await saveSelectedMethod(selected);
-    await markOnboardingDone();
     setSelectedMethod(selected);
-    setOnboardingDone(true);
     setLoading(false);
+    navigation.navigate('AllSet');
   }
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
+        {/* Logo */}
+        <View style={styles.logoWrap}>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            source={require('../../../assets/logotransparent.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
         {/* Badge */}
         <View style={styles.badge}>
           <Icon source="auto-fix" size={14} color={colors.textPrimary} />
@@ -102,7 +110,7 @@ export default function MethodSelectionScreen({ navigation }: Props) {
         </View>
 
         <PrimaryButton
-          label="Start My Journey"
+          label="Let's Go!"
           rightIcon="chevron-right"
           onPress={handleStart}
           loading={loading}

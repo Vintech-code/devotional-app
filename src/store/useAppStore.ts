@@ -47,6 +47,10 @@ interface AppState {
   sermonNotes: SermonNote[];
   setSermonNotes: (notes: SermonNote[]) => void;
 
+  // Bible translation
+  bibleTranslation: string;
+  setBibleTranslation: (id: string) => void;
+
   // Hydration
   hydrate: () => Promise<void>;
 }
@@ -84,6 +88,12 @@ export const useAppStore = create<AppState>((set) => ({
   sermonNotes: [],
   setSermonNotes: (notes) => set({ sermonNotes: notes }),
 
+  bibleTranslation: 'kjv',
+  setBibleTranslation: (id) => {
+    void storage.saveBibleTranslation(id);
+    set({ bibleTranslation: id });
+  },
+
   hydrate: async () => {
     await storage.refreshProfileProgress();
 
@@ -97,6 +107,7 @@ export const useAppStore = create<AppState>((set) => ({
       mcpwaEntries,
       swordEntries,
       sermonNotes,
+      bibleTranslation,
     ] = await Promise.all([
       storage.isOnboardingDone(),
       storage.getIsDarkMode(),
@@ -107,6 +118,7 @@ export const useAppStore = create<AppState>((set) => ({
       storage.getMcpwaEntries(),
       storage.getSwordEntries(),
       storage.getSermonNotes(),
+      storage.getBibleTranslation(),
     ]);
 
     set({
@@ -119,6 +131,7 @@ export const useAppStore = create<AppState>((set) => ({
       mcpwaEntries,
       swordEntries,
       sermonNotes,
+      bibleTranslation,
     });
   },
 }));

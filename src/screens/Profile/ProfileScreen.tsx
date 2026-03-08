@@ -111,7 +111,7 @@ export default function ProfileScreen() {
           <SettingsRow
             icon="help-circle"
             title="Support & Feedback"
-            subtitle="Help us improve Abide"
+            subtitle="Help us improve DevoVerse"
             onPress={() => {}}
             style={styles.lastRow}
           />
@@ -128,7 +128,7 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <Text style={styles.version}>ABIDE VERSION 2.4.1 (BUILD 82)</Text>
+        <Text style={styles.version}>DEVOVERSE VERSION 2.4.1 (BUILD 82)</Text>
       </ScrollView>
     </SafeAreaView>
   );
