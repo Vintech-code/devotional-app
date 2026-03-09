@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -43,6 +44,7 @@ export default function SoapJournalScreen({ navigation, route }: Props) {
   const [application, setApplication] = useState('');
   const [prayer, setPrayer] = useState('');
   const [saving, setSaving] = useState(false);
+  const [snackVisible, setSnackVisible] = useState(false);
 
   async function handleSave() {
     setSaving(true);
@@ -61,7 +63,8 @@ export default function SoapJournalScreen({ navigation, route }: Props) {
     const profile = await refreshProfileProgress();
     setProfile(profile);
     setSaving(false);
-    navigation.goBack();
+    setSnackVisible(true);
+    setTimeout(() => navigation.goBack(), 1500);
   }
 
   return (
@@ -179,6 +182,13 @@ export default function SoapJournalScreen({ navigation, route }: Props) {
         <PrimaryButton label="Save Devotional" onPress={handleSave} loading={saving} style={styles.saveBtn} />
         <Text style={styles.savedHint}>Saved entries will appear in your Journal History.</Text>
       </ScrollView>
+      <Snackbar
+        visible={snackVisible}
+        onDismiss={() => setSnackVisible(false)}
+        duration={1400}
+      >
+        Devotional saved!
+      </Snackbar>
     </SafeAreaView>
   );
 }

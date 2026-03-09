@@ -12,6 +12,7 @@ import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
 import SettingsRow from '../../components/SettingsRow/SettingsRow';
 import ToggleCard from '../../components/ToggleCard/ToggleCard';
+import ReadingHeatmap from '../../components/ReadingHeatmap/ReadingHeatmap';
 import { makeStyles } from './Profile.styles';
 import { saveAvatarUri, getActiveUid } from '../../services/storageService';
 import { auth } from '../../services/firebase';
@@ -142,6 +143,12 @@ export default function ProfileScreen() {
             <Text style={styles.statSub}>Your personal best!</Text>
           </View>
         </View>
+
+        {/* Activity Heatmap */}
+        <ReadingHeatmap
+          entries={[...soapEntries, ...mcpwaEntries, ...swordEntries, ...sermonNotes]}
+          label="DEVOTIONAL ACTIVITY"
+        />
 
         {/* My Progress */}
         <Text style={styles.sectionLabel}>MY PROGRESS</Text>

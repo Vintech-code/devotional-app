@@ -12,6 +12,7 @@ import { MainTabParamList, HomeStackParamList } from '../../navigation/types';
 import { saveSelectedMethod } from '../../services/storageService';
 import { getDailyVerse } from '../../services/dailyVerseService';
 import { makeStyles } from './Home.styles';
+import { READING_PLANS } from '../../services/readingPlanService';
 
 const DAILY_BREAD_IMAGES = [
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -37,11 +38,9 @@ type Nav = CompositeNavigationProp<
 >;
 
 const GUIDED_METHODS = [
-  { id: 'SOAP',  icon: 'pencil',            label: 'SOAP'  },
-  { id: 'MCPWA', icon: 'shield',            label: 'MCPWA' },
-  { id: 'SWORD', icon: 'sword',             label: 'SWORD' },
-  { id: 'BIBLE', icon: 'book-open-variant', label: 'BIBLE' },
-  { id: 'SERM',  icon: 'microphone',        label: 'SERM'  },
+  { id: 'SOAP',  icon: 'pencil',  label: 'SOAP'  },
+  { id: 'MCPWA', icon: 'shield',  label: 'MCPWA' },
+  { id: 'SWORD', icon: 'sword',   label: 'SWORD' },
 ];
 
 export default function HomeScreen() {
@@ -51,6 +50,7 @@ export default function HomeScreen() {
   const profile = useAppStore((s) => s.profile);
   const selectedMethod = useAppStore((s) => s.selectedMethod);
   const setSelectedMethod = useAppStore((s) => s.setSelectedMethod);
+  const readingPlans = useAppStore((s) => s.readingPlans);
   const verse = getDailyVerse();
 
   const greeting = (() => {
@@ -75,23 +75,6 @@ export default function HomeScreen() {
   const today = new Date().toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   });
-
-  async function handleMethodPress(methodId: string) {
-    if (methodId === 'BIBLE') {
-      navigation.navigate('Bible', { screen: 'Books' });
-      return;
-    }
-
-    if (methodId === 'SERM') {
-      navigation.navigate('Journal', { screen: 'JournalHome' });
-      return;
-    }
-
-    const nextMethod = methodId as 'SOAP' | 'MCPWA' | 'SWORD';
-    setSelectedMethod(nextMethod);
-    await saveSelectedMethod(nextMethod);
-    navigation.navigate('Journal', { screen: 'JournalHome' });
-  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -141,7 +124,11 @@ export default function HomeScreen() {
               style={styles.methodItem}
               activeOpacity={0.8}
               onPress={() => {
-                void handleMethodPress(m.id);
+                void (async () => {
+                  const nextMethod = m.id as 'SOAP' | 'MCPWA' | 'SWORD';
+                  setSelectedMethod(nextMethod);
+                  await saveSelectedMethod(nextMethod);
+                })();
               }}
             >
               <View style={[
@@ -162,26 +149,31 @@ export default function HomeScreen() {
 
         {/* ─── Inspiration ─── */}
         <Text style={styles.sectionLabel}>INSPIRATION</Text>
-        <ImageBackground
-          source={getDailyBreadImage()}
-          style={styles.verseCard}
-          imageStyle={styles.verseCardImg}
-          resizeMode="cover"
-        >
-          <View style={styles.verseCardOverlay}>
-            <View style={styles.verseMeta}>
-              <Text style={styles.breadTitle}>Daily Bread</Text>
-              <Text style={styles.breadDate}>{today}</Text>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('VerseOfDay')}>
+          <ImageBackground
+            source={getDailyBreadImage()}
+            style={styles.verseCard}
+            imageStyle={styles.verseCardImg}
+            resizeMode="cover"
+          >
+            <View style={styles.verseCardOverlay}>
+              <View style={styles.verseMeta}>
+                <Text style={styles.breadTitle}>Daily Bread</Text>
+                <Text style={styles.breadDate}>{today}</Text>
+              </View>
+              <Text style={styles.verseText}>
+                {`"${verse.text}"`}
+              </Text>
+              <View style={styles.verseRefRow}>
+                <Text style={styles.verseRef}>{verse.reference}</Text>
+                <View style={styles.verseRefRight}>
+                  <Icon source="heart-outline" size={16} color="rgba(255,255,255,0.85)" />
+                  <Text style={styles.verseExplore}>Explore →</Text>
+                </View>
+              </View>
             </View>
-            <Text style={styles.verseText}>
-              {`"${verse.text}"`}
-            </Text>
-            <View style={styles.verseRefRow}>
-              <Text style={styles.verseRef}>{verse.reference}</Text>
-              <Icon source="heart-outline" size={16} color="rgba(255,255,255,0.85)" />
-            </View>
-          </View>
-        </ImageBackground>
+          </ImageBackground>
+        </TouchableOpacity>
         <Text style={styles.sectionLabel}>MY PROGRESS</Text>
         <View style={styles.progressCard}>
           <View style={styles.progressItem}>
@@ -196,6 +188,51 @@ export default function HomeScreen() {
             <Text style={styles.progressLabel}>COMPLETED</Text>
           </View>
         </View>
+
+        {/* ─── Reading Plan ─── */}
+        <Text style={styles.sectionLabel}>READING PLAN</Text>
+        {(() => {
+          // Pick the most recently started plan to show in the card
+          const allActive = Object.values(readingPlans).sort((a, b) => b.startedAt - a.startedAt);
+          const latest = allActive[0];
+          if (!latest) {
+            return (
+              <TouchableOpacity
+                style={styles.planCard}
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('ReadingPlans')}
+              >
+                <Icon source="book-multiple" size={22} color={colors.textPrimary} />
+                <View style={styles.planBody}>
+                  <Text style={styles.planTitle}>Start a Reading Plan</Text>
+                  <Text style={styles.planSub}>Choose a structured Bible reading journey</Text>
+                </View>
+                <Icon source="chevron-right" size={18} color={colors.textPrimary} />
+              </TouchableOpacity>
+            );
+          }
+          const plan = READING_PLANS.find((p) => p.id === latest.planId);
+          const pct  = plan ? Math.round(((latest.completedDays ?? []).length / plan.durationDays) * 100) : 0;
+          return (
+            <TouchableOpacity
+              style={styles.planCard}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('ReadingPlans')}
+            >
+              <Icon source="book-multiple" size={22} color={colors.textPrimary} />
+              <View style={styles.planBody}>
+                <Text style={styles.planTitle}>{plan?.title ?? 'Reading Plan'}</Text>
+                <View style={styles.planBarTrack}>
+                  <View style={[styles.planBarFill, { width: `${pct}%` as `${number}%` }]} />
+                </View>
+                <Text style={styles.planSub}>
+                  {(latest.completedDays ?? []).length}/{plan?.durationDays ?? '?'} days · {pct}%{allActive.length > 1 ? ` · ${allActive.length} plans` : ''}
+                </Text>
+              </View>
+              <Icon source="chevron-right" size={18} color={colors.textPrimary} />
+            </TouchableOpacity>
+          );
+        })()}
 
         {/* ─── Next Session ─── */}
         <Text style={styles.sectionLabel}>NEXT SESSION</Text>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import { Icon } from 'react-native-paper';
+import { Icon, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -48,6 +48,7 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
     application: '',
   });
   const [saving, setSaving] = useState(false);
+  const [snackVisible, setSnackVisible] = useState(false);
 
   function updateField(key: FieldKey) {
     return (value: string) => setFields((f) => ({ ...f, [key]: value }));
@@ -70,7 +71,8 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
     const profile = await refreshProfileProgress();
     setProfile(profile);
     setSaving(false);
-    navigation.goBack();
+    setSnackVisible(true);
+    setTimeout(() => navigation.goBack(), 1500);
   }
 
   return (
@@ -120,6 +122,13 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
         <PrimaryButton label="Save Devotional" onPress={handleSave} loading={saving} style={styles.btn} />
         <Text style={styles.footer}>FAITHFUL IS HE WHO CALLED YOU</Text>
       </ScrollView>
+      <Snackbar
+        visible={snackVisible}
+        onDismiss={() => setSnackVisible(false)}
+        duration={1400}
+      >
+        Devotional saved!
+      </Snackbar>
     </SafeAreaView>
   );
 }

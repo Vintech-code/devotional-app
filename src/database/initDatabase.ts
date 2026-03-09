@@ -3,23 +3,23 @@
  *
  * Opens (or creates) the local Bible verse cache.
  *
- * Schema (version 2)
+ * Schema (version 3)
  * ──────────────────
  * verse_cache (translation, book_id, chapter, verse, text, cached_at)
  *   PK: (translation, book_id, chapter, verse)
  *
- * `translation` is included in the primary key so each Bible translation
- * gets its own cached copy of every chapter.
+ * downloaded_translations (translation PK, downloaded_at)
+ *   Tracks which translations have been fully bulk-downloaded for offline use.
  *
- * Migration: version 1 (no translation column) → version 2 is handled
- * by dropping and recreating the table — cache data loss is acceptable
- * since all content is re-downloadable.
+ * Migration: previous versions → version 3 drops and recreates both tables.
+ * verse_cache loss is acceptable (re-downloadable). downloaded_translations
+ * is new in v3.
  */
 
 import * as SQLite from 'expo-sqlite';
 
 const DB_NAME    = 'bible_cache.db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let _db: SQLite.SQLiteDatabase | null = null;
 
@@ -34,8 +34,9 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   const currentVersion = vRow?.user_version ?? 0;
 
   if (currentVersion < DB_VERSION) {
-    // Drop old table (acceptable — it's a download cache, not user data)
+    // Drop old tables (cache loss acceptable — everything is re-downloadable)
     await _db.execAsync('DROP TABLE IF EXISTS verse_cache;');
+    await _db.execAsync('DROP TABLE IF EXISTS downloaded_translations;');
   }
 
   await _db.execAsync(`
@@ -49,6 +50,11 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
       text        TEXT    NOT NULL,
       cached_at   INTEGER NOT NULL DEFAULT (strftime('%s','now')),
       PRIMARY KEY (translation, book_id, chapter, verse)
+    );
+
+    CREATE TABLE IF NOT EXISTS downloaded_translations (
+      translation   TEXT    NOT NULL PRIMARY KEY,
+      downloaded_at INTEGER NOT NULL
     );
 
     PRAGMA user_version = ${DB_VERSION};

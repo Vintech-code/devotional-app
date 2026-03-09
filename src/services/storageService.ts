@@ -7,6 +7,8 @@ import {
   UserProfile,
   ReminderSettings,
   DevotionalMethodId,
+  UserReadingPlan,
+  UserReadingPlans,
 } from '../types';
 
 // ─── Active User ──────────────────────────────────────────────────────────────
@@ -76,6 +78,7 @@ const K = {
   METHOD:     '@devotional/selected_method',
   ONBOARDING: '@devotional/onboarding_done',
   AVATAR:     '@devotional/avatar_uri',
+  READING_PLAN: '@devotional/reading_plan',
   // Global / device-level (NOT UID-scoped)
   DARK_MODE:   '@devotional/dark_mode',
   BIBLE_POS:   '@devotional/bible_position',
@@ -356,7 +359,32 @@ export async function importUserData(data: Partial<LocalUserData>): Promise<void
   await Promise.all(ops);
 }
 
-// ─── Clear all user-scoped data (called on sign-out) ─────────────────────────
+// ─── Reading Plans ─────────────────────────────────────────────────────────────────────
+
+export async function getUserReadingPlans(): Promise<UserReadingPlans> {
+  const raw = await getJson<unknown>(uk(K.READING_PLAN), {});
+  if (!raw || typeof raw !== 'object') return {};
+  // Migrate old format: a single UserReadingPlan object (has top-level `planId` string key)
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.planId === 'string') {
+    const migrated: UserReadingPlans = { [obj.planId]: obj as unknown as UserReadingPlan };
+    await setJson(uk(K.READING_PLAN), migrated);
+    return migrated;
+  }
+  return obj as UserReadingPlans;
+}
+
+export async function saveUserReadingPlans(plans: UserReadingPlans): Promise<void> {
+  await setJson(uk(K.READING_PLAN), plans);
+}
+
+export async function saveUserReadingPlan(plan: UserReadingPlan): Promise<void> {
+  const all = await getUserReadingPlans();
+  all[plan.planId] = plan;
+  await setJson(uk(K.READING_PLAN), all);
+}
+
+// ─── Clear all user-scoped data (called on sign-out) ────────────────────
 
 export async function clearUserData(): Promise<void> {
   if (!_uid) return;
@@ -371,5 +399,6 @@ export async function clearUserData(): Promise<void> {
     `${K.METHOD}/${uid}`,
     `${K.ONBOARDING}/${uid}`,
     `${K.AVATAR}/${uid}`,
+    `${K.READING_PLAN}/${uid}`,
   ]);
 }

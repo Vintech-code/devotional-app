@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { Icon } from 'react-native-paper';
+import { Icon, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -55,6 +55,7 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
     dailyLiving: '',
   });
   const [saving, setSaving] = useState(false);
+  const [snackVisible, setSnackVisible] = useState(false);
 
   function updateField(key: FieldKey) {
     return (value: string) => setFields((f) => ({ ...f, [key]: value }));
@@ -76,7 +77,8 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
     const profile = await refreshProfileProgress();
     setProfile(profile);
     setSaving(false);
-    navigation.goBack();
+    setSnackVisible(true);
+    setTimeout(() => navigation.goBack(), 1500);
   }
 
   return (
@@ -123,8 +125,14 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
           <Text style={styles.hintLink}>Journal History</Text>.
         </Text>
 
-
       </ScrollView>
+      <Snackbar
+        visible={snackVisible}
+        onDismiss={() => setSnackVisible(false)}
+        duration={1400}
+      >
+        Devotional saved!
+      </Snackbar>
     </SafeAreaView>
   );
 }

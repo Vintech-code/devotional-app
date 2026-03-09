@@ -12,6 +12,7 @@ import {
   Animated,
   Dimensions,
   Easing,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -20,7 +21,6 @@ import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Icon } from 'react-native-paper';
-import ConfettiCannon from 'react-native-confetti-cannon';
 
 import type { AuthStackParamList } from '../../navigation/types';
 import { useColors } from '../../theme';
@@ -74,10 +74,9 @@ export default function AllSetScreen({ navigation, route }: Props) {
   const name           = route.params?.name;
 
   const [currentPage,  setCurrentPage]  = useState(0);
-  // confettiRound: 1-3 drives re-mount of cannon via key; 0 = idle
-  const [confettiRound, setConfettiRound] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
   const [showNotif,    setShowNotif]    = useState(false);
-  const notifFired = useRef(false);
+  const celebFired = useRef(false);
 
   // Horizontal slide rail
   const railX   = useRef(new Animated.Value(0)).current;
@@ -137,30 +136,22 @@ export default function AllSetScreen({ navigation, route }: Props) {
     }).start(() => setShowNotif(false));
   }
 
-  // Fire on first render — confetti shoots 3 times, notification slides in once
   useEffect(() => {
-    // Start first confetti shot after a brief moment
-    const t1 = setTimeout(() => setConfettiRound(1), 300);
-
-    // Show notification toaster at ~400 ms
-    if (!notifFired.current) {
-      notifFired.current = true;
-      const t2 = setTimeout(() => {
-        setShowNotif(true);
-        Animated.spring(notifY, {
-          toValue:         0,
-          useNativeDriver: true,
-          tension:         62,
-          friction:        10,
-        }).start();
-        // Auto-dismiss after 5 s
-        setTimeout(() => dismissNotif(), 5000);
-      }, 400);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
+    if (currentPage === SLIDES.length - 1 && !celebFired.current) {
+      celebFired.current = true;
+      setShowCelebration(true);
+      setShowNotif(true);
+      Animated.spring(notifY, {
+        toValue:          0,
+        useNativeDriver:  true,
+        tension:          68,
+        friction:         10,
+      }).start();
+      // Auto-dismiss after 5 s
+      setTimeout(() => dismissNotif(), 5000);
     }
-    return () => clearTimeout(t1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentPage]);
   const isLast = currentPage === SLIDES.length - 1;
 
   return (
@@ -251,22 +242,14 @@ export default function AllSetScreen({ navigation, route }: Props) {
         )}
       </View>
 
-      {/* ── Confetti cannon — re-mounts via key for 3 sequential shots ───── */}
-      {confettiRound > 0 && (
-        <ConfettiCannon
-          key={confettiRound}
-          count={180}
-          origin={{ x: W / 2, y: -20 }}
-          explosionSpeed={220}
-          fallSpeed={4200}
-          fadeOut
-          colors={['#428a9b', '#C8A86A', '#7EC8D3', '#E1A3F7', '#F0C040', '#FF8FAB', '#FFFFFF', '#B8E4D0']}
-          onAnimationEnd={() => {
-            if (confettiRound < 3) {
-              // Brief gap between shots (800 ms)
-              setTimeout(() => setConfettiRound((r) => r + 1), 800);
-            }
-          }}
+      {/* ── Celebration Lottie — plays once on last slide ────────────────── */}
+      {showCelebration && (
+        <LottieView
+          source={{ uri: 'https://assets2.lottiefiles.com/packages/lf20_u4yrau.json' }}
+          autoPlay
+          loop={false}
+          style={StyleSheet.absoluteFillObject}
+          onAnimationFinish={() => setShowCelebration(false)}
         />
       )}
 

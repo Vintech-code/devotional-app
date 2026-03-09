@@ -135,4 +135,58 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   transName:       { fontSize: Typography.size.sm, fontWeight: Typography.weight.semiBold, color: c.textPrimary },
   transNameActive: { color: c.primary },
   transLang:       { fontSize: Typography.size.xs, color: c.textMuted, marginTop: 2 },
+
+  // ── Offline download banner ──────────────────────────────────────────────────
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    padding: Spacing.sm,
+    borderRadius: Radius.lg,
+    backgroundColor: c.surface,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  offlineBannerDone: {
+    backgroundColor: (c.success ?? '#4CAF50') + '18',
+    borderColor:     (c.success ?? '#4CAF50') + '55',
+  },
+  offlineBannerTitle: {
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textPrimary,
+  },
+  offlineBannerSub: {
+    fontSize: Typography.size.xs,
+    color: c.textMuted,
+    marginTop: 2,
+  },
+  offlineBtn: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.md,
+    backgroundColor: c.primary,
+  },
+  offlineBtnText: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    color: '#fff',
+  },
+  offlineCancelBtn: {
+    padding: 4,
+  },
+  offlineBar: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: c.border,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  offlineBarFill: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: c.primary,
+  },
 });

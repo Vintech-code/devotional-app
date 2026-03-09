@@ -45,6 +45,9 @@ import SoapJournalScreen from '../screens/SoapJournal/SoapJournalScreen';
 import McpwaJournalScreen from '../screens/McpwaJournal/McpwaJournalScreen';
 import SwordJournalScreen from '../screens/SwordJournal/SwordJournalScreen';
 import SermonNotesScreen from '../screens/SermonNotes/SermonNotesScreen';
+import VerseOfDayScreen from '../screens/VerseOfDay/VerseOfDayScreen';
+import ReadingPlansScreen from '../screens/ReadingPlan/ReadingPlansScreen';
+import ReadingPlanDetailScreen from '../screens/ReadingPlan/ReadingPlanDetailScreen';
 
 // ─── Tab Icon Component ───────────────────────────────────────────────────────
 
@@ -78,7 +81,7 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
 function AuthNavigator() {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
@@ -98,7 +101,6 @@ function JournalNavigator() {
     <JournalStack.Navigator
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
       }}
     >
       <JournalStack.Screen name="JournalHome" component={JournalHomeScreen} />
@@ -116,7 +118,7 @@ const BibleStack = createNativeStackNavigator<BibleStackParamList>();
 
 function BibleNavigator() {
   return (
-    <BibleStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <BibleStack.Navigator screenOptions={{ headerShown: false }}>
       <BibleStack.Screen name="Books"    component={BooksScreen} />
       <BibleStack.Screen name="Chapters" component={ChaptersScreen} />
       <BibleStack.Screen name="Verses"   component={VersesScreen} />
@@ -130,8 +132,11 @@ const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeNavigator() {
   return (
-    <HomeStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
-      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain"          component={HomeScreen} />
+      <HomeStack.Screen name="VerseOfDay"        component={VerseOfDayScreen} />
+      <HomeStack.Screen name="ReadingPlans"      component={ReadingPlansScreen} />
+      <HomeStack.Screen name="ReadingPlanDetail" component={ReadingPlanDetailScreen} />
     </HomeStack.Navigator>
   );
 }
@@ -142,7 +147,7 @@ const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
 
 function HistoryNavigator() {
   return (
-    <HistoryStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <HistoryStack.Navigator screenOptions={{ headerShown: false }}>
       <HistoryStack.Screen name="HistoryMain" component={JournalHistoryScreen} />
       <HistoryStack.Screen name="DevotionalDetail" component={DevotionalDetailScreen} />
     </HistoryStack.Navigator>
@@ -155,7 +160,7 @@ const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 function ProfileNavigator() {
   return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="Reminders"   component={RemindersScreen} />
       <ProfileStack.Screen name="Feedback"    component={FeedbackScreen} />

@@ -147,6 +147,17 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  verseRefRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  verseExplore: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.semiBold,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 0.5,
+  },
   verseRef: {
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semiBold,
@@ -216,6 +227,46 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     fontSize: Typography.size.sm,
     color: c.textSecondary,
     marginTop: 2,
+  },
+
+  // Reading Plan card
+  planCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: c.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  planBody: { flex: 1 },
+  planTitle: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textPrimary,
+    marginBottom: 4,
+  },
+  planSub: {
+    fontSize: Typography.size.xs,
+    color: c.textMuted,
+  },
+  planBarTrack: {
+    height: 5,
+    backgroundColor: c.border,
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  planBarFill: {
+    height: 5,
+    borderRadius: Radius.full,
+    backgroundColor: c.primary,
   },
 }
 );

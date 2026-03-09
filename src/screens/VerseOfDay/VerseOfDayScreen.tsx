@@ -11,7 +11,7 @@ import * as Sharing from 'expo-sharing';
 import * as Notifications from 'expo-notifications';
 
 import { useColors, Typography } from '../../theme';
-import { getDailyVerse, getVerseForDay } from '../../services/dailyVerseService';
+import { getDailyVerse } from '../../services/dailyVerseService';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import { makeStyles } from './VerseOfDay.styles';
 
@@ -141,8 +141,6 @@ const ms = StyleSheet.create({
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-const UPCOMING_DAYS = 7; // show next 7 days' verses
-
 export default function VerseOfDayScreen() {
   const colors   = useColors();
   const styles   = makeStyles(colors);
@@ -157,16 +155,6 @@ export default function VerseOfDayScreen() {
   const today      = new Date();
   const todayLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   const accentColor = THEME_COLORS[todayVerse.theme] ?? colors.primary;
-
-  const upcomingVerses = Array.from({ length: UPCOMING_DAYS }, (_, i) => ({
-    offset: i + 1,
-    verse:  getVerseForDay(i + 1),
-    date:   (() => {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i + 1);
-      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    })(),
-  }));
 
   async function handleCaptureAndShare() {
     if (!cardRef.current || capturing) return;
@@ -283,21 +271,6 @@ export default function VerseOfDayScreen() {
           />
         </View>
 
-        {/* ─── Upcoming verses ─── */}
-        <Text style={styles.sectionLabel}>COMING UP</Text>
-        {upcomingVerses.map(({ offset, verse, date }) => (
-          <View key={offset} style={styles.miniCard}>
-            <View style={[styles.miniAccent, { backgroundColor: THEME_COLORS[verse.theme] ?? colors.primary }]} />
-            <View style={styles.miniBody}>
-              <Text style={styles.miniDay}>{date}</Text>
-              <Text style={styles.miniVerse} numberOfLines={2}>{verse.text}</Text>
-              <Text style={styles.miniRef}>{verse.reference}</Text>
-              <View style={styles.miniTheme}>
-                <Text style={styles.miniThemeText}>{verse.theme.toUpperCase()}</Text>
-              </View>
-            </View>
-          </View>
-        ))}
       </ScrollView>
 
       {/* ─── Share Modal ─── */}

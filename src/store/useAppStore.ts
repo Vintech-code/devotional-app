@@ -7,6 +7,8 @@ import {
   McpwaEntry,
   SwordEntry,
   SermonNote,
+  UserReadingPlan,
+  UserReadingPlans,
 } from '../types';
 import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
@@ -53,6 +55,10 @@ interface AppState {
   bibleTranslation: string;
   setBibleTranslation: (id: string) => void;
 
+  // Reading Plans
+  readingPlans: UserReadingPlans;
+  setReadingPlan: (plan: UserReadingPlan) => void;
+
   // Hydration
   // Load global (device-level) settings — call once on app start.
   hydrate: () => Promise<void>;
@@ -85,6 +91,7 @@ export const useAppStore = create<AppState>((set) => ({
       sermonNotes: [],
       reminderSettings: null,
       selectedMethod: 'SOAP',
+      readingPlans: {},
     });
   },
 
@@ -120,6 +127,11 @@ export const useAppStore = create<AppState>((set) => ({
     set({ bibleTranslation: id });
   },
 
+  readingPlans: {},
+  setReadingPlan: (plan) => set((s) => ({
+    readingPlans: { ...s.readingPlans, [plan.planId]: plan },
+  })),
+
   // ── hydrate: global / device-level settings only ─────────────────────────
   hydrate: async () => {
     const [isDarkMode, bibleTranslation] = await Promise.all([
@@ -143,6 +155,7 @@ export const useAppStore = create<AppState>((set) => ({
       mcpwaEntries,
       swordEntries,
       sermonNotes,
+      readingPlans,
     ] = await Promise.all([
       storage.isOnboardingDone(),
       storage.getSelectedMethod(),
@@ -152,6 +165,7 @@ export const useAppStore = create<AppState>((set) => ({
       storage.getMcpwaEntries(),
       storage.getSwordEntries(),
       storage.getSermonNotes(),
+      storage.getUserReadingPlans(),
     ]);
 
     // Attach avatarUri to the profile object
@@ -168,6 +182,7 @@ export const useAppStore = create<AppState>((set) => ({
       swordEntries,
       sermonNotes,
       firebaseUid: uid,
+      readingPlans,
     });
   },
 }));

@@ -32,7 +32,10 @@ export type BibleStackParamList = {
 // ─── Home Stack ───────────────────────────────────────────────────────────────
 
 export type HomeStackParamList = {
-  HomeMain: undefined;
+  HomeMain:         undefined;
+  VerseOfDay:       undefined;
+  ReadingPlans:     undefined;
+  ReadingPlanDetail: { planId: string };
 };
 
 // ─── Journal Stack ────────────────────────────────────────────────────────────

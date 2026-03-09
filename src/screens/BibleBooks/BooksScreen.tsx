@@ -19,7 +19,12 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useColors } from '../../theme';
-import { getBooks } from '../../services/bibleService';
+import {
+  getBooks,
+  downloadTranslation,
+  getTranslationDownloadInfo,
+  type DownloadProgress,
+} from '../../services/bibleService';
 import { BIBLE_TRANSLATIONS, getTranslationById } from '../../data/bibleTranslations';
 import { useAppStore } from '../../store/useAppStore';
 import type { BibleBook } from '../../types/bible';
@@ -43,6 +48,43 @@ export default function BooksScreen() {
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState<string | null>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
+
+  // ── Offline download state ────────────────────────────────────────────────
+  const [isComplete,    setIsComplete]    = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [dlProgress,    setDlProgress]    = useState<DownloadProgress | null>(null);
+  const abortRef = React.useRef<AbortController | null>(null);
+
+  // Check download status whenever the active translation changes
+  useEffect(() => {
+    setIsComplete(false);
+    setDlProgress(null);
+    getTranslationDownloadInfo(bibleTranslation)
+      .then((info) => setIsComplete(info.isComplete))
+      .catch(() => { /* non-fatal */ });
+  }, [bibleTranslation]);
+
+  const handleDownload = useCallback(() => {
+    if (isDownloading) return;
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    setIsDownloading(true);
+    setDlProgress({ done: 0, total: 1189, percent: 0, currentBook: '' });
+    downloadTranslation(
+      bibleTranslation,
+      (p) => setDlProgress(p),
+      ctrl.signal,
+    )
+      .then(() => {
+        if (!ctrl.signal.aborted) setIsComplete(true);
+      })
+      .catch(() => { /* handled inside service */ })
+      .finally(() => { setIsDownloading(false); abortRef.current = null; });
+  }, [bibleTranslation, isDownloading]);
+
+  const handleCancelDownload = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
 
   useEffect(() => {
     getBooks()
@@ -101,6 +143,49 @@ export default function BooksScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Offline download banner */}
+      {!isComplete && !isDownloading && (
+        <View style={styles.offlineBanner}>
+          <Icon source="cloud-download-outline" size={18} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.offlineBannerTitle}>Download for Offline</Text>
+            <Text style={styles.offlineBannerSub}>
+              Save the entire {activeTrans?.shortName ?? bibleTranslation.toUpperCase()} Bible to your device.
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.offlineBtn} onPress={handleDownload} activeOpacity={0.8}>
+            <Text style={styles.offlineBtnText}>Download</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {isDownloading && dlProgress && (
+        <View style={styles.offlineBanner}>
+          <Icon source="cloud-sync-outline" size={18} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.offlineBannerTitle}>
+              Downloading… {dlProgress.percent}%
+            </Text>
+            <View style={styles.offlineBar}>
+              <View style={[styles.offlineBarFill, { width: `${dlProgress.percent}%` as `${number}%` }]} />
+            </View>
+            <Text style={styles.offlineBannerSub} numberOfLines={1}>
+              {dlProgress.currentBook}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.offlineCancelBtn} onPress={handleCancelDownload} activeOpacity={0.8}>
+            <Icon source="close" size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+      )}
+      {isComplete && (
+        <View style={[styles.offlineBanner, styles.offlineBannerDone]}>
+          <Icon source="check-circle-outline" size={18} color={colors.success} />
+          <Text style={[styles.offlineBannerTitle, { color: colors.success }]}>
+            Available offline · {activeTrans?.shortName ?? bibleTranslation.toUpperCase()}
+          </Text>
+        </View>
+      )}
 
       {/* Search */}
       <View style={styles.searchWrap}>

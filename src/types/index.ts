@@ -111,3 +111,28 @@ export interface RegisterForm {
   password: string;
   agreedToTerms: boolean;
 }
+
+// ─── Reading Plans ────────────────────────────────────────────────────────────
+
+export interface ReadingPlanDay {
+  day: number;      // 1-based
+  refs: string[];   // e.g. ['Matthew 1', 'Matthew 2']
+  title: string;
+}
+
+export interface ReadingPlan {
+  id: string;
+  title: string;
+  description: string;
+  durationDays: number;
+  days: ReadingPlanDay[];
+}
+
+export interface UserReadingPlan {
+  planId: string;
+  startedAt: number;       // Unix ms
+  completedDays: number[]; // day numbers that have been checked off
+}
+
+/** All plans the user has ever started, keyed by planId */
+export type UserReadingPlans = Record<string, UserReadingPlan>;
