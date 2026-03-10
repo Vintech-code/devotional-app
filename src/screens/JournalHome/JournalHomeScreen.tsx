@@ -174,6 +174,23 @@ export default function JournalHomeScreen() {
           </TouchableOpacity>
         ))}
 
+        {/* ── Prayer Journal card ─────────────────────────────────────────── */}
+        <Text style={[styles.sectionLabel, { marginTop: Spacing.md }]}>PRAYER JOURNAL</Text>
+        <TouchableOpacity
+          style={styles.prayerCard}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('PrayerJournal')}
+        >
+          <View style={styles.prayerIconWrap}>
+            <Icon source="hands-pray" size={26} color="#A855F7" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.prayerTitle}>Prayer Requests</Text>
+            <Text style={styles.prayerSub}>Track your prayers · celebrate answered ones</Text>
+          </View>
+          <Icon source="chevron-right" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+
         {/* ── Recent entries ───────────────────────────────────────────────── */}
         {recentEntries.length > 0 && (
           <>

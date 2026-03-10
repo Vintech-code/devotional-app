@@ -136,3 +136,17 @@ export interface UserReadingPlan {
 
 /** All plans the user has ever started, keyed by planId */
 export type UserReadingPlans = Record<string, UserReadingPlan>;
+
+// ─── Prayer Journal ───────────────────────────────────────────────────────────
+
+export type PrayerStatus = 'Pending' | 'In Progress' | 'Answered';
+
+export interface PrayerRequest {
+  id: string;
+  title: string;
+  description: string;
+  status: PrayerStatus;
+  scriptureRef?: string;
+  answeredDate?: number;
+  createdAt: number;
+}

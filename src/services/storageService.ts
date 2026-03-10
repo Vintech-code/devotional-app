@@ -9,6 +9,7 @@ import {
   DevotionalMethodId,
   UserReadingPlan,
   UserReadingPlans,
+  PrayerRequest,
 } from '../types';
 
 // ─── Active User ──────────────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ export function getActiveUid(): string | null {
 }
 
 /** Returns a UID-scoped key for per-user data. */
-function uk(base: string): string {
+export function uk(base: string): string {
   return _uid ? `${base}/${_uid}` : base;
 }
 
@@ -67,7 +68,7 @@ function calculateLevel(completedCount: number): { level: number; levelTitle: st
 
 // ─── Base key names (raw, not UID-scoped) ─────────────────────────────────────
 
-const K = {
+export const K = {
   // Per-user (wrapped with uk() in every function below)
   SOAP:       '@devotional/soap_entries',
   MCPWA:      '@devotional/mcpwa_entries',
@@ -79,6 +80,7 @@ const K = {
   ONBOARDING: '@devotional/onboarding_done',
   AVATAR:     '@devotional/avatar_uri',
   READING_PLAN: '@devotional/reading_plan',
+  PRAYER:       '@devotional/prayer_requests',
   // Global / device-level (NOT UID-scoped)
   DARK_MODE:   '@devotional/dark_mode',
   BIBLE_POS:   '@devotional/bible_position',
@@ -97,8 +99,16 @@ async function getJson<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
-async function setJson<T>(key: string, value: T): Promise<void> {
+export async function setJson<T>(key: string, value: T): Promise<void> {
   await AsyncStorage.setItem(key, JSON.stringify(value));
+}
+
+/**
+ * Directly write a merged entries array into local storage for the given uid.
+ * Used by the cloud sync to import data pulled from Firestore.
+ */
+export async function importEntries<T>(baseKey: string, uid: string, entries: T[]): Promise<void> {
+  await AsyncStorage.setItem(`${baseKey}/${uid}`, JSON.stringify(entries));
 }
 
 // ─── SOAP ─────────────────────────────────────────────────────────────────────
@@ -382,6 +392,16 @@ export async function saveUserReadingPlan(plan: UserReadingPlan): Promise<void> 
   const all = await getUserReadingPlans();
   all[plan.planId] = plan;
   await setJson(uk(K.READING_PLAN), all);
+}
+
+// ─── Prayer Requests ─────────────────────────────────────────────────────────
+
+export async function getPrayerRequests(): Promise<PrayerRequest[]> {
+  return getJson<PrayerRequest[]>(uk(K.PRAYER), []);
+}
+
+export async function savePrayerRequests(requests: PrayerRequest[]): Promise<void> {
+  await setJson(uk(K.PRAYER), requests);
 }
 
 // ─── Clear all user-scoped data (called on sign-out) ────────────────────

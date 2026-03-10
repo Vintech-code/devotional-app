@@ -13,7 +13,7 @@ import { useAppStore } from '../../store/useAppStore';
 import SettingsRow from '../../components/SettingsRow/SettingsRow';
 import ToggleCard from '../../components/ToggleCard/ToggleCard';
 import ReadingHeatmap from '../../components/ReadingHeatmap/ReadingHeatmap';
-import { makeStyles } from './Profile.styles';
+import { makeStyles } from '../Profile/Profile.styles';
 import { saveAvatarUri, getActiveUid } from '../../services/storageService';
 import { auth } from '../../services/firebase';
 
@@ -154,6 +154,12 @@ export default function ProfileScreen() {
         <Text style={styles.sectionLabel}>MY PROGRESS</Text>
         <View style={styles.card}>
           <SettingsRow
+            icon="account-group"
+            title="Accountability Partner"
+            subtitle="Connect with a friend · share your progress"
+            onPress={() => navigation.navigate('Accountability')}
+          />
+          <SettingsRow
             icon="bell"
             title="Reminders"
             subtitle="Daily devotional notifications"
@@ -189,7 +195,6 @@ export default function ProfileScreen() {
               title="Admin Dashboard"
               subtitle="Monitor users · Reply to feedback"
               onPress={() => navigation.navigate('Admin')}
-              iconBg="rgba(66,138,155,0.15)"
               style={styles.lastRow}
             />
           </View>
@@ -201,7 +206,6 @@ export default function ProfileScreen() {
             icon="logout"
             title="Sign Out"
             onPress={() => setShowSignOutModal(true)}
-            iconBg="#FDECEA"
             style={styles.lastRow}
           />
         </View>

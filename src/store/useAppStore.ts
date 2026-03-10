@@ -9,9 +9,11 @@ import {
   SermonNote,
   UserReadingPlan,
   UserReadingPlans,
+  PrayerRequest,
 } from '../types';
 import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
+import { pushToCloud, pullFromCloud, mergeById } from '../services/userDataSyncService';
 
 interface AppState {
   // Auth / onboarding
@@ -59,6 +61,10 @@ interface AppState {
   readingPlans: UserReadingPlans;
   setReadingPlan: (plan: UserReadingPlan) => void;
 
+  // Prayer Journal
+  prayerRequests: PrayerRequest[];
+  setPrayerRequests: (requests: PrayerRequest[]) => void;
+
   // Hydration
   // Load global (device-level) settings — call once on app start.
   hydrate: () => Promise<void>;
@@ -74,13 +80,31 @@ export const useAppStore = create<AppState>((set) => ({
   setFirebaseUid: (uid) => set({ firebaseUid: uid }),
 
   signOut: async () => {
-    // 1. Clear all UID-scoped AsyncStorage keys for this user
-    await storage.clearUserData();
+    const s = useAppStore.getState();
+
+    // 1. Best-effort cloud backup before signing out (fire-and-forget if offline)
+    if (s.firebaseUid) {
+      void pushToCloud(s.firebaseUid, {
+        soap:        s.soapEntries,
+        mcpwa:       s.mcpwaEntries,
+        sword:       s.swordEntries,
+        sermons:     s.sermonNotes,
+        prayer:      s.prayerRequests,
+        readingPlans: s.readingPlans,
+        profile:     s.profile,
+        reminders:   s.reminderSettings,
+        method:      s.selectedMethod,
+        onboarding:  s.isOnboardingDone,
+      }).catch(() => {});
+    }
+
     // 2. Sign out of Firebase
     await firebaseSignOut();
-    // 3. Clear active UID from storage service
+
+    // 3. Clear active UID in storage (data stays on-device, scoped by uid)
     storage.setActiveUid(null);
-    // 4. Reset in-memory store
+
+    // 4. Reset in-memory state — local AsyncStorage data is NOT deleted
     set({
       isOnboardingDone: false,
       profile: null,
@@ -92,6 +116,7 @@ export const useAppStore = create<AppState>((set) => ({
       reminderSettings: null,
       selectedMethod: 'SOAP',
       readingPlans: {},
+      prayerRequests: [],
     });
   },
 
@@ -132,6 +157,9 @@ export const useAppStore = create<AppState>((set) => ({
     readingPlans: { ...s.readingPlans, [plan.planId]: plan },
   })),
 
+  prayerRequests: [],
+  setPrayerRequests: (requests) => set({ prayerRequests: requests }),
+
   // ── hydrate: global / device-level settings only ─────────────────────────
   hydrate: async () => {
     const [isDarkMode, bibleTranslation] = await Promise.all([
@@ -156,6 +184,7 @@ export const useAppStore = create<AppState>((set) => ({
       swordEntries,
       sermonNotes,
       readingPlans,
+      prayerRequests,
     ] = await Promise.all([
       storage.isOnboardingDone(),
       storage.getSelectedMethod(),
@@ -166,6 +195,7 @@ export const useAppStore = create<AppState>((set) => ({
       storage.getSwordEntries(),
       storage.getSermonNotes(),
       storage.getUserReadingPlans(),
+      storage.getPrayerRequests(),
     ]);
 
     // Attach avatarUri to the profile object
@@ -183,6 +213,56 @@ export const useAppStore = create<AppState>((set) => ({
       sermonNotes,
       firebaseUid: uid,
       readingPlans,
+      prayerRequests,
     });
+
+    // ── Background cloud sync: restore data from other devices / after reinstall ──
+    void (async () => {
+      try {
+        const cloud = await pullFromCloud(uid);
+        if (!cloud.journals && !cloud.settings) return;
+
+        const updates: Record<string, unknown> = {};
+
+        if (cloud.journals) {
+          const j = cloud.journals;
+          const mergedSoap    = mergeById(soapEntries,    j.soap    ?? []);
+          const mergedMcpwa   = mergeById(mcpwaEntries,   j.mcpwa   ?? []);
+          const mergedSword   = mergeById(swordEntries,   j.sword   ?? []);
+          const mergedSermons = mergeById(sermonNotes,    j.sermons ?? []);
+          const mergedPrayer  = mergeById(prayerRequests, j.prayer  ?? []);
+
+          await Promise.all([
+            storage.importEntries(storage.K.SOAP,    uid, mergedSoap),
+            storage.importEntries(storage.K.MCPWA,   uid, mergedMcpwa),
+            storage.importEntries(storage.K.SWORD,   uid, mergedSword),
+            storage.importEntries(storage.K.SERMONS, uid, mergedSermons),
+            storage.importEntries(storage.K.PRAYER,  uid, mergedPrayer),
+          ]);
+          updates.soapEntries    = mergedSoap;
+          updates.mcpwaEntries   = mergedMcpwa;
+          updates.swordEntries   = mergedSword;
+          updates.sermonNotes    = mergedSermons;
+          updates.prayerRequests = mergedPrayer;
+
+          if (j.readingPlans && Object.keys(j.readingPlans).length > 0) {
+            const mergedPlans = { ...j.readingPlans, ...readingPlans };
+            await storage.saveUserReadingPlans(mergedPlans);
+            updates.readingPlans = mergedPlans;
+          }
+        }
+
+        if (cloud.settings?.profile) {
+          const cp = cloud.settings.profile;
+          if ((cp.completedCount ?? 0) > (profileWithAvatar.completedCount ?? 0)) {
+            const merged = { ...cp, avatarUri: profileWithAvatar.avatarUri };
+            await storage.saveUserProfile(merged);
+            updates.profile = merged;
+          }
+        }
+
+        if (Object.keys(updates).length > 0) set(updates as unknown as AppState);
+      } catch { /* stay silent if cloud pull fails */ }
+    })();
   },
 }));

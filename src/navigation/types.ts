@@ -46,6 +46,7 @@ export type JournalStackParamList = {
   McpwaJournal: { entryId?: string; prefill?: JournalPrefill };
   SwordJournal: { entryId?: string; prefill?: JournalPrefill };
   SermonNotes: { noteId?: string };
+  PrayerJournal: undefined;
 };
 
 export type JournalPrefill = {
@@ -63,10 +64,11 @@ export type HistoryStackParamList = {
 // ─── Profile Stack ────────────────────────────────────────────────────────────
 
 export type ProfileStackParamList = {
-  ProfileMain: undefined;
-  Reminders:   undefined;
-  Feedback:    undefined;
-  Admin:       undefined;
+  ProfileMain:     undefined;
+  Reminders:       undefined;
+  Feedback:        undefined;
+  Admin:           undefined;
+  Accountability:  undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

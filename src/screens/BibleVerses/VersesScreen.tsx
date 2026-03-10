@@ -8,19 +8,24 @@
  *  - Journal button navigates to Journal tab pre-filled with selected verse(s)
  */
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   ScrollView,
   Share,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as Speech from 'expo-speech';
 import { Icon } from 'react-native-paper';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useRoute, CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -81,6 +86,13 @@ export default function VersesScreen() {
   const [selected,  setSelected]  = useState<Set<number>>(new Set());
   const [pickerOpen, setPickerOpen] = useState(false);
   const [highlights, setHighlights] = useState<Record<number, string>>({});
+  const [shareCardOpen, setShareCardOpen] = useState(false);
+  const [capturing,    setCapturing]    = useState(false);
+  const shareCardRef  = useRef<View>(null);
+  const ttsCancelRef   = useRef(false);
+
+  const [ttsIdx, setTtsIdx] = useState(-1);
+  const isListening = ttsIdx >= 0;
 
   useEffect(() => {
     setLoading(true);
@@ -94,6 +106,21 @@ export default function VersesScreen() {
 
     void saveBiblePosition(`${bookName} ${chapter}`, chapter);
   }, [bookId, bookName, chapter, retryKey, bibleTranslation]);
+
+  // Stop TTS when the chapter changes
+  useEffect(() => {
+    ttsCancelRef.current = true;
+    Speech.stop();
+    setTtsIdx(-1);
+  }, [bookId, chapter]);
+
+  // Stop TTS on unmount
+  useEffect(() => {
+    return () => {
+      ttsCancelRef.current = true;
+      Speech.stop();
+    };
+  }, []);
 
   const toggleVerse = useCallback((verseNum: number) => {
     setSelected((prev) => {
@@ -162,6 +189,25 @@ export default function VersesScreen() {
     setSelected(new Set());
   }
 
+  async function handleShareCard() {
+    setShareCardOpen(true);
+  }
+
+  async function captureAndShare() {
+    if (!shareCardRef.current || capturing) return;
+    setCapturing(true);
+    try {
+      const uri = await captureRef(shareCardRef, { format: 'png', quality: 1 });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share Verse Card' });
+      }
+    } catch {
+      /* dismissed */
+    } finally {
+      setCapturing(false);
+    }
+  }
+
   function handleJournal() {
     if (!selectedVerseTexts) return;
     const prefill = { reference: selectedReference, text: selectedVerseTexts };
@@ -170,6 +216,30 @@ export default function VersesScreen() {
       screen: 'JournalHome',
       params: { prefill },
     });
+  }
+
+  function startTts(idx: number) {
+    if (ttsCancelRef.current || idx >= verses.length) { setTtsIdx(-1); return; }
+    setTtsIdx(idx);
+    Speech.speak(verses[idx].text, {
+      rate: 0.9,
+      onDone:  () => { if (!ttsCancelRef.current) startTts(idx + 1); },
+      onError: () => { if (!ttsCancelRef.current) setTtsIdx(-1); },
+    });
+  }
+
+  function stopTts() {
+    ttsCancelRef.current = true;
+    Speech.stop();
+    setTtsIdx(-1);
+  }
+
+  function toggleListen() {
+    if (isListening) { stopTts(); return; }
+    if (verses.length > 0) {
+      ttsCancelRef.current = false;
+      startTts(0);
+    }
   }
 
   function navigatePrev() {
@@ -203,11 +273,19 @@ export default function VersesScreen() {
         </TouchableOpacity>
 
         <View style={styles.navBtn}>
-          {hasSelection && (
+          {hasSelection ? (
             <TouchableOpacity onPress={() => setSelected(new Set())} hitSlop={8}>
               <Icon source="close-circle-outline" size={22} color={TEXT_MUTED} />
             </TouchableOpacity>
-          )}
+          ) : !loading && verses.length > 0 ? (
+            <TouchableOpacity onPress={toggleListen} hitSlop={8}>
+              <Icon
+                source={isListening ? 'stop-circle-outline' : 'headphones'}
+                size={22}
+                color={isListening ? VNUM_CLR : TEXT_MUTED}
+              />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
 
@@ -248,8 +326,9 @@ export default function VersesScreen() {
           ) : (
             <Text style={styles.paragraph}>
               {verses.map((v) => {
-                const hlBg  = highlights[v.verse];
-                const isSel = selected.has(v.verse);
+                const hlBg      = highlights[v.verse];
+                const isSel     = selected.has(v.verse);
+                const isSpeaking = isListening && verses[ttsIdx]?.verse === v.verse;
                 return (
                   <Text key={v.id}>
                     <Text
@@ -261,9 +340,10 @@ export default function VersesScreen() {
                     <Text
                       style={[
                         styles.verseText,
-                        hlBg  ? { backgroundColor: hlBg }
-                             : isSel ? styles.verseTextSelected
-                             : undefined,
+                        isSpeaking ? { backgroundColor: 'rgba(78,205,196,0.18)' }
+                                   : hlBg  ? { backgroundColor: hlBg }
+                                   : isSel ? styles.verseTextSelected
+                                   : undefined,
                       ]}
                       onPress={() => toggleVerse(v.verse)}
                     >
@@ -275,6 +355,20 @@ export default function VersesScreen() {
             </Text>
           )}
         </ScrollView>
+      )}
+
+      {isListening && (
+        <View style={audioBar.bar}>
+          <Icon source="headphones" size={16} color={VNUM_CLR} />
+          <Text style={audioBar.label} numberOfLines={1}>
+            {verses[ttsIdx]
+              ? `${bookName} ${chapter}:${verses[ttsIdx].verse}  ·  ${ttsIdx + 1} of ${verses.length}`
+              : 'Reading…'}
+          </Text>
+          <TouchableOpacity onPress={stopTts} hitSlop={8}>
+            <Icon source="stop-circle-outline" size={26} color="#FF453A" />
+          </TouchableOpacity>
+        </View>
       )}
 
       {!hasSelection && (
@@ -326,6 +420,11 @@ export default function VersesScreen() {
               <Text style={styles.toolBtnLabel}>Share</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.toolBtn} onPress={handleShareCard}>
+              <Icon source="image-outline" size={20} color={VNUM_CLR} />
+              <Text style={[styles.toolBtnLabel, { color: VNUM_CLR }]}>Card</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.toolBtn} onPress={handleJournal}>
               <Icon source="notebook-edit-outline" size={20} color={VNUM_CLR} />
               <Text style={[styles.toolBtnLabel, { color: VNUM_CLR }]}>Journal</Text>
@@ -365,6 +464,135 @@ export default function VersesScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ─── Share Card Modal ──────────────────────────────────────────────── */}
+      <Modal
+        visible={shareCardOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShareCardOpen(false)}
+      >
+        <View style={scm.overlay}>
+          <View style={scm.sheet}>
+            <View style={scm.handle} />
+            <Text style={scm.previewLabel}>PREVIEW</Text>
+
+            <ScrollView contentContainerStyle={scm.scrollContent} showsVerticalScrollIndicator={false}>
+              {/* Capturable card */}
+              <View ref={shareCardRef} collapsable={false} style={scm.card}>
+                <View style={scm.band}>
+                  <Image source={require('../../../assets/logotransparent1.png')} style={scm.bandLogo} />
+                  <Text style={scm.bandRight}>VERSE CARD</Text>
+                </View>
+                <View style={scm.body}>
+                  <Text style={scm.bigQuote}>“</Text>
+                  <Text style={scm.verseText}>{selectedVerseTexts}</Text>
+                  <View style={scm.accentBar} />
+                  <Text style={scm.verseRef}>{selectedReference}</Text>
+                </View>
+                <View style={scm.footer}>
+                  <Text style={scm.footerLeft}>{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
+                  <Image source={require('../../../assets/logotransparent1.png')} style={scm.footerLogo} />
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={scm.btnRow}>
+              <TouchableOpacity
+                style={scm.closeBtn}
+                onPress={() => { setShareCardOpen(false); setSelected(new Set()); }}
+              >
+                <Text style={scm.closeTxt}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[scm.shareBtn, { backgroundColor: VNUM_CLR }]}
+                onPress={captureAndShare}
+                disabled={capturing}
+                activeOpacity={0.85}
+              >
+                {capturing
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <>
+                      <Icon source="share-variant" size={16} color="#fff" />
+                      <Text style={scm.shareTxt}>Share Image</Text>
+                    </>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
+
+// ─── Share Card Modal Styles ────────────────────────────────────────────────────────
+
+const scm = StyleSheet.create({
+  overlay:      { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.8)' },
+  sheet: {
+    backgroundColor: '#1A1A1A',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingHorizontal: 16, paddingBottom: 32, maxHeight: '85%',
+  },
+  handle:       { width: 36, height: 4, borderRadius: 2, backgroundColor: '#444', alignSelf: 'center', marginTop: 10, marginBottom: 12 },
+  previewLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, textAlign: 'center', color: '#888', marginBottom: 12 },
+  scrollContent:{ alignItems: 'center', paddingBottom: 8 },
+
+  // Card design
+  card: {
+    width: 320, backgroundColor: '#FEFCF3',
+    borderRadius: 16, overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8,
+    elevation: 8,
+  },
+  band: {
+    backgroundColor: '#0D4D3A',
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 10,
+  },
+  bandLeft:  { fontSize: 9, fontWeight: '700', color: '#C8A86A', letterSpacing: 2 },
+  bandLogo:  { width: 90, height: 26, resizeMode: 'contain' },
+  bandRight: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.6)', letterSpacing: 2 },
+  body:      { padding: 24, paddingTop: 16 },
+  bigQuote:  { fontSize: 56, color: '#C8A86A', lineHeight: 48, marginBottom: 4, fontFamily: 'serif' },
+  verseText: { fontSize: 15, color: '#374151', lineHeight: 22, fontStyle: 'italic', marginBottom: 16 },
+  accentBar: { height: 2, width: 40, backgroundColor: '#C8A86A', marginBottom: 10 },
+  verseRef:  { fontSize: 13, fontWeight: '800', color: '#0D4D3A', letterSpacing: 0.5 },
+  footer: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderTopWidth: 1, borderTopColor: '#E5E7EB', backgroundColor: '#F5F0E8',
+  },
+  footerLeft:  { fontSize: 9, color: '#9CA3AF' },
+  footerLogo:  { width: 70, height: 20, resizeMode: 'contain', opacity: 0.5 },
+  footerRight: { fontSize: 9, color: '#0D4D3A', fontWeight: '800', letterSpacing: 2 },
+
+  // Buttons
+  btnRow:   { flexDirection: 'row', gap: 10, marginTop: 16 },
+  closeBtn: { flex: 1, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#444' },
+  closeTxt: { fontSize: 14, fontWeight: '600', color: '#aaa' },
+  shareBtn: { flex: 2, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  shareTxt: { fontSize: 14, fontWeight: '700', color: '#fff' },
+});
+
+// ─── Audio Player Bar ─────────────────────────────────────────────────────────
+const audioBar = StyleSheet.create({
+  bar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#1C1C1E',
+    borderTopWidth: 1,
+    borderTopColor: '#2C2C2E',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  label: {
+    flex: 1,
+    fontSize: 12,
+    color: '#B0B0B0',
+    fontWeight: '500',
+  },
+});

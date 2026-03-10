@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity, Image,
   Modal, StyleSheet, ActivityIndicator, Platform,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
@@ -74,7 +74,7 @@ const cs = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  appName:     { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 3 },
+  appLogo:     { width: 100, height: 30, resizeMode: 'contain' },
   typePill:    {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 999,
@@ -122,7 +122,7 @@ const cs = StyleSheet.create({
     justifyContent: 'space-between',
   },
   footerLeft:  { fontSize: 9, letterSpacing: 0.3 },
-  footerRight: { fontSize: 9, fontWeight: '700', letterSpacing: 2 },
+  footerLogo:  { width: 72, height: 20, resizeMode: 'contain', opacity: 0.6 },
 });
 
 // ─── CardRow ─────────────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
   return (
     <View style={[cs.card, { backgroundColor: t.bg }]}>
       <View style={[cs.cardHeader, { backgroundColor: t.header }]}>
-        <Text style={cs.appName}>✦ DevoVerse</Text>
+        <Image source={require('../../../assets/logotransparent1.png')} style={cs.appLogo} />
         <View style={cs.typePill}>
           <Text style={cs.typePillText}>{entryType.toUpperCase()}</Text>
         </View>
@@ -217,8 +217,8 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
       </View>
 
       <View style={[cs.cardFooter, { backgroundColor: t.surface, borderTopColor: t.border }]}>
-        <Text style={[cs.footerLeft,  { color: t.muted   }]}>DevoVerse Devotional App</Text>
-        <Text style={[cs.footerRight, { color: t.label_  }]}>DEVOVERSE</Text>
+        <Text style={[cs.footerLeft, { color: t.muted }]}>DevoVerse Devotional App</Text>
+        <Image source={require('../../../assets/logotransparent1.png')} style={cs.footerLogo} />
       </View>
     </View>
   );

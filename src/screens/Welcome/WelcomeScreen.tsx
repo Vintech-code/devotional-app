@@ -32,7 +32,7 @@ export default function WelcomeScreen({ navigation }: Props) {
         <View style={styles.logoWrap}>
           {/* eslint-disable-next-line @typescript-eslint/no-var-requires */}
           <Image
-            source={require('../../../assets/logotransparent.png')}
+            source={require('../../../assets/logotransparent1.png')}
             style={styles.logo}
             resizeMode="contain"
           />

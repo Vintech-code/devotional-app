@@ -109,7 +109,7 @@ export default function ReadingPlansScreen() {
           return (
             <TouchableOpacity
               key={plan.id}
-              style={[styles.planCard, isActive && { borderColor: accent, borderWidth: 2 }]}
+              style={styles.planCard}
               activeOpacity={0.85}
               onPress={() => { void handleStartPlan(plan.id); }}
             >

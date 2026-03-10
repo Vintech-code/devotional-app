@@ -207,4 +207,33 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     fontSize: Typography.size.sm,
     color: c.textSecondary,
   },
+
+  // ── Prayer Journal card ──────────────────────────────────────────────
+  prayerCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: c.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  prayerIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+    backgroundColor: '#A855F722',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  prayerTitle: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textPrimary,
+    marginBottom: 2,
+  },
+  prayerSub: {
+    fontSize: Typography.size.xs,
+    color: c.textMuted,
+  },
 });

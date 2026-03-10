@@ -82,7 +82,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Image
           // eslint-disable-next-line @typescript-eslint/no-var-requires
-          source={require('../../../assets/logotransparent.png')}
+          source={require('../../../assets/logotransparent1.png')}
           style={styles.headerLogo}
           resizeMode="contain"
         />

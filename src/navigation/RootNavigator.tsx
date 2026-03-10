@@ -45,8 +45,10 @@ import SoapJournalScreen from '../screens/SoapJournal/SoapJournalScreen';
 import McpwaJournalScreen from '../screens/McpwaJournal/McpwaJournalScreen';
 import SwordJournalScreen from '../screens/SwordJournal/SwordJournalScreen';
 import SermonNotesScreen from '../screens/SermonNotes/SermonNotesScreen';
+import PrayerJournalScreen from '../screens/PrayerJournal/PrayerJournalScreen';
 import VerseOfDayScreen from '../screens/VerseOfDay/VerseOfDayScreen';
 import ReadingPlansScreen from '../screens/ReadingPlan/ReadingPlansScreen';
+import AccountabilityScreen from '../screens/Accountability/AccountabilityScreen';
 import ReadingPlanDetailScreen from '../screens/ReadingPlan/ReadingPlanDetailScreen';
 
 // ─── Tab Icon Component ───────────────────────────────────────────────────────
@@ -108,6 +110,7 @@ function JournalNavigator() {
       <JournalStack.Screen name="McpwaJournal" component={McpwaJournalScreen} />
       <JournalStack.Screen name="SwordJournal" component={SwordJournalScreen} />
       <JournalStack.Screen name="SermonNotes" component={SermonNotesScreen} />
+      <JournalStack.Screen name="PrayerJournal" component={PrayerJournalScreen} />
     </JournalStack.Navigator>
   );
 }
@@ -161,10 +164,11 @@ const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 function ProfileNavigator() {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
-      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
-      <ProfileStack.Screen name="Reminders"   component={RemindersScreen} />
-      <ProfileStack.Screen name="Feedback"    component={FeedbackScreen} />
-      <ProfileStack.Screen name="Admin"       component={AdminScreen} />
+      <ProfileStack.Screen name="ProfileMain"    component={ProfileScreen} />
+      <ProfileStack.Screen name="Reminders"      component={RemindersScreen} />
+      <ProfileStack.Screen name="Feedback"       component={FeedbackScreen} />
+      <ProfileStack.Screen name="Admin"          component={AdminScreen} />
+      <ProfileStack.Screen name="Accountability" component={AccountabilityScreen} />
     </ProfileStack.Navigator>
   );
 }

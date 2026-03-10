@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  Modal, StyleSheet, ActivityIndicator, Platform, Alert, Switch,
+  Modal, StyleSheet, ActivityIndicator, Platform, Alert, Switch, Image,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -69,6 +69,7 @@ const vcs = StyleSheet.create({
   },
   bandLeft:  { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 3 },
   bandRight: { color: 'rgba(255,255,255,0.6)', fontSize: 10, letterSpacing: 0.5 },
+  bandLogo:  { width: 90, height: 28, resizeMode: 'contain' },
   body: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 14 },
   bigQuote: {
     fontSize: 52,
@@ -99,6 +100,7 @@ const vcs = StyleSheet.create({
     alignItems: 'center',
   },
   footerLeft:  { fontSize: 9, color: VCC.muted },
+  footerLogo:   { width: 70, height: 20, resizeMode: 'contain', opacity: 0.5 },
   footerRight: { fontSize: 9, color: VCC.ref, fontWeight: '800', letterSpacing: 2 },
 });
 
@@ -106,18 +108,18 @@ function VerseShareCard({ reference, text, date }: { reference: string; text: st
   return (
     <View style={vcs.card}>
       <View style={vcs.band}>
-        <Text style={vcs.bandLeft}>✦ DEVOVERSE</Text>
+        <Image source={require('../../../assets/logotransparent1.png')} style={vcs.bandLogo} />
         <Text style={vcs.bandRight}>VERSE OF THE DAY</Text>
       </View>
       <View style={vcs.body}>
-        <Text style={vcs.bigQuote}>"</Text>
+        <Text style={vcs.bigQuote}>“</Text>
         <Text style={vcs.verseText}>{text}</Text>
         <View style={vcs.accentBar} />
         <Text style={vcs.verseRef}>{reference}</Text>
       </View>
       <View style={vcs.footer}>
         <Text style={vcs.footerLeft}>{date}</Text>
-        <Text style={vcs.footerRight}>DEVOVERSE</Text>
+        <Image source={require('../../../assets/logotransparent1.png')} style={vcs.footerLogo} />
       </View>
     </View>
   );

@@ -72,7 +72,7 @@ export default function MethodSelectionScreen({ navigation }: Props) {
         <View style={styles.logoWrap}>
           <Image
             // eslint-disable-next-line @typescript-eslint/no-var-requires
-            source={require('../../../assets/logotransparent.png')}
+            source={require('../../../assets/logotransparent1.png')}
             style={styles.logo}
             resizeMode="contain"
           />
