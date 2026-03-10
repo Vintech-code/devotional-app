@@ -27,6 +27,7 @@ function genCode(len = 6): string {
 export interface PublicProfile {
   userId: string; displayName: string; code: string;
   streakCount: number; completedCount: number; lastActivity: number;
+  avatarUri?: string;
 }
 
 export interface PartnerRequest {
@@ -51,8 +52,8 @@ export async function getPartnerStats(partnerUid: string): Promise<PublicProfile
   return snap.exists() ? (snap.data() as PublicProfile) : null;
 }
 
-export async function syncPublicStats(userId: string, streakCount: number, completedCount: number): Promise<void> {
-  await setDoc(doc(db, 'publicProfiles', userId), { streakCount, completedCount, lastActivity: Date.now() }, { merge: true });
+export async function syncPublicStats(userId: string, streakCount: number, completedCount: number, avatarUri?: string): Promise<void> {
+  await setDoc(doc(db, 'publicProfiles', userId), { streakCount, completedCount, lastActivity: Date.now(), ...(avatarUri !== undefined ? { avatarUri } : {}) }, { merge: true });
 }
 
 export async function sendPartnerRequest(fromUid: string, fromName: string, toCode: string): Promise<'ok'|'not_found'|'already_sent'|'self'|'already_partners'> {

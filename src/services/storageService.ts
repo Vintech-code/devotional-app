@@ -10,6 +10,8 @@ import {
   UserReadingPlan,
   UserReadingPlans,
   PrayerRequest,
+  PrayEntry,
+  ActsEntry,
 } from '../types';
 
 // ─── Active User ──────────────────────────────────────────────────────────────
@@ -52,6 +54,11 @@ function calculateCurrentStreak(timestamps: number[]): number {
   const days = new Set(timestamps.map(getDayKey));
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
+  // If no entry today, allow yesterday as the streak start (grace period)
+  if (!days.has(cursor.toISOString().slice(0, 10))) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!days.has(cursor.toISOString().slice(0, 10))) return 0;
+  }
   let streak = 0;
   while (days.has(cursor.toISOString().slice(0, 10))) {
     streak += 1;
@@ -81,6 +88,8 @@ export const K = {
   AVATAR:     '@devotional/avatar_uri',
   READING_PLAN: '@devotional/reading_plan',
   PRAYER:       '@devotional/prayer_requests',
+  PRAY_JOURNAL: '@devotional/pray_entries',
+  ACTS_JOURNAL: '@devotional/acts_entries',
   // Global / device-level (NOT UID-scoped)
   DARK_MODE:   '@devotional/dark_mode',
   BIBLE_POS:   '@devotional/bible_position',
@@ -191,6 +200,46 @@ export async function deleteSermonNote(id: string): Promise<void> {
   await refreshProfileProgress();
 }
 
+// --- PRAY Journal ---
+
+export async function getPrayEntries(): Promise<PrayEntry[]> {
+  return getJson<PrayEntry[]>(uk(K.PRAY_JOURNAL), []);
+}
+
+export async function savePrayEntry(entry: PrayEntry): Promise<void> {
+  const entries = await getPrayEntries();
+  const idx = entries.findIndex((e) => e.id === entry.id);
+  if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
+  await setJson(uk(K.PRAY_JOURNAL), entries);
+  await refreshProfileProgress();
+}
+
+export async function deletePrayEntry(id: string): Promise<void> {
+  const entries = await getPrayEntries();
+  await setJson(uk(K.PRAY_JOURNAL), entries.filter((e) => e.id !== id));
+  await refreshProfileProgress();
+}
+
+// --- ACTS Journal ---
+
+export async function getActsEntries(): Promise<ActsEntry[]> {
+  return getJson<ActsEntry[]>(uk(K.ACTS_JOURNAL), []);
+}
+
+export async function saveActsEntry(entry: ActsEntry): Promise<void> {
+  const entries = await getActsEntries();
+  const idx = entries.findIndex((e) => e.id === entry.id);
+  if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
+  await setJson(uk(K.ACTS_JOURNAL), entries);
+  await refreshProfileProgress();
+}
+
+export async function deleteActsEntry(id: string): Promise<void> {
+  const entries = await getActsEntries();
+  await setJson(uk(K.ACTS_JOURNAL), entries.filter((e) => e.id !== id));
+  await refreshProfileProgress();
+}
+
 // ─── User Profile ─────────────────────────────────────────────────────────────
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -211,20 +260,24 @@ export async function saveUserProfile(profile: UserProfile): Promise<void> {
 }
 
 export async function refreshProfileProgress(): Promise<UserProfile> {
-  const [soap, mcpwa, sword, sermons, profile] = await Promise.all([
+  const [soap, mcpwa, sword, sermons, pray, acts, profile] = await Promise.all([
     getSoapEntries(),
     getMcpwaEntries(),
     getSwordEntries(),
     getSermonNotes(),
+    getPrayEntries(),
+    getActsEntries(),
     getUserProfile(),
   ]);
 
-  const completedCount = soap.length + mcpwa.length + sword.length + sermons.length;
+  const completedCount = soap.length + mcpwa.length + sword.length + sermons.length + pray.length + acts.length;
   const allTs = [
     ...soap.map((e) => e.createdAt),
     ...mcpwa.map((e) => e.createdAt),
     ...sword.map((e) => e.createdAt),
     ...sermons.map((e) => e.createdAt),
+    ...pray.map((e) => e.createdAt),
+    ...acts.map((e) => e.createdAt),
   ];
   const { level, levelTitle } = calculateLevel(completedCount);
   const next: UserProfile = {

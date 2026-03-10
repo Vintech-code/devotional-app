@@ -49,6 +49,7 @@ export interface AdminUserRecord {
   disabled: boolean;
   /** Derived from the synced profile data stored by syncService. */
   entryCount: number;
+  avatarUri?: string;
 }
 
 // ─── Collection identifiers ───────────────────────────────────────────────────
@@ -129,6 +130,7 @@ export async function getAllUsers(): Promise<AdminUserRecord[]> {
         registeredAt: (data.registeredAt as number) ?? (data._updatedAt as number) ?? 0,
         disabled:     data.disabled === true,
         entryCount:   soap + mcpwa + sword + sermon,
+        avatarUri:    (data.profile?.avatarUri as string | undefined) ?? undefined,
       } as AdminUserRecord;
     })
     .filter((u) => u.email !== '');

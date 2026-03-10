@@ -1,6 +1,6 @@
 // ─── Devotional Methods ──────────────────────────────────────────────────────
 
-export type DevotionalMethodId = 'SOAP' | 'MCPWA' | 'SWORD';
+export type DevotionalMethodId = 'SOAP' | 'MCPWA' | 'SWORD' | 'PRAY' | 'ACTS';
 
 export interface DevotionalMethod {
   id: DevotionalMethodId;
@@ -50,7 +50,35 @@ export interface SwordEntry {
   createdAt: number;
 }
 
-export type JournalEntry = SoapEntry | McpwaEntry | SwordEntry;
+// ─── PRAY Entry ──────────────────────────────────────────────────────────────
+
+export interface PrayEntry {
+  id: string;
+  date: string;
+  scripture: string;
+  fullVerse: string;
+  praise: string;      // P – Praise
+  repent: string;      // R – Repent
+  ask: string;         // A – Ask
+  yield_: string;      // Y – Yield  (avoid reserved keyword 'yield')
+  createdAt: number;
+}
+
+// ─── ACTS Entry ───────────────────────────────────────────────────────────────
+
+export interface ActsEntry {
+  id: string;
+  date: string;
+  scripture: string;
+  fullVerse: string;
+  adoration: string;     // A – Adoration
+  confession: string;    // C – Confession
+  thanksgiving: string;  // T – Thanksgiving
+  supplication: string;  // S – Supplication
+  createdAt: number;
+}
+
+export type JournalEntry = SoapEntry | McpwaEntry | SwordEntry | PrayEntry | ActsEntry;
 
 // ─── Sermon Notes ────────────────────────────────────────────────────────────
 

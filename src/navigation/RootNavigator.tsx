@@ -44,6 +44,8 @@ import JournalHomeScreen from '../screens/JournalHome/JournalHomeScreen';
 import SoapJournalScreen from '../screens/SoapJournal/SoapJournalScreen';
 import McpwaJournalScreen from '../screens/McpwaJournal/McpwaJournalScreen';
 import SwordJournalScreen from '../screens/SwordJournal/SwordJournalScreen';
+import PrayJournalScreen from '../screens/PrayJournal/PrayJournalScreen';
+import ActsJournalScreen from '../screens/ActsJournal/ActsJournalScreen';
 import SermonNotesScreen from '../screens/SermonNotes/SermonNotesScreen';
 import PrayerJournalScreen from '../screens/PrayerJournal/PrayerJournalScreen';
 import VerseOfDayScreen from '../screens/VerseOfDay/VerseOfDayScreen';
@@ -109,6 +111,8 @@ function JournalNavigator() {
       <JournalStack.Screen name="SoapJournal" component={SoapJournalScreen} />
       <JournalStack.Screen name="McpwaJournal" component={McpwaJournalScreen} />
       <JournalStack.Screen name="SwordJournal" component={SwordJournalScreen} />
+      <JournalStack.Screen name="PrayJournal" component={PrayJournalScreen} />
+      <JournalStack.Screen name="ActsJournal" component={ActsJournalScreen} />
       <JournalStack.Screen name="SermonNotes" component={SermonNotesScreen} />
       <JournalStack.Screen name="PrayerJournal" component={PrayerJournalScreen} />
     </JournalStack.Navigator>

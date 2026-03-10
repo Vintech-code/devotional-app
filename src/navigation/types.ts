@@ -45,6 +45,8 @@ export type JournalStackParamList = {
   SoapJournal: { entryId?: string; prefill?: JournalPrefill };
   McpwaJournal: { entryId?: string; prefill?: JournalPrefill };
   SwordJournal: { entryId?: string; prefill?: JournalPrefill };
+  PrayJournal: { entryId?: string; prefill?: JournalPrefill };
+  ActsJournal: { entryId?: string; prefill?: JournalPrefill };
   SermonNotes: { noteId?: string };
   PrayerJournal: undefined;
 };

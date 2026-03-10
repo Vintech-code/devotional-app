@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 
 import { useColors } from '../../theme';
+import { makeStyles } from './Accountability.styles';
 import { useAppStore } from '../../store/useAppStore';
 import { auth } from '../../services/firebase';
 import {
@@ -278,7 +279,14 @@ export default function AccountabilityScreen() {
                   <View key={conn.uid} style={styles.partnerCard}>
                     <View style={styles.partnerTop}>
                       <View style={styles.partnerAvatar}>
-                        <Text style={styles.partnerInitial}>{conn.name[0].toUpperCase()}</Text>
+                        {stats?.avatarUri ? (
+                          <Image
+                            source={{ uri: stats.avatarUri }}
+                            style={{ width: 48, height: 48, borderRadius: 24 }}
+                          />
+                        ) : (
+                          <Text style={styles.partnerInitial}>{conn.name[0].toUpperCase()}</Text>
+                        )}
                       </View>
                       <View style={styles.partnerInfo}>
                         <Text style={styles.partnerName}>{conn.name}</Text>
@@ -327,66 +335,4 @@ export default function AccountabilityScreen() {
   );
 }
 
-function makeStyles(colors: ReturnType<typeof useColors>) {
-  return StyleSheet.create({
-    safe:         { flex: 1, backgroundColor: colors.background },
-    header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
-    headerTitle:  { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
-    center:       { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    container:    { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 48 },
-    sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: colors.textMuted, marginBottom: 10, marginTop: 6 },
 
-    // Code
-    codeCard:    { backgroundColor: colors.surface, borderRadius: 16, padding: 20, marginBottom: 28, borderWidth: 1, borderColor: colors.border },
-    codeRow:     { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 14 },
-    codeChar:    { width: 44, height: 52, borderRadius: 10, backgroundColor: colors.background, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-    codeCharTxt: { fontSize: 22, fontWeight: '800', color: colors.primary },
-    codeHint:    { fontSize: 13, color: colors.textMuted, textAlign: 'center', marginBottom: 14, lineHeight: 18 },
-    copyBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 10, borderWidth: 1.5, borderColor: colors.primary, paddingVertical: 10 },
-    copyBtnDone: { backgroundColor: colors.primary, borderColor: colors.primary },
-    copyTxt:     { fontSize: 14, fontWeight: '600', color: colors.primary },
-
-    // Incoming requests
-    requestCard:  { backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 12 },
-    reqAvatar:    { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary + '22', alignItems: 'center', justifyContent: 'center' },
-    reqInitial:   { fontSize: 18, fontWeight: '800', color: colors.primary },
-    reqInfo:      { flex: 1 },
-    reqName:      { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-    reqTime:      { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-    reqActions:   { flexDirection: 'row', gap: 8 },
-    acceptBtn:    { backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7, minWidth: 64, alignItems: 'center' },
-    acceptTxt:    { fontSize: 13, fontWeight: '700', color: '#fff' },
-    declineBtn:   { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
-    declineTxt:   { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-
-    // Add partner
-    addCard:      { backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 28, borderWidth: 1, borderColor: colors.border },
-    addLabel:     { fontSize: 13, color: colors.textMuted, marginBottom: 12 },
-    inputRow:     { flexDirection: 'row', gap: 10 },
-    input:        { flex: 1, height: 48, borderRadius: 10, borderWidth: 1.5, borderColor: colors.border, paddingHorizontal: 14, fontSize: 18, fontWeight: '700', letterSpacing: 3, color: colors.textPrimary, backgroundColor: colors.background },
-    sendBtn:      { height: 48, paddingHorizontal: 20, borderRadius: 10, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-    sendBtnDisabled: { opacity: 0.45 },
-    sendTxt:      { fontSize: 14, fontWeight: '700', color: '#fff' },
-
-    // Partners
-    partnerCard:    { backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
-    partnerTop:     { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-    partnerAvatar:  { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primary + '22', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-    partnerInitial: { fontSize: 20, fontWeight: '800', color: colors.primary },
-    partnerInfo:    { flex: 1 },
-    partnerName:    { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-    partnerSince:   { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-    removeBtn:      { padding: 4 },
-    statsRow:       { flexDirection: 'row' },
-    statBox:        { flex: 1, backgroundColor: colors.background, borderRadius: 10, padding: 10, alignItems: 'center', gap: 2, borderWidth: 1, borderColor: colors.border },
-    statMid:        { marginHorizontal: 8 },
-    statNum:        { fontSize: 15, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' },
-    statLbl:        { fontSize: 9, fontWeight: '700', letterSpacing: 1, color: colors.textMuted },
-    noStats:        { fontSize: 12, color: colors.textMuted, textAlign: 'center', paddingVertical: 4 },
-
-    // Empty
-    emptyWrap:    { alignItems: 'center', paddingTop: 24, gap: 10 },
-    emptyTitle:   { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-    emptySub:     { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 20, paddingHorizontal: 10 },
-  });
-}

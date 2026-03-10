@@ -14,6 +14,8 @@ import {
   deleteMcpwaEntry,
   deleteSwordEntry,
   deleteSermonNote,
+  deletePrayEntry,
+  deleteActsEntry,
   refreshProfileProgress,
 } from '../../services/storageService';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
@@ -32,17 +34,23 @@ export default function JournalHistoryScreen() {
     MCPWA:  '#7C3AED',
     SWORD:  '#0891B2',
     Sermon: colors.accent,
+    PRAY:   '#A855F7',
+    ACTS:   '#10B981',
   };
   const navigation = useNavigation<Nav>();
   const soapEntries   = useAppStore((s) => s.soapEntries);
   const mcpwaEntries  = useAppStore((s) => s.mcpwaEntries);
   const swordEntries  = useAppStore((s) => s.swordEntries);
   const sermonNotes   = useAppStore((s) => s.sermonNotes);
+  const prayEntries   = useAppStore((s) => s.prayEntries);
+  const actsEntries   = useAppStore((s) => s.actsEntries);
   const profile       = useAppStore((s) => s.profile);
   const setSoapEntries = useAppStore((s) => s.setSoapEntries);
   const setMcpwaEntries = useAppStore((s) => s.setMcpwaEntries);
   const setSwordEntries = useAppStore((s) => s.setSwordEntries);
   const setSermonNotes = useAppStore((s) => s.setSermonNotes);
+  const setPrayEntries = useAppStore((s) => s.setPrayEntries);
+  const setActsEntries = useAppStore((s) => s.setActsEntries);
   const setProfile = useAppStore((s) => s.setProfile);
 
   const [search, setSearch] = useState('');
@@ -86,7 +94,23 @@ export default function JournalHistoryScreen() {
       searchText: [e.title, e.preacher, e.church, e.mainScripture, e.notes, ...(e.tags ?? [])]
         .filter(Boolean).join(' ').toLowerCase(),
     })),
-  ].sort((a, b) => b.createdAt - a.createdAt), [soapEntries, mcpwaEntries, swordEntries, sermonNotes]);
+    ...prayEntries.map((e) => ({
+      id: e.id, type: 'PRAY', date: e.date, createdAt: e.createdAt,
+      entryTitle: e.scripture || 'Prayer',
+      excerpt: e.praise || e.ask || '',
+      tags: ['Praise', 'Repent', 'Ask', 'Yield'],
+      searchText: [e.scripture, e.praise, e.repent, e.ask, e.yield_]
+        .filter(Boolean).join(' ').toLowerCase(),
+    })),
+    ...actsEntries.map((e) => ({
+      id: e.id, type: 'ACTS', date: e.date, createdAt: e.createdAt,
+      entryTitle: e.scripture || 'Prayer',
+      excerpt: e.adoration || e.thanksgiving || '',
+      tags: ['Adoration', 'Confession', 'Thanksgiving', 'Supplication'],
+      searchText: [e.scripture, e.adoration, e.confession, e.thanksgiving, e.supplication]
+        .filter(Boolean).join(' ').toLowerCase(),
+    })),
+  ].sort((a, b) => b.createdAt - a.createdAt), [soapEntries, mcpwaEntries, swordEntries, sermonNotes, prayEntries, actsEntries]);
 
   const filtered = useMemo(() => {
     let result = allEntries;
@@ -130,6 +154,12 @@ export default function JournalHistoryScreen() {
             } else if (item.type === 'SWORD') {
               await deleteSwordEntry(item.id);
               setSwordEntries(swordEntries.filter((e) => e.id !== item.id));
+            } else if (item.type === 'PRAY') {
+              await deletePrayEntry(item.id);
+              setPrayEntries(prayEntries.filter((e) => e.id !== item.id));
+            } else if (item.type === 'ACTS') {
+              await deleteActsEntry(item.id);
+              setActsEntries(actsEntries.filter((e) => e.id !== item.id));
             } else {
               await deleteSermonNote(item.id);
               setSermonNotes(sermonNotes.filter((e) => e.id !== item.id));
@@ -191,7 +221,7 @@ export default function JournalHistoryScreen() {
         style={styles.typeFilterScroll}
         contentContainerStyle={styles.typeFilterRow}
       >
-        {(['', 'SOAP', 'MCPWA', 'SWORD', 'Sermon'] as const).map((type) => (
+        {(['', 'SOAP', 'MCPWA', 'SWORD', 'PRAY', 'ACTS', 'Sermon'] as const).map((type) => (
           <TouchableOpacity
             key={type || 'all'}
             style={[styles.typeChip, activeType === type && styles.typeChipActive]}

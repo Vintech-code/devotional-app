@@ -54,7 +54,7 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   letter: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
-    color: c.primary,
+    color: '#A855F7',
   },
   sectionInfo: { flex: 1 },
   sectionTitle: {
@@ -86,7 +86,7 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   proTipLabel: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
-    color: c.primary,
+    color: '#A855F7',
     letterSpacing: 1,
     marginBottom: Spacing.xs,
   },
@@ -102,5 +102,4 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
-}
-);
+});

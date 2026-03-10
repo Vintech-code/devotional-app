@@ -48,6 +48,28 @@ const METHODS = [
     image: require('../../../assets/cards/sword.png') as number,
   },
   {
+    key: 'PRAY',
+    screen: 'PrayJournal' as keyof JournalStackParamList,
+    title: 'PRAY Method',
+    acronym: 'P · R · A · Y',
+    steps: 'Praise  ·  Repent  ·  Ask  ·  Yield',
+    duration: '10–15 min',
+    accent: '#A855F7',
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    image: require('../../../assets/cards/pray.png') as number,
+  },
+  {
+    key: 'ACTS',
+    screen: 'ActsJournal' as keyof JournalStackParamList,
+    title: 'ACTS Method',
+    acronym: 'A · C · T · S',
+    steps: 'Adoration  ·  Confession  ·  Thanksgiving  ·  Supplication',
+    duration: '10–15 min',
+    accent: '#10B981',
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    image: require('../../../assets/cards/acts.png') as number,
+  },
+  {
     key: 'SERMON',
     screen: 'SermonNotes' as keyof JournalStackParamList,
     title: 'Sermon Notes',
@@ -77,9 +99,11 @@ export default function JournalHomeScreen() {
   const mcpwaEntries = useAppStore((s) => s.mcpwaEntries);
   const swordEntries = useAppStore((s) => s.swordEntries);
   const sermonNotes  = useAppStore((s) => s.sermonNotes);
+  const prayEntries  = useAppStore((s) => s.prayEntries);
+  const actsEntries  = useAppStore((s) => s.actsEntries);
   const profile      = useAppStore((s) => s.profile);
 
-  const totalEntries = soapEntries.length + mcpwaEntries.length + swordEntries.length + sermonNotes.length;
+  const totalEntries = soapEntries.length + mcpwaEntries.length + swordEntries.length + sermonNotes.length + prayEntries.length + actsEntries.length;
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric',
@@ -91,9 +115,11 @@ export default function JournalHomeScreen() {
       ...mcpwaEntries.map((e) => ({ id: e.id, method: 'MCPWA',  label: e.scripture || e.date,       createdAt: e.createdAt, color: '#5A82B8' })),
       ...swordEntries.map((e) => ({ id: e.id, method: 'SWORD',  label: e.scripture || e.date,       createdAt: e.createdAt, color: '#C8A86A' })),
       ...sermonNotes.map((e)  => ({ id: e.id, method: 'Sermon', label: e.title || e.serviceDate,    createdAt: e.createdAt, color: '#8B7BF0' })),
+      ...prayEntries.map((e)  => ({ id: e.id, method: 'PRAY',   label: e.scripture || e.date,       createdAt: e.createdAt, color: '#A855F7' })),
+      ...actsEntries.map((e)  => ({ id: e.id, method: 'ACTS',   label: e.scripture || e.date,       createdAt: e.createdAt, color: '#10B981' })),
     ];
     return all.sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
-  }, [soapEntries, mcpwaEntries, swordEntries, sermonNotes]);
+  }, [soapEntries, mcpwaEntries, swordEntries, sermonNotes, prayEntries, actsEntries]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -129,6 +155,8 @@ export default function JournalHomeScreen() {
             { n: soapEntries.length,    l: 'SOAP'    },
             { n: mcpwaEntries.length,   l: 'MCPWA'   },
             { n: swordEntries.length,   l: 'SWORD'   },
+            { n: prayEntries.length,    l: 'PRAY'    },
+            { n: actsEntries.length,    l: 'ACTS'    },
             { n: sermonNotes.length,    l: 'Sermons' },
           ].map(({ n, l }) => (
             <View key={l} style={styles.statChip}>

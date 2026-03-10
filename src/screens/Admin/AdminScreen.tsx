@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -319,11 +320,18 @@ export default function AdminScreen() {
             ) : (
               filteredUsers.map((user) => (
                 <View key={user.uid} style={styles.userCard}>
-                  {/* Initials circle */}
+                  {/* Avatar */}
                   <View style={styles.userInitialCircle}>
-                    <Text style={styles.userInitialText}>
-                      {(user.name[0] ?? '?').toUpperCase()}
-                    </Text>
+                    {user.avatarUri ? (
+                      <Image
+                        source={{ uri: user.avatarUri }}
+                        style={{ width: 44, height: 44, borderRadius: 22 }}
+                      />
+                    ) : (
+                      <Text style={styles.userInitialText}>
+                        {(user.name[0] ?? '?').toUpperCase()}
+                      </Text>
+                    )}
                   </View>
 
                   {/* Info */}

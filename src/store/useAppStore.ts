@@ -10,10 +10,13 @@ import {
   UserReadingPlan,
   UserReadingPlans,
   PrayerRequest,
+  PrayEntry,
+  ActsEntry,
 } from '../types';
 import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
 import { pushToCloud, pullFromCloud, mergeById } from '../services/userDataSyncService';
+import { syncPublicStats } from '../services/partnerService';
 
 interface AppState {
   // Auth / onboarding
@@ -52,6 +55,10 @@ interface AppState {
   setSwordEntries: (entries: SwordEntry[]) => void;
   sermonNotes: SermonNote[];
   setSermonNotes: (notes: SermonNote[]) => void;
+  prayEntries: PrayEntry[];
+  setPrayEntries: (entries: PrayEntry[]) => void;
+  actsEntries: ActsEntry[];
+  setActsEntries: (entries: ActsEntry[]) => void;
 
   // Bible
   bibleTranslation: string;
@@ -90,6 +97,8 @@ export const useAppStore = create<AppState>((set) => ({
         sword:       s.swordEntries,
         sermons:     s.sermonNotes,
         prayer:      s.prayerRequests,
+        pray_journal: s.prayEntries,
+        acts_journal: s.actsEntries,
         readingPlans: s.readingPlans,
         profile:     s.profile,
         reminders:   s.reminderSettings,
@@ -117,6 +126,8 @@ export const useAppStore = create<AppState>((set) => ({
       selectedMethod: 'SOAP',
       readingPlans: {},
       prayerRequests: [],
+      prayEntries: [],
+      actsEntries: [],
     });
   },
 
@@ -132,7 +143,11 @@ export const useAppStore = create<AppState>((set) => ({
   setSelectedMethod: (method) => set({ selectedMethod: method }),
 
   profile: null,
-  setProfile: (profile) => set({ profile }),
+  setProfile: (profile) => {
+    const uid = useAppStore.getState().firebaseUid;
+    if (uid) void syncPublicStats(uid, profile.dayStreak ?? 0, profile.completedCount ?? 0, profile.avatarUri).catch(() => {});
+    set({ profile });
+  },
 
   reminderSettings: null,
   setReminderSettings: (settings) => set({ reminderSettings: settings }),
@@ -145,6 +160,10 @@ export const useAppStore = create<AppState>((set) => ({
   setSwordEntries: (entries) => set({ swordEntries: entries }),
   sermonNotes: [],
   setSermonNotes: (notes) => set({ sermonNotes: notes }),
+  prayEntries: [],
+  setPrayEntries: (entries) => set({ prayEntries: entries }),
+  actsEntries: [],
+  setActsEntries: (entries) => set({ actsEntries: entries }),
 
   bibleTranslation: 'kjv',
   setBibleTranslation: (id) => {
@@ -177,30 +196,35 @@ export const useAppStore = create<AppState>((set) => ({
     const [
       onboardingDone,
       selectedMethod,
-      profile,
       reminderSettings,
       soapEntries,
       mcpwaEntries,
       swordEntries,
       sermonNotes,
+      prayEntries,
+      actsEntries,
       readingPlans,
       prayerRequests,
     ] = await Promise.all([
       storage.isOnboardingDone(),
       storage.getSelectedMethod(),
-      storage.getUserProfile(),
       storage.getReminderSettings(),
       storage.getSoapEntries(),
       storage.getMcpwaEntries(),
       storage.getSwordEntries(),
       storage.getSermonNotes(),
+      storage.getPrayEntries(),
+      storage.getActsEntries(),
       storage.getUserReadingPlans(),
       storage.getPrayerRequests(),
     ]);
 
-    // Attach avatarUri to the profile object
-    const avatarUri = await storage.getAvatarUri();
-    const profileWithAvatar: UserProfile = { ...profile, avatarUri: avatarUri ?? undefined };
+    // Always recalculate streak & counts from actual entries (fixes reset-on-sign-in bug)
+    const [freshProfile, avatarUri] = await Promise.all([
+      storage.refreshProfileProgress(),
+      storage.getAvatarUri(),
+    ]);
+    const profileWithAvatar: UserProfile = { ...freshProfile, avatarUri: avatarUri ?? undefined };
 
     set({
       isOnboardingDone: onboardingDone,
@@ -214,7 +238,12 @@ export const useAppStore = create<AppState>((set) => ({
       firebaseUid: uid,
       readingPlans,
       prayerRequests,
+      prayEntries,
+      actsEntries,
     });
+
+    // Push fresh stats to Firestore so partners see up-to-date streak/completed/lastActive
+    void syncPublicStats(uid, profileWithAvatar.dayStreak ?? 0, profileWithAvatar.completedCount ?? 0, profileWithAvatar.avatarUri).catch(() => {});
 
     // ── Background cloud sync: restore data from other devices / after reinstall ──
     void (async () => {
@@ -226,24 +255,30 @@ export const useAppStore = create<AppState>((set) => ({
 
         if (cloud.journals) {
           const j = cloud.journals;
-          const mergedSoap    = mergeById(soapEntries,    j.soap    ?? []);
-          const mergedMcpwa   = mergeById(mcpwaEntries,   j.mcpwa   ?? []);
-          const mergedSword   = mergeById(swordEntries,   j.sword   ?? []);
-          const mergedSermons = mergeById(sermonNotes,    j.sermons ?? []);
-          const mergedPrayer  = mergeById(prayerRequests, j.prayer  ?? []);
+          const mergedSoap    = mergeById(soapEntries,    j.soap         ?? []);
+          const mergedMcpwa   = mergeById(mcpwaEntries,   j.mcpwa        ?? []);
+          const mergedSword   = mergeById(swordEntries,   j.sword        ?? []);
+          const mergedSermons = mergeById(sermonNotes,    j.sermons      ?? []);
+          const mergedPrayer  = mergeById(prayerRequests, j.prayer       ?? []);
+          const mergedPray    = mergeById(prayEntries,    j.pray_journal ?? []);
+          const mergedActs    = mergeById(actsEntries,    j.acts_journal ?? []);
 
           await Promise.all([
-            storage.importEntries(storage.K.SOAP,    uid, mergedSoap),
-            storage.importEntries(storage.K.MCPWA,   uid, mergedMcpwa),
-            storage.importEntries(storage.K.SWORD,   uid, mergedSword),
-            storage.importEntries(storage.K.SERMONS, uid, mergedSermons),
-            storage.importEntries(storage.K.PRAYER,  uid, mergedPrayer),
+            storage.importEntries(storage.K.SOAP,         uid, mergedSoap),
+            storage.importEntries(storage.K.MCPWA,        uid, mergedMcpwa),
+            storage.importEntries(storage.K.SWORD,        uid, mergedSword),
+            storage.importEntries(storage.K.SERMONS,      uid, mergedSermons),
+            storage.importEntries(storage.K.PRAYER,       uid, mergedPrayer),
+            storage.importEntries(storage.K.PRAY_JOURNAL, uid, mergedPray),
+            storage.importEntries(storage.K.ACTS_JOURNAL, uid, mergedActs),
           ]);
           updates.soapEntries    = mergedSoap;
           updates.mcpwaEntries   = mergedMcpwa;
           updates.swordEntries   = mergedSword;
           updates.sermonNotes    = mergedSermons;
           updates.prayerRequests = mergedPrayer;
+          updates.prayEntries    = mergedPray;
+          updates.actsEntries    = mergedActs;
 
           if (j.readingPlans && Object.keys(j.readingPlans).length > 0) {
             const mergedPlans = { ...j.readingPlans, ...readingPlans };

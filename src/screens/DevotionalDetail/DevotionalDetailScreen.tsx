@@ -24,6 +24,8 @@ const TYPE_COLORS: Record<string, string> = {
   MCPWA:  '#7C3AED',
   SWORD:  '#0891B2',
   Sermon: '#D97706',
+  PRAY:   '#A855F7',
+  ACTS:   '#10B981',
 };
 
 // ─── Card themes ──────────────────────────────────────────────────────────────
@@ -74,7 +76,7 @@ const cs = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  appLogo:     { width: 100, height: 30, resizeMode: 'contain' },
+  appLogo:     { width: 130, height: 38, resizeMode: 'contain' },
   typePill:    {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 999,
@@ -122,7 +124,7 @@ const cs = StyleSheet.create({
     justifyContent: 'space-between',
   },
   footerLeft:  { fontSize: 9, letterSpacing: 0.3 },
-  footerLogo:  { width: 72, height: 20, resizeMode: 'contain', opacity: 0.6 },
+  footerLogo:  { width: 110, height: 30, resizeMode: 'contain', opacity: 0.7 },
 });
 
 // ─── CardRow ─────────────────────────────────────────────────────────────────
@@ -186,6 +188,34 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
             <CardRow label="OBSERVATION"  content={entry.observation} t={t} />
             <CardRow label="RESPONSE"     content={entry.response}    t={t} />
             <CardRow label="DAILY LIVING" content={entry.dailyLiving} t={t} />
+          </>
+        )}
+
+        {entryType === 'PRAY' && (
+          <>
+            {entry.fullVerse ? (
+              <View style={[cs.verseBox, { backgroundColor: t.surface, borderLeftColor: t.accent }]}>
+                <Text style={[cs.verseText, { color: t.body }]}>"{entry.fullVerse}"</Text>
+              </View>
+            ) : null}
+            <CardRow label="PRAISE"  content={entry.praise}  t={t} />
+            <CardRow label="REPENT"  content={entry.repent}  t={t} />
+            <CardRow label="ASK"     content={entry.ask}     t={t} />
+            <CardRow label="YIELD"   content={entry.yield_}  t={t} />
+          </>
+        )}
+
+        {entryType === 'ACTS' && (
+          <>
+            {entry.fullVerse ? (
+              <View style={[cs.verseBox, { backgroundColor: t.surface, borderLeftColor: t.accent }]}>
+                <Text style={[cs.verseText, { color: t.body }]}>"{entry.fullVerse}"</Text>
+              </View>
+            ) : null}
+            <CardRow label="ADORATION"    content={entry.adoration}    t={t} />
+            <CardRow label="CONFESSION"   content={entry.confession}   t={t} />
+            <CardRow label="THANKSGIVING" content={entry.thanksgiving} t={t} />
+            <CardRow label="SUPPLICATION" content={entry.supplication} t={t} />
           </>
         )}
 
@@ -286,13 +316,17 @@ export default function DevotionalDetailScreen() {
   const mcpwaEntries = useAppStore((s) => s.mcpwaEntries);
   const swordEntries = useAppStore((s) => s.swordEntries);
   const sermonNotes  = useAppStore((s) => s.sermonNotes);
+  const prayEntries  = useAppStore((s) => s.prayEntries);
+  const actsEntries  = useAppStore((s) => s.actsEntries);
 
   const entry = useMemo(() => {
     if (entryType === 'SOAP')   return soapEntries.find((e) => e.id === entryId) as Record<string, any> | undefined;
     if (entryType === 'MCPWA')  return mcpwaEntries.find((e) => e.id === entryId) as Record<string, any> | undefined;
     if (entryType === 'SWORD')  return swordEntries.find((e) => e.id === entryId) as Record<string, any> | undefined;
+    if (entryType === 'PRAY')   return prayEntries.find((e) => e.id === entryId) as Record<string, any> | undefined;
+    if (entryType === 'ACTS')   return actsEntries.find((e) => e.id === entryId) as Record<string, any> | undefined;
     return sermonNotes.find((e) => e.id === entryId) as Record<string, any> | undefined;
-  }, [entryId, entryType, soapEntries, mcpwaEntries, swordEntries, sermonNotes]);
+  }, [entryId, entryType, soapEntries, mcpwaEntries, swordEntries, sermonNotes, prayEntries, actsEntries]);
 
   async function handleCaptureAndShare() {
     if (!cardRef.current || capturing || !entry) return;
@@ -415,6 +449,30 @@ export default function DevotionalDetailScreen() {
                 </View>
               </View>
             )}
+          </>
+        )}
+
+        {/* ─── PRAY ─── */}
+        {entryType === 'PRAY' && (
+          <>
+            <Section label="SCRIPTURE REFERENCE" content={entry.scripture} styles={styles} />
+            <Section label="FULL VERSE"           content={entry.fullVerse} styles={styles} verse />
+            <Section label="PRAISE"               content={entry.praise}   styles={styles} />
+            <Section label="REPENT"               content={entry.repent}   styles={styles} />
+            <Section label="ASK"                  content={entry.ask}      styles={styles} />
+            <Section label="YIELD"                content={entry.yield_}   styles={styles} />
+          </>
+        )}
+
+        {/* ─── ACTS ─── */}
+        {entryType === 'ACTS' && (
+          <>
+            <Section label="SCRIPTURE REFERENCE" content={entry.scripture}    styles={styles} />
+            <Section label="FULL VERSE"           content={entry.fullVerse}    styles={styles} verse />
+            <Section label="ADORATION"            content={entry.adoration}    styles={styles} />
+            <Section label="CONFESSION"           content={entry.confession}   styles={styles} />
+            <Section label="THANKSGIVING"         content={entry.thanksgiving} styles={styles} />
+            <Section label="SUPPLICATION"         content={entry.supplication} styles={styles} />
           </>
         )}
 

@@ -16,6 +16,7 @@ import { db } from './firebase';
 import type {
   SoapEntry, McpwaEntry, SwordEntry, SermonNote,
   UserProfile, ReminderSettings, UserReadingPlans, PrayerRequest,
+  PrayEntry, ActsEntry,
   DevotionalMethodId,
 } from '../types';
 
@@ -27,6 +28,8 @@ export interface CloudJournals {
   sword:        SwordEntry[];
   sermons:      SermonNote[];
   prayer:       PrayerRequest[];
+  pray_journal: PrayEntry[];
+  acts_journal: ActsEntry[];
   readingPlans: UserReadingPlans;
   updatedAt:    number;
 }
@@ -49,6 +52,8 @@ export async function pushToCloud(
     sword:        SwordEntry[];
     sermons:      SermonNote[];
     prayer:       PrayerRequest[];
+    pray_journal: PrayEntry[];
+    acts_journal: ActsEntry[];
     readingPlans: UserReadingPlans;
     profile:      UserProfile | null;
     reminders:    ReminderSettings | null;
@@ -64,6 +69,8 @@ export async function pushToCloud(
       sword:       payload.sword,
       sermons:     payload.sermons,
       prayer:      payload.prayer,
+      pray_journal: payload.pray_journal,
+      acts_journal: payload.acts_journal,
       readingPlans: payload.readingPlans,
       updatedAt:   now,
     }),

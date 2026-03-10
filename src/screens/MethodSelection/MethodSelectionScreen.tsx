@@ -40,12 +40,30 @@ const METHODS: DevotionalMethod[] = [
       'Scripture, Observation, Application, Response, Daily Living. Sharpen your faith through active response.',
     steps: ['Scripture', 'Word', 'Observation', 'Response', 'Daily Living'],
   },
+  {
+    id: 'PRAY',
+    name: 'PRAY Method',
+    acronym: 'P.R.A.Y',
+    description:
+      'Praise, Repent, Ask, Yield. A structured prayer framework that guides you into God’s presence intentionally.',
+    steps: ['Praise', 'Repent', 'Ask', 'Yield'],
+  },
+  {
+    id: 'ACTS',
+    name: 'ACTS Method',
+    acronym: 'A.C.T.S',
+    description:
+      'Adoration, Confession, Thanksgiving, Supplication. A balanced prayer model that honors God and intercedes for others.',
+    steps: ['Adoration', 'Confession', 'Thanksgiving', 'Supplication'],
+  },
 ];
 
 const ICON_MAP: Record<DevotionalMethodId, string> = {
-  SOAP: 'pencil',
+  SOAP:  'pencil',
   MCPWA: 'shield',
   SWORD: 'sword',
+  PRAY:  'hands-pray',
+  ACTS:  'cross',
 };
 
 export default function MethodSelectionScreen({ navigation }: Props) {

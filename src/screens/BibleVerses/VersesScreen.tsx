@@ -552,7 +552,7 @@ const scm = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 10,
   },
   bandLeft:  { fontSize: 9, fontWeight: '700', color: '#C8A86A', letterSpacing: 2 },
-  bandLogo:  { width: 90, height: 26, resizeMode: 'contain' },
+  bandLogo:  { width: 130, height: 38, resizeMode: 'contain' },
   bandRight: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.6)', letterSpacing: 2 },
   body:      { padding: 24, paddingTop: 16 },
   bigQuote:  { fontSize: 56, color: '#C8A86A', lineHeight: 48, marginBottom: 4, fontFamily: 'serif' },
@@ -565,7 +565,7 @@ const scm = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: '#E5E7EB', backgroundColor: '#F5F0E8',
   },
   footerLeft:  { fontSize: 9, color: '#9CA3AF' },
-  footerLogo:  { width: 70, height: 20, resizeMode: 'contain', opacity: 0.5 },
+  footerLogo:  { width: 110, height: 30, resizeMode: 'contain', opacity: 0.7 },
   footerRight: { fontSize: 9, color: '#0D4D3A', fontWeight: '800', letterSpacing: 2 },
 
   // Buttons
