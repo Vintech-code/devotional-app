@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon, Snackbar } from 'react-native-paper';
+import AppToast from '../../components/AppToast/AppToast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -184,13 +185,13 @@ export default function SermonNotesScreen({ navigation }: Props) {
           style={styles.saveBtn}
         />
       </ScrollView>
-      <Snackbar
+      <AppToast
         visible={snackVisible}
+        emoji="✍️"
+        title="Sermon note saved!"
+        message="Your note has been added to Journal History."
         onDismiss={() => setSnackVisible(false)}
-        duration={1400}
-      >
-        Sermon note saved!
-      </Snackbar>
+      />
     </SafeAreaView>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Image,
-  Modal, StyleSheet, ActivityIndicator, Platform,
+  Modal, StyleSheet, ActivityIndicator, Platform, TextInput,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,8 +10,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 
-import { useColors } from '../../theme';
+import { useColors, Spacing } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
+import {
+  saveSoapEntry, saveMcpwaEntry, saveSwordEntry, savePrayEntry,
+  saveActsEntry, saveSermonNote, refreshProfileProgress,
+} from '../../services/storageService';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import { HistoryStackParamList } from '../../navigation/types';
 import { makeStyles } from './DevotionalDetail.styles';
@@ -298,6 +302,29 @@ const ms = StyleSheet.create({
   shareTxt: { fontSize: 14, fontWeight: '700' },
 });
 
+// ─── Inline edit field (defined outside component to avoid TextInput focus loss) ─
+function EditField({ label, value, onChange, multiline = false, s }: {
+  label: string;
+  value: string;
+  onChange: (t: string) => void;
+  multiline?: boolean;
+  s: ReturnType<typeof makeStyles>;
+}) {
+  return (
+    <View style={s.section}>
+      <Text style={s.sectionLabel}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        multiline={multiline}
+        style={[multiline ? s.verseContent : s.sectionContent, s.editInput]}
+        textAlignVertical={multiline ? 'top' : 'center'}
+        numberOfLines={multiline ? 4 : 1}
+      />
+    </View>
+  );
+}
+
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function DevotionalDetailScreen() {
@@ -311,6 +338,9 @@ export default function DevotionalDetailScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<CardTheme>(CARD_THEMES[0]);
+  const [isEditing,  setIsEditing]  = useState(false);
+  const [editData,   setEditData]   = useState<Record<string, string>>({});
+  const [editSaving, setEditSaving] = useState(false);
 
   const soapEntries  = useAppStore((s) => s.soapEntries);
   const mcpwaEntries = useAppStore((s) => s.mcpwaEntries);
@@ -318,6 +348,13 @@ export default function DevotionalDetailScreen() {
   const sermonNotes  = useAppStore((s) => s.sermonNotes);
   const prayEntries  = useAppStore((s) => s.prayEntries);
   const actsEntries  = useAppStore((s) => s.actsEntries);
+  const setSoapEntries  = useAppStore((s) => s.setSoapEntries);
+  const setMcpwaEntries = useAppStore((s) => s.setMcpwaEntries);
+  const setSwordEntries = useAppStore((s) => s.setSwordEntries);
+  const setSermonNotes  = useAppStore((s) => s.setSermonNotes);
+  const setPrayEntries  = useAppStore((s) => s.setPrayEntries);
+  const setActsEntries  = useAppStore((s) => s.setActsEntries);
+  const setProfile      = useAppStore((s) => s.setProfile);
 
   const entry = useMemo(() => {
     if (entryType === 'SOAP')   return soapEntries.find((e) => e.id === entryId) as Record<string, any> | undefined;
@@ -341,6 +378,32 @@ export default function DevotionalDetailScreen() {
     } finally {
       setCapturing(false);
     }
+  }
+
+  function enterEditMode() {
+    if (!entry) return;
+    setEditData(
+      Object.fromEntries(Object.entries(entry).map(([k, v]) => [k, String(v ?? '')]))
+    );
+    setIsEditing(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!entry || editSaving) return;
+    setEditSaving(true);
+    const updated = { ...entry, ...editData };
+    switch (entryType) {
+      case 'SOAP':  await saveSoapEntry(updated as any);  setSoapEntries(soapEntries.map((e)  => e.id === entryId ? updated as any : e)); break;
+      case 'MCPWA': await saveMcpwaEntry(updated as any); setMcpwaEntries(mcpwaEntries.map((e) => e.id === entryId ? updated as any : e)); break;
+      case 'SWORD': await saveSwordEntry(updated as any); setSwordEntries(swordEntries.map((e) => e.id === entryId ? updated as any : e)); break;
+      case 'PRAY':  await savePrayEntry(updated as any);  setPrayEntries(prayEntries.map((e)  => e.id === entryId ? updated as any : e)); break;
+      case 'ACTS':  await saveActsEntry(updated as any);  setActsEntries(actsEntries.map((e)  => e.id === entryId ? updated as any : e)); break;
+      default:      await saveSermonNote(updated as any); setSermonNotes(sermonNotes.map((e)  => e.id === entryId ? updated as any : e)); break;
+    }
+    const updatedProfile = await refreshProfileProgress();
+    setProfile(updatedProfile);
+    setEditSaving(false);
+    setIsEditing(false);
   }
 
   if (!entry) {
@@ -377,7 +440,12 @@ export default function DevotionalDetailScreen() {
 
       <ScreenHeader
         title={entryType === 'Sermon' ? 'Sermon Notes' : `${entryType} Devotional`}
-        onBack={() => navigation.goBack()}
+        onBack={() => {
+          if (isEditing) { setIsEditing(false); return; }
+          navigation.goBack();
+        }}
+        rightIcon={isEditing ? undefined : 'pencil-outline'}
+        onRightPress={isEditing ? undefined : enterEditMode}
       />
 
       <ScrollView
@@ -396,95 +464,165 @@ export default function DevotionalDetailScreen() {
         {/* Title */}
         <Text style={styles.titleText}>{title}</Text>
 
-        {/* ─── SOAP ─── */}
-        {entryType === 'SOAP' && (
+        {/* ─── Fields: view or edit mode ─── */}
+        {isEditing ? (
           <>
-            <Section label="SCRIPTURE REFERENCE" content={entry.scripture} styles={styles} />
-            <Section label="FULL VERSE"           content={entry.fullVerse}   styles={styles} verse />
-            <Section label="OBSERVATION"          content={entry.observation} styles={styles} />
-            <Section label="APPLICATION"          content={entry.application} styles={styles} />
-            <Section label="PRAYER"               content={entry.prayer}      styles={styles} />
+            {entryType === 'SOAP' && <>
+              <EditField label="SCRIPTURE REFERENCE" value={String(editData.scripture ?? '')}   onChange={(t) => setEditData((p) => ({ ...p, scripture: t }))}   s={styles} />
+              <EditField label="FULL VERSE"          value={String(editData.fullVerse ?? '')}    onChange={(t) => setEditData((p) => ({ ...p, fullVerse: t }))}    s={styles} multiline />
+              <EditField label="OBSERVATION"         value={String(editData.observation ?? '')}  onChange={(t) => setEditData((p) => ({ ...p, observation: t }))}  s={styles} multiline />
+              <EditField label="APPLICATION"         value={String(editData.application ?? '')}  onChange={(t) => setEditData((p) => ({ ...p, application: t }))}  s={styles} multiline />
+              <EditField label="PRAYER"              value={String(editData.prayer ?? '')}       onChange={(t) => setEditData((p) => ({ ...p, prayer: t }))}       s={styles} multiline />
+            </>}
+            {entryType === 'MCPWA' && <>
+              <EditField label="SCRIPTURE"   value={String(editData.scripture ?? '')}   onChange={(t) => setEditData((p) => ({ ...p, scripture: t }))}   s={styles} />
+              <EditField label="MESSAGE"     value={String(editData.message ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, message: t }))}     s={styles} multiline />
+              <EditField label="COMMAND"     value={String(editData.command ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, command: t }))}     s={styles} multiline />
+              <EditField label="PROMISE"     value={String(editData.promise ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, promise: t }))}     s={styles} multiline />
+              <EditField label="WARNING"     value={String(editData.warning ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, warning: t }))}     s={styles} multiline />
+              <EditField label="APPLICATION" value={String(editData.application ?? '')} onChange={(t) => setEditData((p) => ({ ...p, application: t }))} s={styles} multiline />
+            </>}
+            {entryType === 'SWORD' && <>
+              <EditField label="SCRIPTURE"    value={String(editData.scripture ?? '')}   onChange={(t) => setEditData((p) => ({ ...p, scripture: t }))}   s={styles} />
+              <EditField label="WORD"         value={String(editData.word ?? '')}         onChange={(t) => setEditData((p) => ({ ...p, word: t }))}         s={styles} />
+              <EditField label="OBSERVATION"  value={String(editData.observation ?? '')}  onChange={(t) => setEditData((p) => ({ ...p, observation: t }))}  s={styles} multiline />
+              <EditField label="RESPONSE"     value={String(editData.response ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, response: t }))}     s={styles} multiline />
+              <EditField label="DAILY LIVING" value={String(editData.dailyLiving ?? '')}  onChange={(t) => setEditData((p) => ({ ...p, dailyLiving: t }))}  s={styles} multiline />
+            </>}
+            {entryType === 'Sermon' && <>
+              <EditField label="SERMON TITLE"   value={String(editData.title ?? '')}         onChange={(t) => setEditData((p) => ({ ...p, title: t }))}         s={styles} />
+              <EditField label="PREACHER"       value={String(editData.preacher ?? '')}      onChange={(t) => setEditData((p) => ({ ...p, preacher: t }))}      s={styles} />
+              <EditField label="CHURCH"         value={String(editData.church ?? '')}        onChange={(t) => setEditData((p) => ({ ...p, church: t }))}        s={styles} />
+              <EditField label="MAIN SCRIPTURE" value={String(editData.mainScripture ?? '')} onChange={(t) => setEditData((p) => ({ ...p, mainScripture: t }))} s={styles} />
+              <EditField label="NOTES"          value={String(editData.notes ?? '')}         onChange={(t) => setEditData((p) => ({ ...p, notes: t }))}         s={styles} multiline />
+            </>}
+            {entryType === 'PRAY' && <>
+              <EditField label="SCRIPTURE REFERENCE" value={String(editData.scripture ?? '')}  onChange={(t) => setEditData((p) => ({ ...p, scripture: t }))}  s={styles} />
+              <EditField label="FULL VERSE"          value={String(editData.fullVerse ?? '')}  onChange={(t) => setEditData((p) => ({ ...p, fullVerse: t }))}  s={styles} multiline />
+              <EditField label="PRAISE"              value={String(editData.praise ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, praise: t }))}     s={styles} multiline />
+              <EditField label="REPENT"              value={String(editData.repent ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, repent: t }))}     s={styles} multiline />
+              <EditField label="ASK"                 value={String(editData.ask ?? '')}        onChange={(t) => setEditData((p) => ({ ...p, ask: t }))}        s={styles} multiline />
+              <EditField label="YIELD"               value={String(editData.yield_ ?? '')}     onChange={(t) => setEditData((p) => ({ ...p, yield_: t }))}     s={styles} multiline />
+            </>}
+            {entryType === 'ACTS' && <>
+              <EditField label="SCRIPTURE REFERENCE" value={String(editData.scripture ?? '')}    onChange={(t) => setEditData((p) => ({ ...p, scripture: t }))}    s={styles} />
+              <EditField label="FULL VERSE"          value={String(editData.fullVerse ?? '')}    onChange={(t) => setEditData((p) => ({ ...p, fullVerse: t }))}    s={styles} multiline />
+              <EditField label="ADORATION"           value={String(editData.adoration ?? '')}   onChange={(t) => setEditData((p) => ({ ...p, adoration: t }))}   s={styles} multiline />
+              <EditField label="CONFESSION"          value={String(editData.confession ?? '')}  onChange={(t) => setEditData((p) => ({ ...p, confession: t }))}  s={styles} multiline />
+              <EditField label="THANKSGIVING"        value={String(editData.thanksgiving ?? '')} onChange={(t) => setEditData((p) => ({ ...p, thanksgiving: t }))} s={styles} multiline />
+              <EditField label="SUPPLICATION"        value={String(editData.supplication ?? '')} onChange={(t) => setEditData((p) => ({ ...p, supplication: t }))} s={styles} multiline />
+            </>}
+            {/* Save / Cancel */}
+            <View style={styles.editBtnRow}>
+              <TouchableOpacity style={styles.cancelEditBtn} onPress={() => setIsEditing(false)}>
+                <Text style={styles.cancelEditText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.saveEditBtn, editSaving && { opacity: 0.6 }]}
+                onPress={handleSaveEdit}
+                disabled={editSaving}
+              >
+                {editSaving
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.saveEditText}>Save Changes</Text>}
+              </TouchableOpacity>
+            </View>
           </>
-        )}
-
-        {/* ─── MCPWA ─── */}
-        {entryType === 'MCPWA' && (
+        ) : (
           <>
-            <Section label="SCRIPTURE"   content={entry.scripture}   styles={styles} />
-            <Section label="MESSAGE"     content={entry.message}     styles={styles} />
-            <Section label="COMMAND"     content={entry.command}     styles={styles} />
-            <Section label="PROMISE"     content={entry.promise}     styles={styles} />
-            <Section label="WARNING"     content={entry.warning}     styles={styles} />
-            <Section label="APPLICATION" content={entry.application} styles={styles} />
-          </>
-        )}
-
-        {/* ─── SWORD ─── */}
-        {entryType === 'SWORD' && (
-          <>
-            <Section label="SCRIPTURE"    content={entry.scripture}   styles={styles} />
-            <Section label="WORD"         content={entry.word}        styles={styles} />
-            <Section label="OBSERVATION"  content={entry.observation} styles={styles} />
-            <Section label="RESPONSE"     content={entry.response}    styles={styles} />
-            <Section label="DAILY LIVING" content={entry.dailyLiving} styles={styles} />
-          </>
-        )}
-
-        {/* ─── Sermon ─── */}
-        {entryType === 'Sermon' && (
-          <>
-            <Section label="PREACHER"        content={entry.preacher}       styles={styles} />
-            <Section label="CHURCH"          content={entry.church}         styles={styles} />
-            <Section label="MAIN SCRIPTURE"  content={entry.mainScripture}  styles={styles} />
-            <Section label="NOTES"           content={entry.notes}          styles={styles} />
-            {entry.tags?.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>TAGS</Text>
-                <View style={styles.tagRow}>
-                  {entry.tags.map((tag: string, i: number) => (
-                    <View key={i} style={styles.tag}>
-                      <Text style={styles.tagText}>#{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
+            {/* ─── SOAP ─── */}
+            {entryType === 'SOAP' && (
+              <>
+                <Section label="SCRIPTURE REFERENCE" content={entry.scripture} styles={styles} />
+                <Section label="FULL VERSE"           content={entry.fullVerse}   styles={styles} verse />
+                <Section label="OBSERVATION"          content={entry.observation} styles={styles} />
+                <Section label="APPLICATION"          content={entry.application} styles={styles} />
+                <Section label="PRAYER"               content={entry.prayer}      styles={styles} />
+              </>
             )}
+            {/* ─── MCPWA ─── */}
+            {entryType === 'MCPWA' && (
+              <>
+                <Section label="SCRIPTURE"   content={entry.scripture}   styles={styles} />
+                <Section label="MESSAGE"     content={entry.message}     styles={styles} />
+                <Section label="COMMAND"     content={entry.command}     styles={styles} />
+                <Section label="PROMISE"     content={entry.promise}     styles={styles} />
+                <Section label="WARNING"     content={entry.warning}     styles={styles} />
+                <Section label="APPLICATION" content={entry.application} styles={styles} />
+              </>
+            )}
+            {/* ─── SWORD ─── */}
+            {entryType === 'SWORD' && (
+              <>
+                <Section label="SCRIPTURE"    content={entry.scripture}   styles={styles} />
+                <Section label="WORD"         content={entry.word}        styles={styles} />
+                <Section label="OBSERVATION"  content={entry.observation} styles={styles} />
+                <Section label="RESPONSE"     content={entry.response}    styles={styles} />
+                <Section label="DAILY LIVING" content={entry.dailyLiving} styles={styles} />
+              </>
+            )}
+            {/* ─── Sermon ─── */}
+            {entryType === 'Sermon' && (
+              <>
+                <Section label="PREACHER"        content={entry.preacher}       styles={styles} />
+                <Section label="CHURCH"          content={entry.church}         styles={styles} />
+                <Section label="MAIN SCRIPTURE"  content={entry.mainScripture}  styles={styles} />
+                <Section label="NOTES"           content={entry.notes}          styles={styles} />
+                {entry.tags?.length > 0 && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>TAGS</Text>
+                    <View style={styles.tagRow}>
+                      {entry.tags.map((tag: string, i: number) => (
+                        <View key={i} style={styles.tag}>
+                          <Text style={styles.tagText}>#{tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </>
+            )}
+            {/* ─── PRAY ─── */}
+            {entryType === 'PRAY' && (
+              <>
+                <Section label="SCRIPTURE REFERENCE" content={entry.scripture} styles={styles} />
+                <Section label="FULL VERSE"           content={entry.fullVerse} styles={styles} verse />
+                <Section label="PRAISE"               content={entry.praise}   styles={styles} />
+                <Section label="REPENT"               content={entry.repent}   styles={styles} />
+                <Section label="ASK"                  content={entry.ask}      styles={styles} />
+                <Section label="YIELD"                content={entry.yield_}   styles={styles} />
+              </>
+            )}
+            {/* ─── ACTS ─── */}
+            {entryType === 'ACTS' && (
+              <>
+                <Section label="SCRIPTURE REFERENCE" content={entry.scripture}    styles={styles} />
+                <Section label="FULL VERSE"           content={entry.fullVerse}    styles={styles} verse />
+                <Section label="ADORATION"            content={entry.adoration}    styles={styles} />
+                <Section label="CONFESSION"           content={entry.confession}   styles={styles} />
+                <Section label="THANKSGIVING"         content={entry.thanksgiving} styles={styles} />
+                <Section label="SUPPLICATION"         content={entry.supplication} styles={styles} />
+              </>
+            )}
+            {/* Edit + Share buttons */}
+            <TouchableOpacity
+              style={[styles.shareBtn, { marginBottom: Spacing.sm, backgroundColor: colors.surfaceAlt }]}
+              activeOpacity={0.85}
+              onPress={enterEditMode}
+            >
+              <Icon source="pencil-outline" size={18} color={colors.primary} />
+              <Text style={[styles.shareBtnText, { color: colors.primary }]}>Edit Entry</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.shareBtn}
+              onPress={() => setShowShareModal(true)}
+              activeOpacity={0.85}
+            >
+              <Icon source="image-outline" size={18} color={colors.textOnPrimary} />
+              <Text style={styles.shareBtnText}>Share / Print as Image</Text>
+            </TouchableOpacity>
           </>
         )}
-
-        {/* ─── PRAY ─── */}
-        {entryType === 'PRAY' && (
-          <>
-            <Section label="SCRIPTURE REFERENCE" content={entry.scripture} styles={styles} />
-            <Section label="FULL VERSE"           content={entry.fullVerse} styles={styles} verse />
-            <Section label="PRAISE"               content={entry.praise}   styles={styles} />
-            <Section label="REPENT"               content={entry.repent}   styles={styles} />
-            <Section label="ASK"                  content={entry.ask}      styles={styles} />
-            <Section label="YIELD"                content={entry.yield_}   styles={styles} />
-          </>
-        )}
-
-        {/* ─── ACTS ─── */}
-        {entryType === 'ACTS' && (
-          <>
-            <Section label="SCRIPTURE REFERENCE" content={entry.scripture}    styles={styles} />
-            <Section label="FULL VERSE"           content={entry.fullVerse}    styles={styles} verse />
-            <Section label="ADORATION"            content={entry.adoration}    styles={styles} />
-            <Section label="CONFESSION"           content={entry.confession}   styles={styles} />
-            <Section label="THANKSGIVING"         content={entry.thanksgiving} styles={styles} />
-            <Section label="SUPPLICATION"         content={entry.supplication} styles={styles} />
-          </>
-        )}
-
-        {/* Share / Print button */}
-        <TouchableOpacity
-          style={styles.shareBtn}
-          onPress={() => setShowShareModal(true)}
-          activeOpacity={0.85}
-        >
-          <Icon source="image-outline" size={18} color={colors.textOnPrimary} />
-          <Text style={styles.shareBtnText}>Share / Print as Image</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* ─── Share Preview Bottom Sheet ─── */}

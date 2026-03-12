@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "devotional-app",
+    "name": "DevoVerse",
     "slug": "devotional-app",
     "version": "1.0.0",
     "scheme": "devotionalapp",
@@ -8,12 +8,19 @@
     "icon": "./assets/appicon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/appicon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#111111"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6f0ba1a7-cd81-4d2f-8375-1fdc5999d5e3"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.clarkvincent.devoverse"
     },
     "android": {
       "package": "com.clarkvincent.devoverse",
@@ -24,9 +31,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -44,13 +53,34 @@
         }
       ],
       "expo-font",
-      ["expo-notifications", {
-        "icon": "./assets/notification-icon.png",
-        "color": "#ffffff"
-      }]
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#111111",
+          "image": "./assets/appicon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#111111",
+            "image": "./assets/appicon.png"
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#ffffff"
+        }
+      ]
     ],
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/appicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6f0ba1a7-cd81-4d2f-8375-1fdc5999d5e3"
+      }
     }
   }
 }

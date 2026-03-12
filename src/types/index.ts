@@ -1,6 +1,6 @@
 // ─── Devotional Methods ──────────────────────────────────────────────────────
 
-export type DevotionalMethodId = 'SOAP' | 'MCPWA' | 'SWORD' | 'PRAY' | 'ACTS';
+export type DevotionalMethodId = 'SOAP' | 'MCPWA' | 'SWORD' | 'PRAY' | 'ACTS' | 'SERMON';
 
 export interface DevotionalMethod {
   id: DevotionalMethodId;
@@ -126,9 +126,24 @@ export interface ReminderSettings {
   scheduledTime: string; // 'HH:MM'
   repeatDays: number[]; // 0=Sun … 6=Sat
   weeklyReviewEnabled: boolean;
+  streakProtectionEnabled: boolean; // evening reminder if no entry logged today
   alertSound: string;
   vibration: string;
   contentPreview: boolean;
+}
+
+// ─── Daily Bread Customization ───────────────────────────────────────────────
+
+export type VerseFontKey = 'serif' | 'sans' | 'mono' | 'elegant';
+
+export interface DailyBreadCustomization {
+  bgType: 'preset' | 'color' | 'photo';
+  /** -1 = rotate daily, 0-3 = fixed preset index */
+  presetIndex: number;
+  bgColor: string;
+  bgPhotoUri: string;
+  fontKey: VerseFontKey;
+  fontSize: number; // 12–22
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────

@@ -12,9 +12,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { RegisterForm } from '../../types';
 import { useColors } from '../../theme';
-import { saveUserProfile } from '../../services/storageService';
-import { setActiveUid } from '../../services/storageService';
-import { createUserWithEmail, friendlyAuthError } from '../../services/authService';
+import { saveUserProfile, setActiveUid } from '../../services/storageService';
+import {
+  createUserWithEmail,
+  signInWithGoogle,
+  friendlyAuthError,
+} from '../../services/authService';
 import { useAppStore } from '../../store/useAppStore';
 import FormInput from '../../components/FormInput/FormInput';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
@@ -43,14 +46,54 @@ export default function CreateAccountScreen({ navigation }: Props) {
     password: '',
     agreedToTerms: false,
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
 
   const setProfile = useAppStore((s) => s.setProfile);
-  const strength   = getStrength(form.password);
+  const strength          = getStrength(form.password);
+
+  // ── Native Google Sign-Up ────────────────────────────────────────────────
+  async function handleGoogleSignUp() {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      if (!result) return; // user cancelled — do nothing
+      const { user, isNewUser } = result;
+
+      if (isNewUser) {
+        // Brand-new account: set up profile and go through the AllSet → MethodSelection flow
+        setActiveUid(user.uid);
+        const name = user.displayName ?? user.email?.split('@')[0] ?? 'Friend';
+        const profile = {
+          name,
+          memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          level: 1,
+          levelTitle: 'Faith Seeker',
+          completedCount: 0,
+          dayStreak: 0,
+          avatarUri: user.photoURL ?? undefined,
+        };
+        await saveUserProfile(profile);
+        setProfile(profile);
+        navigation.navigate('AllSet', { name });
+      }
+      // Existing account: onAuthStateChanged → hydrateForUser reads their stored
+      // isOnboardingDone and routes to Main automatically — no manual action needed.
+    } catch (e) {
+      setError(friendlyAuthError(e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleCreate() {
     if (!form.fullName || !form.email || !form.password || !form.agreedToTerms) return;
+    if (form.password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
@@ -79,7 +122,8 @@ export default function CreateAccountScreen({ navigation }: Props) {
     return (value: string) => setForm((f) => ({ ...f, [field]: value }));
   }
 
-  const canSubmit = !!(form.fullName && form.email && form.password && form.agreedToTerms);
+  const passwordsMatch = confirmPassword.length === 0 || form.password === confirmPassword;
+  const canSubmit = !!(form.fullName && form.email && form.password && confirmPassword && form.password === confirmPassword && form.agreedToTerms);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -145,6 +189,27 @@ export default function CreateAccountScreen({ navigation }: Props) {
           </View>
         )}
 
+        <FormInput
+          label="Confirm Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Re-enter your password"
+          secureTextEntry
+          autoCapitalize="none"
+        />
+
+        {/* Password mismatch hint */}
+        {!passwordsMatch && (
+          <Text style={[styles.matchHint, { color: colors.error }]}>
+            Passwords do not match.
+          </Text>
+        )}
+        {passwordsMatch && confirmPassword.length > 0 && (
+          <Text style={[styles.matchHint, { color: '#22c55e' }]}>
+            Passwords match.
+          </Text>
+        )}
+
         {/* Terms */}
         <TouchableOpacity
           style={styles.termsRow}
@@ -179,6 +244,23 @@ export default function CreateAccountScreen({ navigation }: Props) {
           disabled={!canSubmit}
           style={styles.cta}
         />
+
+        {/* Google Sign-Up */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={styles.googleBtn}
+          activeOpacity={0.8}
+          onPress={() => { void handleGoogleSignUp(); }}
+          disabled={loading}
+        >
+          <Icon source="google" size={20} color={colors.textPrimary} />
+          <Text style={styles.googleText}>Sign up with Google</Text>
+        </TouchableOpacity>
 
         {/* Divider */}
         <View style={styles.divider}>

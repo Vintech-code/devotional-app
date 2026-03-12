@@ -27,6 +27,7 @@ import {
   FeedbackCategory,
 } from '../../services/feedbackService';
 import { makeStyles } from './Admin.styles';
+import { auth } from '../../services/firebase';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -52,6 +53,7 @@ export default function AdminScreen() {
   const colors     = useColors();
   const styles     = makeStyles(colors);
   const navigation = useNavigation<Nav>();
+  const adminUid   = auth.currentUser?.uid ?? '';
 
   const [activeTab,    setActiveTab]    = useState<'users' | 'feedbacks'>('users');
   const [users,        setUsers]        = useState<AdminUserRecord[]>([]);
@@ -105,6 +107,10 @@ export default function AdminScreen() {
   // ── Actions ──────────────────────────────────────────────────────────────
 
   function handleToggleDisabled(user: AdminUserRecord) {
+    if (user.uid === adminUid) {
+      Alert.alert('Not Allowed', 'You cannot disable your own admin account.');
+      return;
+    }
     const next = !user.disabled;
     Alert.alert(
       next ? 'Disable Account' : 'Enable Account',
@@ -159,6 +165,7 @@ export default function AdminScreen() {
   // ── Derived lists ─────────────────────────────────────────────────────────
 
   const filteredUsers = users.filter((u) => {
+    if (u.uid === adminUid) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
@@ -194,7 +201,7 @@ export default function AdminScreen() {
           <Icon source="shield-crown-outline" size={26} color={colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.greetingTitle}>Welcome, Clark</Text>
+          <Text style={styles.greetingTitle}>Welcome, {auth.currentUser?.displayName ?? 'Admin'}</Text>
           <Text style={styles.greetingSubtitle}>
             Monitor users · Manage accounts · Reply to feedback
           </Text>

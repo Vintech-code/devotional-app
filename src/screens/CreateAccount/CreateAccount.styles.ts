@@ -110,4 +110,30 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   dividerText: { fontSize: Typography.size.xs, color: c.textMuted },
 
   signInBtn: { width: '100%' },
+
+  // ── Google button ────────────────────────────────────────────────────────
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 56,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  googleText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textPrimary,
+  },
+
+  // ── Password match hint ──────────────────────────────────────────────────
+  matchHint: {
+    fontSize: Typography.size.xs,
+    marginTop: -Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
 });

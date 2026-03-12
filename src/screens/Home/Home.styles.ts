@@ -27,8 +27,133 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bellWrapper: {
+    position: 'relative',
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: c.surface,
+  },
+  bellBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800' as const,
+    lineHeight: 13,
+  },
+
+  // Notification drawer (bottom sheet modal)
+  drawerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  drawerContainer: {
+    backgroundColor: c.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+    paddingTop: Spacing.sm,
+  },
+  drawerHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: c.border,
+    alignSelf: 'center',
+    marginBottom: Spacing.md,
+  },
+  drawerTitle: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    color: c.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  notifCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: c.surfaceAlt,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  notifIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: c.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notifContent: { flex: 1 },
+  notifTitle: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textPrimary,
+    marginBottom: 4,
+  },
+  notifDesc: {
+    fontSize: Typography.size.sm,
+    color: c.textSecondary,
+    lineHeight: 20,
+  },
+  drawerActions: {
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  startBtn: {
+    backgroundColor: c.primary,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.sm + 2,
+    alignItems: 'center',
+  },
+  startBtnText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    color: c.textOnPrimary,
+    letterSpacing: 0.3,
+  },
+  remindBtn: {
+    borderWidth: 1,
+    borderColor: c.border,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.sm + 2,
+    alignItems: 'center',
+    backgroundColor: c.surfaceAlt,
+  },
+  remindBtnText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textSecondary,
+  },
 
   container: { padding: Spacing.md, paddingBottom: Spacing.xxl },
+
+  // Greeting
+  greetingRow: {
+    marginBottom: Spacing.sm,
+  },
+  greetingText: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textSecondary,
+  },
+  greetingName: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+    color: c.textPrimary,
+  },
 
   sectionLabel: {
     fontSize: Typography.size.xs,
@@ -72,29 +197,29 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Guided methods
+  // Guided methods — badge images
   methodsRow: {
     paddingRight: Spacing.md,
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   methodItem: {
     alignItems: 'center',
     width: 60,
   },
-  methodCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: c.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
+  methodBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
     marginBottom: Spacing.xs,
-    borderWidth: 2,
-    borderColor: c.border,
+    opacity: 0.65,
   },
-  methodCircleActive: {
-    backgroundColor: c.primary,
-    borderColor: c.primary,
+  methodBadgeActive: {
+    opacity: 1,
+    shadowColor: c.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    elevation: 6,
   },
   methodLabel: {
     fontSize: 10,
@@ -105,7 +230,18 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   methodLabelActive: { color: c.primary },
 
   // Verse card (image background)
+  verseSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  customizeIconBtn: {
+    marginLeft: Spacing.sm,
+    padding: 2,
+  },
   verseCard: {
+    height: 220,
     borderRadius: Radius.lg,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -118,8 +254,10 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     borderRadius: Radius.lg,
   },
   verseCardOverlay: {
+    flex: 1,
     backgroundColor: 'rgba(0,0,0,0.60)',
     padding: Spacing.md,
+    justifyContent: 'space-between',
   },
   verseMeta: {
     flexDirection: 'row',
@@ -162,6 +300,17 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semiBold,
     color: '#5CD6D4',   // always light teal — visible on dark overlay in both themes
+  },
+  verseRefLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  verseBibleVersion: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 0.5,
   },
 
   // Progress

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Snackbar } from 'react-native-paper';
+import AppToast from '../../components/AppToast/AppToast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -198,13 +199,13 @@ export default function PrayJournalScreen({ navigation, route }: Props) {
         <PrimaryButton label="Save Prayer" onPress={handleSave} loading={saving} style={styles.saveBtn} />
         <Text style={styles.savedHint}>Saved entries will appear in your Journal History.</Text>
       </ScrollView>
-      <Snackbar
+      <AppToast
         visible={snackVisible}
+        emoji="🙏"
+        title="Prayer saved!"
+        message="Your prayer has been added to Journal History."
         onDismiss={() => setSnackVisible(false)}
-        duration={1400}
-      >
-        Prayer saved!
-      </Snackbar>
+      />
     </SafeAreaView>
   );
 }

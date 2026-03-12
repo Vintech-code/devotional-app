@@ -1,11 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, ActivityIndicator, Alert } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { ThemeProvider } from '@rneui/themed';
 import { onAuthStateChanged } from 'firebase/auth';
+import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
+import AnimatedSplash from './src/components/AnimatedSplash/AnimatedSplash';
+
+// Keep the native splash on-screen until we are ready to show the animated one.
+void SplashScreen.preventAutoHideAsync();
 
 import RootNavigator from './src/navigation/RootNavigator';
 import { useAppStore } from './src/store/useAppStore';
@@ -14,8 +20,14 @@ import { auth } from './src/services/firebase';
 import { syncOnLogin } from './src/services/syncService';
 import { LocalUserData } from './src/services/storageService';
 import { checkIfDisabled, registerOrUpdateUserMeta } from './src/services/feedbackService';
+import { createNotificationChannel } from './src/services/notificationService';
+import { RootStackParamList } from './src/navigation/types';
 
-function AppContent() {
+interface AppContentProps {
+  navRef: React.RefObject<NavigationContainerRef<RootStackParamList> | null>;
+}
+
+function AppContent({ navRef }: AppContentProps) {
   const hydrate         = useAppStore((s) => s.hydrate);
   const hydrateForUser  = useAppStore((s) => s.hydrateForUser);
   const isDarkMode      = useAppStore((s) => s.isDarkMode);
@@ -26,18 +38,27 @@ function AppContent() {
   const setSermonNotes  = useAppStore((s) => s.setSermonNotes);
   const soapEntries     = useAppStore((s) => s.soapEntries);
   const signOut         = useAppStore((s) => s.signOut);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady]           = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   const colors        = isDarkMode ? DarkColors : LightColors;
   const appPaperTheme = useMemo(() => makePaperTheme(colors, isDarkMode), [colors, isDarkMode]);
   const appRneuiTheme = useMemo(() => makeRneuiTheme(colors), [colors]);
 
   useEffect(() => {
+    // Set up notification channel once on startup
+    void createNotificationChannel();
+
+    // Tapping a delivered notification opens the Journal tab
+    const notifSub = Notifications.addNotificationResponseReceivedListener(() => {
+      navRef.current?.navigate('Main', { screen: 'Journal', params: { screen: 'JournalHome' } } as never);
+    });
+
     // 1. Load global / device settings (dark mode, bible translation) immediately
     void hydrate();
 
     // 2. Wait for Firebase auth to resolve (fires from cache on restart = instant)
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const authUnsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Load this user's UID-scoped data from AsyncStorage
         await hydrateForUser(user.uid);
@@ -61,6 +82,7 @@ function AppContent() {
           user.uid,
           user.displayName ?? 'User',
           user.email ?? '',
+          user.photoURL,
         );
 
         // Disabled-account enforcement (fire-and-forget; never blocks UI)
@@ -82,33 +104,38 @@ function AppContent() {
       setReady(true);
     });
 
-    return unsubscribe;
+    return () => {
+      authUnsub();
+      notifSub.remove();
+    };
   }, []);
 
-  if (!ready) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  // While Firebase/hydration resolves, keep the native splash visible.
+  if (!ready) return null;
 
   return (
     <PaperProvider theme={appPaperTheme}>
       <ThemeProvider theme={appRneuiTheme}>
         <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        {/* Real app — rendered beneath the animated splash so it's warm when splash exits */}
         <RootNavigator />
+        {/* Animated splash sits on top and fades out, then unmounts */}
+        {!splashDone && (
+          <AnimatedSplash onComplete={() => setSplashDone(true)} />
+        )}
       </ThemeProvider>
     </PaperProvider>
   );
 }
 
 export default function App() {
+  const navRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <AppContent />
+      <NavigationContainer ref={navRef}>
+        <AppContent navRef={navRef} />
       </NavigationContainer>
     </SafeAreaProvider>
   );
 }
+

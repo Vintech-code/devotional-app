@@ -12,11 +12,13 @@ import {
   PrayerRequest,
   PrayEntry,
   ActsEntry,
+  DailyBreadCustomization,
 } from '../types';
 import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
 import { pushToCloud, pullFromCloud, mergeById } from '../services/userDataSyncService';
 import { syncPublicStats } from '../services/partnerService';
+import { scheduleDailyReminder } from '../services/notificationService';
 
 interface AppState {
   // Auth / onboarding
@@ -29,7 +31,10 @@ interface AppState {
 
   // Sign the user out and reset to the auth flow
   signOut: () => Promise<void>;
-
+  // Pending one-time toast for sign-in / sign-out feedback
+  pendingAuthToast: string | null;
+  setPendingAuthToast: (msg: string) => void;
+  clearPendingAuthToast: () => void;
   // Theme (global — not per-user)
   isDarkMode: boolean;
   toggleTheme: () => void;
@@ -71,6 +76,10 @@ interface AppState {
   // Prayer Journal
   prayerRequests: PrayerRequest[];
   setPrayerRequests: (requests: PrayerRequest[]) => void;
+
+  // Daily Bread / Verse display customization (device-global)
+  dailyBreadCustom: DailyBreadCustomization;
+  setDailyBreadCustom: (custom: DailyBreadCustomization) => void;
 
   // Hydration
   // Load global (device-level) settings — call once on app start.
@@ -128,8 +137,13 @@ export const useAppStore = create<AppState>((set) => ({
       prayerRequests: [],
       prayEntries: [],
       actsEntries: [],
+      pendingAuthToast: 'You have been signed out.',
     });
   },
+
+  pendingAuthToast: null,
+  setPendingAuthToast: (msg) => set({ pendingAuthToast: msg }),
+  clearPendingAuthToast: () => set({ pendingAuthToast: null }),
 
   isDarkMode: true,
   toggleTheme: () =>
@@ -179,13 +193,27 @@ export const useAppStore = create<AppState>((set) => ({
   prayerRequests: [],
   setPrayerRequests: (requests) => set({ prayerRequests: requests }),
 
+  dailyBreadCustom: {
+    bgType: 'preset',
+    presetIndex: -1,
+    bgColor: '#0d4d3a',
+    bgPhotoUri: '',
+    fontKey: 'serif',
+    fontSize: 16,
+  },
+  setDailyBreadCustom: (custom) => {
+    void storage.saveDailyBreadCustom(custom).catch(() => {});
+    set({ dailyBreadCustom: custom });
+  },
+
   // ── hydrate: global / device-level settings only ─────────────────────────
   hydrate: async () => {
-    const [isDarkMode, bibleTranslation] = await Promise.all([
+    const [isDarkMode, bibleTranslation, dailyBreadCustom] = await Promise.all([
       storage.getIsDarkMode(),
       storage.getBibleTranslation(),
+      storage.getDailyBreadCustom(),
     ]);
-    set({ isDarkMode, bibleTranslation });
+    set({ isDarkMode, bibleTranslation, dailyBreadCustom });
   },
 
   // ── hydrateForUser: load all UID-scoped data for the signed-in user ───────
@@ -244,6 +272,12 @@ export const useAppStore = create<AppState>((set) => ({
 
     // Push fresh stats to Firestore so partners see up-to-date streak/completed/lastActive
     void syncPublicStats(uid, profileWithAvatar.dayStreak ?? 0, profileWithAvatar.completedCount ?? 0, profileWithAvatar.avatarUri).catch(() => {});
+
+    // Re-schedule daily reminder after sign-in so notifications fire even after
+    // the OS clears them (device restart, battery optimisation, re-install, etc.)
+    if (reminderSettings?.dailyEnabled) {
+      void scheduleDailyReminder(reminderSettings).catch(() => {});
+    }
 
     // ── Background cloud sync: restore data from other devices / after reinstall ──
     void (async () => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Icon, Snackbar } from 'react-native-paper';
+import AppToast from '../../components/AppToast/AppToast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -122,13 +123,13 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
         <PrimaryButton label="Save Devotional" onPress={handleSave} loading={saving} style={styles.btn} />
         <Text style={styles.footer}>FAITHFUL IS HE WHO CALLED YOU</Text>
       </ScrollView>
-      <Snackbar
+      <AppToast
         visible={snackVisible}
+        emoji="📖"
+        title="Devotional saved!"
+        message="Your entry has been added to Journal History."
         onDismiss={() => setSnackVisible(false)}
-        duration={1400}
-      >
-        Devotional saved!
-      </Snackbar>
+      />
     </SafeAreaView>
   );
 }

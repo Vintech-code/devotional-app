@@ -211,5 +211,68 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   typeChipTextActive: {
     color: c.textOnPrimary,
   },
+
+  /* ─── multi-select ─── */
+  entriesHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  selectBtn: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: c.primary,
+  },
+  selectBtnText: {
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    color: c.primary,
+    letterSpacing: 0.5,
+  },
+  selectBtnCancel: { borderColor: c.error },
+  selectBtnCancelText: { color: c.error },
+  entryCardSelected: { borderWidth: 1.5, borderColor: c.primary },
+  checkCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: c.border,
+    marginRight: Spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkCircleSelected: { borderColor: c.primary, backgroundColor: c.primary },
+  bottomSelectBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: c.surface,
+    borderTopWidth: 1,
+    borderTopColor: c.border,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: Spacing.lg,
+  },
+  selectCount: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textSecondary,
+  },
+  bulkDeleteBtn: {
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: c.error,
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    alignItems: 'center',
+  },
+  bulkDeleteText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    color: '#fff',
+  },
 }
 );

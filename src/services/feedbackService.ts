@@ -130,7 +130,7 @@ export async function getAllUsers(): Promise<AdminUserRecord[]> {
         registeredAt: (data.registeredAt as number) ?? (data._updatedAt as number) ?? 0,
         disabled:     data.disabled === true,
         entryCount:   soap + mcpwa + sword + sermon,
-        avatarUri:    (data.profile?.avatarUri as string | undefined) ?? undefined,
+        avatarUri:    (data.profile?.avatarUri as string | undefined) ?? (data.photoURL as string | undefined) ?? undefined,
       } as AdminUserRecord;
     })
     .filter((u) => u.email !== '');
@@ -162,10 +162,9 @@ export async function registerOrUpdateUserMeta(
   uid: string,
   name: string,
   email: string,
+  photoURL?: string | null,
 ): Promise<void> {
-  await setDoc(
-    doc(db, COL_USERS, uid),
-    { name, email, registeredAt: Date.now() },
-    { merge: true },
-  );
+  const payload: Record<string, unknown> = { name, email, registeredAt: Date.now() };
+  if (photoURL) payload.photoURL = photoURL;
+  await setDoc(doc(db, COL_USERS, uid), payload, { merge: true });
 }

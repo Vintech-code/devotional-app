@@ -12,6 +12,7 @@ import {
   PrayerRequest,
   PrayEntry,
   ActsEntry,
+  DailyBreadCustomization,
 } from '../types';
 
 // ─── Active User ──────────────────────────────────────────────────────────────
@@ -91,9 +92,11 @@ export const K = {
   PRAY_JOURNAL: '@devotional/pray_entries',
   ACTS_JOURNAL: '@devotional/acts_entries',
   // Global / device-level (NOT UID-scoped)
-  DARK_MODE:   '@devotional/dark_mode',
-  BIBLE_POS:   '@devotional/bible_position',
-  BIBLE_XLAT:  '@devotional/bible_translation',
+  DARK_MODE:        '@devotional/dark_mode',
+  BIBLE_POS:        '@devotional/bible_position',
+  BIBLE_XLAT:       '@devotional/bible_translation',
+  DAILY_BREAD_CUSTOM: '@devotional/daily_bread_custom',
+  VERSE_NOTIF:      '@devotional/verse_notif_enabled',
 };
 
 // ─── JSON helpers ─────────────────────────────────────────────────────────────
@@ -308,6 +311,7 @@ const DEFAULT_REMINDERS: ReminderSettings = {
   scheduledTime: '07:30',
   repeatDays: [0, 1, 2, 3, 4, 5, 6],
   weeklyReviewEnabled: false,
+  streakProtectionEnabled: false,
   alertSound: 'Gentle Morning Chime',
   vibration: 'Soft pulses only',
   contentPreview: true,
@@ -319,6 +323,33 @@ export async function getReminderSettings(): Promise<ReminderSettings> {
 
 export async function saveReminderSettings(settings: ReminderSettings): Promise<void> {
   await setJson(uk(K.REMINDERS), settings);
+}
+
+// ─── Daily Bread Customization (device-global, not UID-scoped) ───────────────
+
+const DEFAULT_DAILY_BREAD_CUSTOM: DailyBreadCustomization = {
+  bgType: 'preset',
+  presetIndex: -1,
+  bgColor: '#0d4d3a',
+  bgPhotoUri: '',
+  fontKey: 'serif',
+  fontSize: 16,
+};
+
+export async function getDailyBreadCustom(): Promise<DailyBreadCustomization> {
+  return getJson<DailyBreadCustomization>(K.DAILY_BREAD_CUSTOM, DEFAULT_DAILY_BREAD_CUSTOM);
+}
+
+export async function saveDailyBreadCustom(custom: DailyBreadCustomization): Promise<void> {
+  await setJson(K.DAILY_BREAD_CUSTOM, custom);
+}
+
+export async function getVerseNotifEnabled(): Promise<boolean> {
+  return getJson<boolean>(K.VERSE_NOTIF, false);
+}
+
+export async function saveVerseNotifEnabled(enabled: boolean): Promise<void> {
+  await setJson(K.VERSE_NOTIF, enabled);
 }
 
 // ─── Selected Method ──────────────────────────────────────────────────────────

@@ -9,11 +9,12 @@ import { ReminderSettings } from '../../types';
 import { getReminderSettings } from '../../services/storageService';
 import { enableAlarm, disableAlarm, updateAlarmTime } from '../../services/alarmService';
 import { saveReminderSettings } from '../../services/storageService';
-import { requestNotificationPermissions } from '../../services/notificationService';
+import { requestNotificationPermissions, scheduleStreakProtection, cancelStreakProtection, scheduleWeeklyReview, cancelWeeklyReview } from '../../services/notificationService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import ToggleCard from '../../components/ToggleCard/ToggleCard';
 import SettingsRow from '../../components/SettingsRow/SettingsRow';
+import AppToast from '../../components/AppToast/AppToast';
 import { makeStyles } from './Reminders.styles';
 
 const QUICK_TIMES = ['06:00 AM', '07:30 AM', '08:15 AM', '10:00 PM'];
@@ -47,6 +48,7 @@ export default function RemindersScreen() {
   const setReminderSettings = useAppStore((s) => s.setReminderSettings);
 
   const [settings, setSettings] = useState<ReminderSettings | null>(storeSettings);
+  const [snackVisible, setSnackVisible] = useState(false);
 
   useEffect(() => {
     if (!settings) {
@@ -120,6 +122,35 @@ export default function RemindersScreen() {
     setReminderSettings(updated);
   }
 
+  async function toggleStreakProtection(enabled: boolean) {
+    if (!settings) return;
+    await requestNotificationPermissions();
+    if (enabled) {
+      // Fires at 8 PM as a last-chance reminder
+      await scheduleStreakProtection(20, 0);
+    } else {
+      await cancelStreakProtection();
+    }
+    const updated = { ...settings, streakProtectionEnabled: enabled };
+    await saveReminderSettings(updated);
+    setSettings(updated);
+    setReminderSettings(updated);
+  }
+
+  async function toggleWeeklyReview(enabled: boolean) {
+    if (!settings) return;
+    await requestNotificationPermissions();
+    if (enabled) {
+      await scheduleWeeklyReview();
+    } else {
+      await cancelWeeklyReview();
+    }
+    const updated = { ...settings, weeklyReviewEnabled: enabled };
+    await saveReminderSettings(updated);
+    setSettings(updated);
+    setReminderSettings(updated);
+  }
+
   async function handleSave() {
     if (!settings) return;
     await saveReminderSettings(settings);
@@ -130,7 +161,8 @@ export default function RemindersScreen() {
     } else {
       await disableAlarm();
     }
-    navigation.goBack();
+    setSnackVisible(true);
+    setTimeout(() => navigation.goBack(), 1500);
   }
 
   return (
@@ -230,11 +262,38 @@ export default function RemindersScreen() {
           />
         </View>
 
+        {/* Smart notifications */}
+        <Text style={styles.sectionLabel}>SMART NOTIFICATIONS</Text>
+        <View style={styles.card}>
+          <ToggleCard
+            icon="fire"
+            title="Streak Protection"
+            description="Get a 8 PM nudge if you haven't logged your devotional yet today."
+            value={settings.streakProtectionEnabled ?? false}
+            onValueChange={toggleStreakProtection}
+          />
+          <ToggleCard
+            icon="calendar-week"
+            title="Weekly Review"
+            description="Sunday evening reminder to review your journal entries for the week."
+            value={settings.weeklyReviewEnabled}
+            onValueChange={toggleWeeklyReview}
+          />
+        </View>
+
         <Text style={styles.footer}>
           Reminders help build the habit of spending time with God, but His grace is new every
           morning regardless of your streak.
         </Text>
       </ScrollView>
+
+      <AppToast
+        visible={snackVisible}
+        emoji="⏰"
+        title="Reminders saved!"
+        message="Your notification preferences have been updated."
+        onDismiss={() => setSnackVisible(false)}
+      />
     </SafeAreaView>
   );
 }

@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  Modal, StyleSheet, ActivityIndicator, Platform, Alert, Switch, Image,
+  Modal, StyleSheet, ActivityIndicator, Platform, Alert, Switch, Image, ImageBackground,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,10 @@ import * as Notifications from 'expo-notifications';
 
 import { useColors, Typography } from '../../theme';
 import { getDailyVerse } from '../../services/dailyVerseService';
+import { getVerseNotifEnabled, saveVerseNotifEnabled } from '../../services/storageService';
+import { useAppStore } from '../../store/useAppStore';
+import { resolveFontFamily, PRESET_IMAGES } from '../../components/DailyBreadCustomizeSheet/DailyBreadCustomizeSheet';
+import { DailyBreadCustomization } from '../../types';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import { makeStyles } from './VerseOfDay.styles';
 
@@ -104,21 +108,85 @@ const vcs = StyleSheet.create({
   footerRight: { fontSize: 9, color: VCC.ref, fontWeight: '800', letterSpacing: 2 },
 });
 
-function VerseShareCard({ reference, text, date }: { reference: string; text: string; date: string }) {
+function VerseShareCard({
+  reference, text, date, custom,
+}: {
+  reference: string;
+  text: string;
+  date: string;
+  custom: DailyBreadCustomization;
+}) {
+  const resolvedFont = resolveFontFamily(custom.fontKey);
+  const resolvedSize = custom.fontSize;
+
+  const isPhoto  = custom.bgType === 'photo' && !!custom.bgPhotoUri;
+  const isColor  = custom.bgType === 'color';
+  const isPreset = custom.bgType === 'preset';
+  const hasCustomBg = isPhoto || isColor || isPreset;
+
+  const presetSource: number | undefined = isPreset
+    ? (() => {
+        if (custom.presetIndex >= 0) return PRESET_IMAGES[custom.presetIndex] ?? PRESET_IMAGES[0];
+        const now = new Date();
+        const dayOfYear = Math.floor(
+          (now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86_400_000,
+        );
+        return PRESET_IMAGES[dayOfYear % PRESET_IMAGES.length];
+      })()
+    : undefined;
+
+  const bodyContent = (
+    <View style={[vcs.body, { backgroundColor: isColor ? custom.bgColor : 'transparent' }]}>
+      <Text style={[vcs.bigQuote, { color: '#C8A86A' }]}>“</Text>
+      <Text style={[
+        vcs.verseText,
+        {
+          fontFamily: resolvedFont,
+          fontSize: resolvedSize,
+          lineHeight: resolvedSize * 1.7,
+          color: hasCustomBg ? '#fff' : VCC.body,
+        },
+      ]}>{text}</Text>
+      <View style={[vcs.accentBar, { backgroundColor: '#C8A86A' }]} />
+      <Text style={[vcs.verseRef, { color: hasCustomBg ? '#C8A86A' : VCC.ref }]}>{reference}</Text>
+    </View>
+  );
+
+  const footerStyle = hasCustomBg
+    ? { backgroundColor: 'rgba(0,0,0,0.4)', borderTopColor: 'rgba(255,255,255,0.1)' }
+    : {};
+
+  const renderBody = () => {
+    if (isPhoto && custom.bgPhotoUri) {
+      return (
+        <ImageBackground source={{ uri: custom.bgPhotoUri }} resizeMode="cover">
+          <View style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>{bodyContent}</View>
+        </ImageBackground>
+      );
+    }
+    if (isPreset && presetSource !== undefined) {
+      return (
+        <ImageBackground source={presetSource} resizeMode="cover">
+          <View style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>{bodyContent}</View>
+        </ImageBackground>
+      );
+    }
+    return bodyContent;
+  };
+
   return (
     <View style={vcs.card}>
+      {/* ─── Watermark band (always visible) ─── */}
       <View style={vcs.band}>
         <Image source={require('../../../assets/logotransparent1.png')} style={vcs.bandLogo} />
         <Text style={vcs.bandRight}>VERSE OF THE DAY</Text>
       </View>
-      <View style={vcs.body}>
-        <Text style={vcs.bigQuote}>“</Text>
-        <Text style={vcs.verseText}>{text}</Text>
-        <View style={vcs.accentBar} />
-        <Text style={vcs.verseRef}>{reference}</Text>
-      </View>
-      <View style={vcs.footer}>
-        <Text style={vcs.footerLeft}>{date}</Text>
+
+      {renderBody()}
+
+      {/* ─── Footer watermark (always visible) ─── */}
+      <View style={[vcs.footer, footerStyle]}>
+        <Text style={[vcs.footerLeft, hasCustomBg ? { color: 'rgba(255,255,255,0.5)' } : {}]}>{date}</Text>
         <Image source={require('../../../assets/logotransparent1.png')} style={vcs.footerLogo} />
       </View>
     </View>
@@ -147,11 +215,17 @@ export default function VerseOfDayScreen() {
   const colors   = useColors();
   const styles   = makeStyles(colors);
   const navigation = useNavigation();
+  const dailyBreadCustom = useAppStore((s) => s.dailyBreadCustom);
 
   const cardRef = useRef<View>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [capturing,     setCapturing]     = useState(false);
   const [notifEnabled,  setNotifEnabled]  = useState(false);
+
+  // Load persisted notif-enabled state on mount
+  useEffect(() => {
+    getVerseNotifEnabled().then(setNotifEnabled);
+  }, []);
 
   const todayVerse = getDailyVerse();
   const today      = new Date();
@@ -183,23 +257,27 @@ export default function VerseOfDayScreen() {
       if (notifEnabled) {
         await Notifications.cancelAllScheduledNotificationsAsync();
         setNotifEnabled(false);
+        await saveVerseNotifEnabled(false);
       } else {
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: '✦ Verse of the Day',
-            body: `"${todayVerse.text}" — ${todayVerse.reference}`,
+            title: '\u2726 Verse of the Day',
+            body: `"${todayVerse.text}" \u2014 ${todayVerse.reference}`,
             sound: true,
           },
-          trigger: { hour: 8, minute: 0, repeats: true } as any,
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: 8,
+            minute: 0,
+          },
         });
         setNotifEnabled(true);
+        await saveVerseNotifEnabled(true);
         Alert.alert('Daily Reminder Set', 'You\'ll receive your verse every morning at 8:00 AM.');
       }
-    } catch {
-      Alert.alert(
-        'Daily verse reminders',
-        'Daily verse notifications require a development build. Enable reminders in the Reminders screen.',
-      );
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Could not schedule the daily verse reminder. Please check your notification settings.';
+      Alert.alert('Reminder Error', msg);
     }
   }
 
@@ -207,7 +285,7 @@ export default function VerseOfDayScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Off-screen capture target */}
       <View ref={cardRef} collapsable={false} style={{ position: 'absolute', left: -5000, top: 0 }}>
-        <VerseShareCard reference={todayVerse.reference} text={todayVerse.text} date={todayLabel} />
+        <VerseShareCard reference={todayVerse.reference} text={todayVerse.text} date={todayLabel} custom={dailyBreadCustom} />
       </View>
 
       <ScreenHeader title="Verse of the Day" onBack={() => navigation.goBack()} />
@@ -230,7 +308,14 @@ export default function VerseOfDayScreen() {
           {/* Main verse card */}
           <View style={styles.verseCard}>
             <Text style={[styles.quoteDecor, { color: accentColor }]}>"</Text>
-            <Text style={styles.verseText}>{todayVerse.text}"</Text>
+            <Text style={[
+              styles.verseText,
+              {
+                fontFamily: resolveFontFamily(dailyBreadCustom.fontKey),
+                fontSize: dailyBreadCustom.fontSize,
+                lineHeight: dailyBreadCustom.fontSize * 1.75,
+              },
+            ]}>{todayVerse.text}"</Text>
             <View style={styles.verseRefRow}>
               <Icon source="book-open-variant" size={14} color={accentColor} />
               <Text style={[styles.verseRef, { color: accentColor }]}>{todayVerse.reference}</Text>
@@ -283,7 +368,7 @@ export default function VerseOfDayScreen() {
             <Text style={[ms.previewTitle, { color: colors.textMuted }]}>PREVIEW</Text>
 
             <ScrollView style={ms.scroll} contentContainerStyle={ms.scrollContent} showsVerticalScrollIndicator={false}>
-              <VerseShareCard reference={todayVerse.reference} text={todayVerse.text} date={todayLabel} />
+              <VerseShareCard reference={todayVerse.reference} text={todayVerse.text} date={todayLabel} custom={dailyBreadCustom} />
             </ScrollView>
 
             <View style={[ms.btnRow, { borderTopColor: colors.border }]}>

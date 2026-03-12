@@ -20,9 +20,8 @@ const METHODS = [
     title: 'SOAP Method',
     acronym: 'S · O · A · P',
     steps: 'Scripture  ·  Observation  ·  Application  ·  Prayer',
-    duration: '10–15 min',
+    duration: '45–50 min',
     accent: '#00ACAA',
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     image: require('../../../assets/cards/soap.png') as number,
   },
   {
@@ -31,9 +30,8 @@ const METHODS = [
     title: 'MCPWA Method',
     acronym: 'M · C · P · W · A',
     steps: 'Message  ·  Command  ·  Promise  ·  Warning  ·  Application',
-    duration: '15–20 min',
-    accent: '#5A82B8',
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    duration: '50–60 min',
+    accent: '#00ACAA',
     image: require('../../../assets/cards/mcpwa.jpg') as number,
   },
   {
@@ -42,9 +40,8 @@ const METHODS = [
     title: 'SWORD Method',
     acronym: 'S · W · O · R · D',
     steps: 'Scripture  ·  Word  ·  Observation  ·  Response  ·  Daily Living',
-    duration: '15–20 min',
-    accent: '#C8A86A',
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    duration: '35–45 min',
+    accent: '#00ACAA',
     image: require('../../../assets/cards/sword.png') as number,
   },
   {
@@ -53,9 +50,8 @@ const METHODS = [
     title: 'PRAY Method',
     acronym: 'P · R · A · Y',
     steps: 'Praise  ·  Repent  ·  Ask  ·  Yield',
-    duration: '10–15 min',
-    accent: '#A855F7',
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    duration: '25–30 min',
+    accent: '#00ACAA',
     image: require('../../../assets/cards/pray.png') as number,
   },
   {
@@ -64,9 +60,8 @@ const METHODS = [
     title: 'ACTS Method',
     acronym: 'A · C · T · S',
     steps: 'Adoration  ·  Confession  ·  Thanksgiving  ·  Supplication',
-    duration: '10–15 min',
-    accent: '#10B981',
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    duration: '25–30 min',
+    accent: '#00ACAA',
     image: require('../../../assets/cards/acts.png') as number,
   },
   {
@@ -76,8 +71,7 @@ const METHODS = [
     acronym: 'N · O · T · E',
     steps: 'Title & Preacher  ·  Main Scripture  ·  Key Points  ·  Application',
     duration: '5–10 min',
-    accent: '#8B7BF0',
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    accent: '#00ACAA',
     image: require('../../../assets/cards/sermon.png') as number,
   },
 ];

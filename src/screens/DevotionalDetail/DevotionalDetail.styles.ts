@@ -108,4 +108,50 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     color: c.textSecondary,
     textAlign: 'center',
   },
+
+  /* ─── inline edit ─── */
+  editInput: {
+    borderWidth: 1.5,
+    borderColor: c.primary,
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+    textAlignVertical: 'top',
+    color: c.textPrimary,
+    fontSize: Typography.size.md,
+    backgroundColor: c.surface,
+    marginBottom: Spacing.xs,
+  },
+  editBtnRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  cancelEditBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelEditText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semiBold,
+    color: c.textSecondary,
+  },
+  saveEditBtn: {
+    flex: 2,
+    height: 48,
+    borderRadius: Radius.md,
+    backgroundColor: c.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveEditText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    color: c.textOnPrimary,
+  },
 });

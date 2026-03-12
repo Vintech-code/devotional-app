@@ -13,6 +13,7 @@ import { useAppStore } from '../../store/useAppStore';
 import SettingsRow from '../../components/SettingsRow/SettingsRow';
 import ToggleCard from '../../components/ToggleCard/ToggleCard';
 import ReadingHeatmap from '../../components/ReadingHeatmap/ReadingHeatmap';
+import AppToast from '../../components/AppToast/AppToast';
 import { makeStyles } from '../Profile/Profile.styles';
 import { saveAvatarUri, getActiveUid } from '../../services/storageService';
 import { auth } from '../../services/firebase';
@@ -36,6 +37,8 @@ export default function ProfileScreen() {
   const [showSignOutModal,  setShowSignOutModal]  = useState(false);
   const [signingOut,        setSigningOut]         = useState(false);
   const [avatarLoading,     setAvatarLoading]      = useState(false);
+  const [snackVisible,      setSnackVisible]       = useState(false);
+  const [snackMsg,          setSnackMsg]           = useState('');
 
   const isAdmin = auth.currentUser?.email === 'clarkcabatuan09@gmail.com';
 
@@ -80,6 +83,8 @@ export default function ProfileScreen() {
       await saveAvatarUri(dest);
       const updated = { ...(profile ?? {}), avatarUri: dest } as typeof profile & { avatarUri: string };
       setProfile(updated as NonNullable<typeof profile>);
+      setSnackMsg('Profile photo updated!');
+      setSnackVisible(true);
     } catch {
       Alert.alert('Error', 'Could not save the photo. Please try again.');
     } finally {
@@ -253,6 +258,13 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
+      <AppToast
+        visible={snackVisible}
+        emoji="📸"
+        title="Profile photo updated!"
+        message="Your new photo is looking great."
+        onDismiss={() => setSnackVisible(false)}
+      />
     </SafeAreaView>
   );
 }

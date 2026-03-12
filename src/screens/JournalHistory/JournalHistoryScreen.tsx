@@ -55,6 +55,8 @@ export default function JournalHistoryScreen() {
 
   const [search, setSearch] = useState('');
   const [activeType, setActiveType] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   type HistoryEntry = {
     id: string; type: string; date: string; createdAt: number;
@@ -173,6 +175,43 @@ export default function JournalHistoryScreen() {
     );
   }
 
+  function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    Alert.alert(
+      `Delete ${selectedIds.size} ${selectedIds.size === 1 ? 'entry' : 'entries'}?`,
+      'This will permanently remove the selected entries.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const ids = Array.from(selectedIds);
+            const entries = filtered.filter((e) => ids.includes(e.id));
+            await Promise.all(entries.map((item) => {
+              if (item.type === 'SOAP')   return deleteSoapEntry(item.id);
+              if (item.type === 'MCPWA') return deleteMcpwaEntry(item.id);
+              if (item.type === 'SWORD') return deleteSwordEntry(item.id);
+              if (item.type === 'PRAY')  return deletePrayEntry(item.id);
+              if (item.type === 'ACTS')  return deleteActsEntry(item.id);
+              return deleteSermonNote(item.id);
+            }));
+            setSoapEntries(soapEntries.filter((e) => !selectedIds.has(e.id)));
+            setMcpwaEntries(mcpwaEntries.filter((e) => !selectedIds.has(e.id)));
+            setSwordEntries(swordEntries.filter((e) => !selectedIds.has(e.id)));
+            setPrayEntries(prayEntries.filter((e) => !selectedIds.has(e.id)));
+            setActsEntries(actsEntries.filter((e) => !selectedIds.has(e.id)));
+            setSermonNotes(sermonNotes.filter((e) => !selectedIds.has(e.id)));
+            setSelectedIds(new Set());
+            setSelectMode(false);
+            const profile = await refreshProfileProgress();
+            setProfile(profile);
+          },
+        },
+      ]
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
       <ScreenHeader title="Journal History" onBack={() => navigation.goBack()} />
@@ -237,7 +276,19 @@ export default function JournalHistoryScreen() {
       {/* ─── Entries header + search ─── */}
       <View style={styles.entriesHeader}>
         <Text style={styles.sectionLabel}>ENTRIES</Text>
-        <Text style={styles.entryCount}>{filtered.length}</Text>
+        <View style={styles.entriesHeaderRight}>
+          <Text style={styles.entryCount}>{filtered.length}</Text>
+          {filtered.length > 0 && (
+            <TouchableOpacity
+              style={[styles.selectBtn, selectMode && styles.selectBtnCancel]}
+              onPress={() => { setSelectMode((v) => !v); setSelectedIds(new Set()); }}
+            >
+              <Text style={[styles.selectBtnText, selectMode && styles.selectBtnCancelText]}>
+                {selectMode ? 'CANCEL' : 'SELECT'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.searchWrap}>
@@ -268,44 +319,79 @@ export default function JournalHistoryScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, selectMode && { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.entryCard}
-              activeOpacity={0.85}
-              onPress={() => navigation.navigate('DevotionalDetail', { entryId: item.id, entryType: item.type })}
-            >
-              <View style={styles.entryMeta}>
-                <Text style={styles.entryDate}>{item.date}</Text>
-                <View style={styles.entryMetaRight}>
-                  <View style={[styles.typeBadge, { backgroundColor: TYPE_COLORS[item.type] ?? colors.primary }]}>
-                    <Text style={styles.typeText}>{item.type}</Text>
+          renderItem={({ item }) => {
+            const isSelected = selectedIds.has(item.id);
+            return (
+              <TouchableOpacity
+                style={[styles.entryCard, isSelected && styles.entryCardSelected]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  if (selectMode) {
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(item.id)) next.delete(item.id);
+                      else next.add(item.id);
+                      return next;
+                    });
+                  } else {
+                    navigation.navigate('DevotionalDetail', { entryId: item.id, entryType: item.type });
+                  }
+                }}
+              >
+                <View style={styles.entryMeta}>
+                  {selectMode && (
+                    <View style={[styles.checkCircle, isSelected && styles.checkCircleSelected]}>
+                      {isSelected && <Icon source="check" size={13} color="#fff" />}
+                    </View>
+                  )}
+                  <Text style={styles.entryDate}>{item.date}</Text>
+                  <View style={styles.entryMetaRight}>
+                    <View style={[styles.typeBadge, { backgroundColor: TYPE_COLORS[item.type] ?? colors.primary }]}>
+                      <Text style={styles.typeText}>{item.type}</Text>
+                    </View>
+                    {!selectMode && (
+                      <TouchableOpacity
+                        style={styles.deleteBtn}
+                        onPress={() => handleDeleteEntry(item)}
+                      >
+                        <Icon source="trash-can-outline" size={14} color={colors.textSecondary} />
+                      </TouchableOpacity>
+                    )}
                   </View>
-                  <TouchableOpacity
-                    style={styles.deleteBtn}
-                    onPress={() => {
-                      handleDeleteEntry(item);
-                    }}
-                  >
-                    <Icon source="trash-can-outline" size={14} color={colors.textSecondary} />
-                  </TouchableOpacity>
                 </View>
-              </View>
-              <Text style={styles.entryTitle}>{item.entryTitle}</Text>
-              {item.excerpt ? (
-                <Text style={styles.entryExcerpt} numberOfLines={2}>{item.excerpt}</Text>
-              ) : null}
-              <View style={styles.tagRow}>
-                {item.tags.slice(0, 4).map((tag, ti) => (
-                  <View key={ti} style={styles.tag}>
-                    <Text style={styles.tagText}>#{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </TouchableOpacity>
-          )}
+                <Text style={styles.entryTitle}>{item.entryTitle}</Text>
+                {item.excerpt ? (
+                  <Text style={styles.entryExcerpt} numberOfLines={2}>{item.excerpt}</Text>
+                ) : null}
+                <View style={styles.tagRow}>
+                  {item.tags.slice(0, 4).map((tag, ti) => (
+                    <View key={ti} style={styles.tag}>
+                      <Text style={styles.tagText}>#{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              </TouchableOpacity>
+            );
+          }}
         />
+      )}
+      {/* ─── Bulk-select action bar ─── */}
+      {selectMode && (
+        <View style={styles.bottomSelectBar}>
+          <Text style={styles.selectCount}>
+            {selectedIds.size} selected
+          </Text>
+          <TouchableOpacity
+            style={[styles.bulkDeleteBtn, selectedIds.size === 0 && { opacity: 0.4 }]}
+            disabled={selectedIds.size === 0}
+            onPress={handleBulkDelete}
+          >
+            <Icon source="trash-can-outline" size={16} color="#fff" />
+            <Text style={styles.bulkDeleteText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </SafeAreaView>
   );

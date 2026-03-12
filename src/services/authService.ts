@@ -1,11 +1,5 @@
 /**
- * Authentication service — wraps Firebase Auth and expo-auth-session Google OAuth.
- *
- * Google Sign-In setup:
- *  1. In your Firebase console → Authentication → Sign-in method → Google → Enable it.
- *  2. In Google Cloud Console → OAuth 2.0 Client IDs, copy your Web, Android, and iOS client IDs.
- *  3. Paste them into GOOGLE_CONFIG below.
- *  4. In app.json, make sure `expo.scheme` is set (e.g. "devotionalapp") — it is used as the OAuth redirect.
+ * Authentication service — wraps Firebase Auth and native Google Sign-In.
  */
 import {
   signInWithEmailAndPassword,
@@ -13,28 +7,30 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   signInWithCredential,
+  getAdditionalUserInfo,
   updateProfile,
   type User,
 } from 'firebase/auth';
-import { makeRedirectUri } from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 
 import { auth } from './firebase';
 
-// ─── Must be called once at app startup so the in-app browser can close itself ─
-WebBrowser.maybeCompleteAuthSession();
-
-// ─── Replace with your Google OAuth client IDs ───────────────────────────────
-export const GOOGLE_CONFIG = {
-  webClientId:     'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
-  androidClientId: 'YOUR_GOOGLE_ANDROID_CLIENT_ID.apps.googleusercontent.com',
-  iosClientId:     'YOUR_GOOGLE_IOS_CLIENT_ID.apps.googleusercontent.com',
-} as const;
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Re-export the hook so screens can simply import it from here
-export { Google };
+// ─── Configure once at module load ───────────────────────────────────────────
+// Wrapped in try-catch: GoogleSignin requires a native binary and is not
+// available in Expo Go. The app functions normally for email auth in Expo Go;
+// Google Sign-In only works in a custom dev-client / production build.
+try {
+  GoogleSignin.configure({
+    webClientId: '1072445897574-hqq0krh696nuoehh21th8p6llpu29n3r.apps.googleusercontent.com',
+  });
+} catch {
+  // Native module unavailable (Expo Go) — Google Sign-In will be disabled.
+}
 
 /** Sign in with email + password. Throws a Firebase AuthError on failure. */
 export async function signInWithEmail(email: string, password: string): Promise<User> {
@@ -53,11 +49,37 @@ export async function createUserWithEmail(
   return credential.user;
 }
 
-/** Exchange a Google ID token (from expo-auth-session) for a Firebase User. */
+/** Exchange a Google ID token for a Firebase User. */
 export async function signInWithGoogleIdToken(idToken: string): Promise<User> {
   const googleCredential = GoogleAuthProvider.credential(idToken);
   const credential = await signInWithCredential(auth, googleCredential);
   return credential.user;
+}
+
+/**
+ * Full native Google Sign-In flow.
+ * Always shows the account picker (signs out of the Google native client first).
+ * Returns { user, isNewUser } on success, or null if the user cancelled.
+ * Throws on network error or misconfiguration.
+ */
+export async function signInWithGoogle(): Promise<{ user: User; isNewUser: boolean } | null> {
+  try {
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    // Clear the cached Google account so the account picker always appears.
+    try { await GoogleSignin.signOut(); } catch { /* ignore — native client may not have an account */ }
+    const response = await GoogleSignin.signIn();
+    if (!isSuccessResponse(response)) return null; // user cancelled
+    const idToken = response.data.idToken;
+    if (!idToken) throw new Error('No ID token returned from Google.');
+    const googleCredential = GoogleAuthProvider.credential(idToken);
+    const credential = await signInWithCredential(auth, googleCredential);
+    const additionalInfo = getAdditionalUserInfo(credential);
+    return { user: credential.user, isNewUser: additionalInfo?.isNewUser ?? false };
+  } catch (err) {
+    if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) return null;
+    // Re-throw real errors (network, misconfiguration, etc)
+    throw err;
+  }
 }
 
 /** Sign the current user out. */
@@ -84,5 +106,4 @@ export function friendlyAuthError(error: unknown): string {
   return map[code] ?? (error as Error)?.message ?? 'Something went wrong. Please try again.';
 }
 
-// ─── Redirect URI helper (used by expo-auth-session internally) ──────────────
-export const googleRedirectUri = makeRedirectUri({ scheme: 'devotionalapp' });
+export { isErrorWithCode, statusCodes };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon, Snackbar } from 'react-native-paper';
+import AppToast from '../../components/AppToast/AppToast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -126,13 +127,13 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
         </Text>
 
       </ScrollView>
-      <Snackbar
+      <AppToast
         visible={snackVisible}
+        emoji="⚔️"
+        title="Devotional saved!"
+        message="Your entry has been added to Journal History."
         onDismiss={() => setSnackVisible(false)}
-        duration={1400}
-      >
-        Devotional saved!
-      </Snackbar>
+      />
     </SafeAreaView>
   );
 }

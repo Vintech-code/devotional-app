@@ -1,12 +1,3 @@
-/**
- * Three-slide onboarding series, each featuring a Lottie animation.
- *
- * Transitions: horizontal animated rail (Easing.out(cubic), 420 ms).
- * Dots:        spring-animated pill that grows (24 px) on the active slide,
- *              shrinks (8 px) on inactive ones.
- * Navigation:  "Next" button advances slides; last slide shows "Begin My Journey".
- *              "Skip" in the top-right jumps straight to the final slide.
- */
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -47,7 +38,7 @@ const SLIDES = [
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     lottie: require('../../../assets/animation/notes.json'),
     title:    'Journal Your Journey',
-    subtitle: 'Deepen your walk with SOAP, MCPWA, SWORD or Sermon Notes — guided formats for real reflection.',
+    subtitle: 'Deepen your walk with SOAP, MCPWA, SWORD, PRAY, ACTS or Sermon Notes — guided formats for real reflection.',
     verse:    null as string | null,
     verseRef: null as string | null,
   },

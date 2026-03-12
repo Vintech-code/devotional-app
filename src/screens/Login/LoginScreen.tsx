@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,9 +10,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { saveUserProfile, markOnboardingDone, setActiveUid } from '../../services/storageService';
 import {
   signInWithEmail,
-  Google,
-  GOOGLE_CONFIG,
-  signInWithGoogleIdToken,
+  signInWithGoogle,
   friendlyAuthError,
 } from '../../services/authService';
 import FormInput from '../../components/FormInput/FormInput';
@@ -32,17 +30,19 @@ export default function LoginScreen({ navigation }: Props) {
 
   const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
   const setProfile = useAppStore((s) => s.setProfile);
+  const setPendingAuthToast = useAppStore((s) => s.setPendingAuthToast);
 
-  // ── Google Sign-In via expo-auth-session ─────────────────────────────────
-  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest(GOOGLE_CONFIG);
-
-  useEffect(() => {
-    if (googleResponse?.type !== 'success') return;
-    const idToken = googleResponse.params?.id_token;
-    if (!idToken) return;
+  // ── Native Google Sign-In ────────────────────────────────────────────────
+  async function handleGoogleSignIn() {
+    setError(null);
     setLoading(true);
-    signInWithGoogleIdToken(idToken)
-      .then(async (user) => {
+    try {
+      const result = await signInWithGoogle();
+      if (!result) return; // user cancelled — do nothing
+      const { user, isNewUser } = result;
+
+      if (isNewUser) {
+        // New account created via the login screen: walk through onboarding
         setActiveUid(user.uid);
         const name = user.displayName ?? user.email?.split('@')[0] ?? 'Friend';
         const profile = {
@@ -52,15 +52,22 @@ export default function LoginScreen({ navigation }: Props) {
           levelTitle: 'Faith Seeker',
           completedCount: 0,
           dayStreak: 0,
+          avatarUri: user.photoURL ?? undefined,
         };
         await saveUserProfile(profile);
-        await markOnboardingDone();
         setProfile(profile);
-        setOnboardingDone(true);
-      })
-      .catch((e) => setError(friendlyAuthError(e)))
-      .finally(() => setLoading(false));
-  }, [googleResponse]);
+        navigation.navigate('AllSet', { name });
+      } else {
+        // Existing account: show welcome toast; routing handled by hydrateForUser
+        const name = user.displayName ?? user.email?.split('@')[0] ?? 'Friend';
+        setPendingAuthToast(`Welcome back, ${name}! 👋`);
+      }
+    } catch (e) {
+      setError(friendlyAuthError(e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // ── Email / Password Sign-In ──────────────────────────────────────────────
   async function handleLogin() {
@@ -83,6 +90,7 @@ export default function LoginScreen({ navigation }: Props) {
       await saveUserProfile(profile);
       await markOnboardingDone();
       setProfile(profile);
+      setPendingAuthToast(`Welcome back, ${name}! 👋`);
       setOnboardingDone(true);
     } catch (e) {
       setError(friendlyAuthError(e));
@@ -175,7 +183,7 @@ export default function LoginScreen({ navigation }: Props) {
         <TouchableOpacity
           style={styles.googleBtn}
           activeOpacity={0.8}
-          onPress={() => { void promptGoogleAsync(); }}
+          onPress={() => { void handleGoogleSignIn(); }}
           disabled={loading}
         >
           <Icon source="google" size={20} color={colors.textPrimary} />

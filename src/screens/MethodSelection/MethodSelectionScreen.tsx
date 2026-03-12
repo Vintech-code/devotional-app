@@ -59,11 +59,12 @@ const METHODS: DevotionalMethod[] = [
 ];
 
 const ICON_MAP: Record<DevotionalMethodId, string> = {
-  SOAP:  'pencil',
-  MCPWA: 'shield',
-  SWORD: 'sword',
-  PRAY:  'hands-pray',
-  ACTS:  'cross',
+  SOAP:   'pencil',
+  MCPWA:  'shield',
+  SWORD:  'sword',
+  PRAY:   'hands-pray',
+  ACTS:   'cross',
+  SERMON: 'microphone',
 };
 
 export default function MethodSelectionScreen({ navigation }: Props) {

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
 import { useColors } from '../../theme';
+import { useAppStore } from '../../store/useAppStore';
 import PrimaryButton from '../../components/PrimaryButton/PrimaryButton';
+import AppToast from '../../components/AppToast/AppToast';
 import { makeStyles } from './Welcome.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
@@ -22,8 +24,14 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 export default function WelcomeScreen({ navigation }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
-  // ? useRef must be here, inside the component
   const animationRef = useRef<LottieView>(null);
+  const pendingAuthToast      = useAppStore((s) => s.pendingAuthToast);
+  const clearPendingAuthToast = useAppStore((s) => s.clearPendingAuthToast);
+  const [authSnackVisible, setAuthSnackVisible] = useState(false);
+
+  useEffect(() => {
+    if (pendingAuthToast) setAuthSnackVisible(true);
+  }, [pendingAuthToast]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -112,6 +120,17 @@ export default function WelcomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <AppToast
+        visible={authSnackVisible}
+        emoji="👋"
+        title="Signed out"
+        message={pendingAuthToast ?? ''}
+        onDismiss={() => {
+          setAuthSnackVisible(false);
+          clearPendingAuthToast();
+        }}
+      />
     </SafeAreaView>
   );
 }

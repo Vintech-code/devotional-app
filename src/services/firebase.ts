@@ -1,19 +1,8 @@
-/**
- * Firebase initialization.
- * React Native requires AsyncStorage as the auth persistence layer —
- * without it the SDK throws auth/configuration-not-found at runtime.
- */
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { initializeAuth, getAuth, Auth, Persistence, ReactNativeAsyncStorage } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Metro resolves @firebase/auth with the react-native export condition at
-// runtime, which exports getReactNativePersistence. tsc uses browser typings
-// by default (the "types" condition wins over "react-native" in @firebase/auth's
-// exports map), so we use require() to bypass the type gap while keeping a
-// correct cast.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { getReactNativePersistence } = require('@firebase/auth') as {
   getReactNativePersistence: (storage: ReactNativeAsyncStorage) => Persistence;
 };

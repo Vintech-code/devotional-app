@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1072445897574",
+    "project_id": "devotional-app-dcdaf",
+    "storage_bucket": "devotional-app-dcdaf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1072445897574:android:641d9a0c7ab5e1c879a6a7",
+        "android_client_info": {
+          "package_name": "com.clarkvincent.devoverse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1072445897574-hqq0krh696nuoehh21th8p6llpu29n3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS72PW6kuFGxO2sO6UhEdjfBwgZ1s-23E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1072445897574-hqq0krh696nuoehh21th8p6llpu29n3r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
