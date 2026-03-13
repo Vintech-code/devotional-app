@@ -63,27 +63,34 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     marginBottom: Spacing.md,
   },
   signInText: {
-    fontSize: Typography.size.sm,
-    color: c.textSecondary,
-  },
-  signInLink: {
-    fontSize: Typography.size.md,
-    color: c.primary,
-    fontWeight: Typography.weight.semiBold,
-  },
-  credits: {
-    fontSize: Typography.size.sm,
-    color: c.textMuted,
-    marginTop: Spacing.lg,
-    textAlign: 'center',
-    lineHeight: Typography.size.sm * 1.45,
-    letterSpacing: 0.2,
-    maxWidth: 320,
-  },
-  creditsName: {
-    color: c.textSecondary,
-    fontWeight: Typography.weight.semiBold,
-  },
+  fontSize: Typography.size.sm,
+  color: c.textSecondary,
+  lineHeight: Typography.size.sm * 1.6,
+  letterSpacing: 0.2,
+  textAlign: 'center',
+},
+
+signInLink: {
+  fontSize: Typography.size.sm,
+  color: c.primary,
+  fontWeight: Typography.weight.semiBold,
+  letterSpacing: 0.2,
+},
+
+credits: {
+  fontSize: Typography.size.xs,
+  color: c.textSecondary,                     // same color for all text
+  marginTop: Spacing.lg,
+  textAlign: 'center',
+  lineHeight: Typography.size.xs * 1.8,
+  letterSpacing: 0.2,
+  maxWidth: 340,
+},
+
+creditsName: {
+  color: c.textSecondary,                     // same as credits text
+  fontWeight: Typography.weight.regular, // no bold
+},
   socialRow: {
     flexDirection: 'row',
     gap: Spacing.sm,

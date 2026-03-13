@@ -94,11 +94,11 @@ export default function WelcomeScreen({ navigation }: Props) {
 
         {/* Credits */}
         <Text style={styles.credits}>
-          Crafted with faith and love by{' '}
-          <Text style={styles.creditsName}>Clark Vincent Cabatuan</Text>
-          {'\n'}
-          Vision sparked by <Text style={styles.creditsName}>Rommel Jampit</Text>
-        </Text>
+  Crafted with faith and love by{' '}
+  <Text style={styles.creditsName}>Clark Vincent Cabatuan</Text>
+  {'\n'}
+  Vision sparked by <Text style={styles.creditsName}>Rommel Jampit</Text>
+</Text>
 
         {/* Social icon buttons */}
         <View style={styles.socialRow}>
