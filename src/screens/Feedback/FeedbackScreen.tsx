@@ -20,9 +20,13 @@ import { auth } from '../../services/firebase';
 import {
   submitFeedback,
   getUserFeedbacks,
+  submitAppRating,
+  getUserAppRating,
+  AppRating,
   FeedbackItem,
   FeedbackCategory,
 } from '../../services/feedbackService';
+import { cancelRateAppReminder, cancelFeedbackReminder } from '../../services/notificationService';
 import { makeStyles } from './Feedback.styles';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
@@ -75,14 +79,24 @@ export default function FeedbackScreen() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [feedbacks,   setFeedbacks]   = useState<FeedbackItem[]>([]);
   const [loading,     setLoading]     = useState(true);
+  const [selectedStars, setSelectedStars] = useState(0);
+  const [ratingReview, setRatingReview] = useState('');
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [existingRating, setExistingRating] = useState<AppRating | null>(null);
 
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadFeedbacks = useCallback(async () => {
     if (!firebaseUid) { setLoading(false); return; }
     try {
-      const items = await getUserFeedbacks(firebaseUid);
+      const [items, rating] = await Promise.all([
+        getUserFeedbacks(firebaseUid),
+        getUserAppRating(firebaseUid),
+      ]);
       setFeedbacks(items);
+      setExistingRating(rating);
+      setSelectedStars(rating?.stars ?? 0);
+      setRatingReview(rating?.review ?? '');
     } catch {
       // Offline — show empty list silently
     } finally {
@@ -117,6 +131,7 @@ export default function FeedbackScreen() {
       setSubject('');
       setMessage('');
       setShowSuccess(true);
+      void cancelFeedbackReminder();
       successTimer.current = setTimeout(() => setShowSuccess(false), 5000);
       void loadFeedbacks();
     } catch {
@@ -130,6 +145,28 @@ export default function FeedbackScreen() {
   }
 
   const canSubmit = subject.trim().length >= 3 && message.trim().length >= 10 && !submitting;
+
+  async function handleSubmitRating() {
+    if (!firebaseUid || selectedStars < 1) {
+      Alert.alert('Rating required', 'Please select a star rating first.');
+      return;
+    }
+
+    const userEmail = auth.currentUser?.email ?? '';
+    const userName = profile?.name ?? auth.currentUser?.displayName ?? 'User';
+
+    setRatingSubmitting(true);
+    try {
+      await submitAppRating(firebaseUid, userName, userEmail, selectedStars, ratingReview);
+      void cancelRateAppReminder();
+      Alert.alert('Thank you!', 'Your rating has been saved.');
+      void loadFeedbacks();
+    } catch {
+      Alert.alert('Rating failed', 'Could not save your rating right now. Please try again.');
+    } finally {
+      setRatingSubmitting(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -156,6 +193,63 @@ export default function FeedbackScreen() {
           <Text style={styles.heroSubtitle}>
             Every message is read personally.{'\n'}Your feedback shapes every future update.
           </Text>
+        </View>
+
+        {/* Rating card */}
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>RATE DEVOVERSE</Text>
+          <Text style={styles.ratingSubtitle}>
+            Your rating helps us improve the app for your daily walk.
+          </Text>
+
+          <View style={styles.starsRow}>
+            {[1, 2, 3, 4, 5].map((star) => {
+              const active = star <= selectedStars;
+              return (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setSelectedStars(star)}
+                  activeOpacity={0.8}
+                  style={styles.starBtn}
+                >
+                  <Icon
+                    source={active ? 'star' : 'star-outline'}
+                    size={28}
+                    color={active ? '#EAB308' : colors.textMuted}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TextInput
+            style={[styles.input, styles.textarea, { minHeight: 90 }]}
+            placeholder="Optional: tell us what you like or what to improve..."
+            placeholderTextColor={colors.textMuted}
+            value={ratingReview}
+            onChangeText={(t) => setRatingReview(t.slice(0, 500))}
+            multiline
+            numberOfLines={4}
+          />
+
+          <TouchableOpacity
+            style={[
+              styles.submitBtn,
+              { backgroundColor: selectedStars > 0 ? colors.primary : colors.border },
+            ]}
+            onPress={() => { void handleSubmitRating(); }}
+            disabled={selectedStars === 0 || ratingSubmitting}
+            activeOpacity={0.85}
+          >
+            {ratingSubmitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Icon source="star-circle" size={18} color="#fff" />
+                <Text style={styles.submitBtnText}>{existingRating ? 'Update Rating' : 'Submit Rating'}</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Success banner */}

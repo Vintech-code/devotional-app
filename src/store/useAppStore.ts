@@ -18,7 +18,14 @@ import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
 import { pushToCloud, pullFromCloud, mergeById } from '../services/userDataSyncService';
 import { syncPublicStats } from '../services/partnerService';
-import { scheduleDailyReminder } from '../services/notificationService';
+import {
+  scheduleDailyReminder,
+  scheduleRateAppReminder,
+  cancelRateAppReminder,
+  scheduleFeedbackReminder,
+  cancelFeedbackReminder,
+} from '../services/notificationService';
+import { hasUserRatedApp, hasUserFeedback } from '../services/feedbackService';
 
 interface AppState {
   // Auth / onboarding
@@ -278,6 +285,30 @@ export const useAppStore = create<AppState>((set) => ({
     if (reminderSettings?.dailyEnabled) {
       void scheduleDailyReminder(reminderSettings).catch(() => {});
     }
+
+    // Schedule engagement reminders based on current user activity.
+    void (async () => {
+      try {
+        const [rated, hasFeedback] = await Promise.all([
+          hasUserRatedApp(uid),
+          hasUserFeedback(uid),
+        ]);
+
+        if (rated) {
+          await cancelRateAppReminder();
+        } else {
+          await scheduleRateAppReminder();
+        }
+
+        if (hasFeedback) {
+          await cancelFeedbackReminder();
+        } else {
+          await scheduleFeedbackReminder();
+        }
+      } catch {
+        // Ignore reminder setup failures so hydration never blocks.
+      }
+    })();
 
     // ── Background cloud sync: restore data from other devices / after reinstall ──
     void (async () => {

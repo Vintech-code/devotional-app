@@ -27,6 +27,18 @@ import { db } from './firebase';
 
 export type FeedbackCategory = 'bug' | 'suggestion' | 'question' | 'other';
 
+export interface AppRating {
+  id: string;
+  uid: string;
+  userName: string;
+  userEmail: string;
+  stars: number;
+  review: string;
+  createdAt: number;
+  updatedAt: number;
+  appOwnerEmail: string;
+}
+
 export interface FeedbackItem {
   id: string;
   uid: string;
@@ -56,6 +68,10 @@ export interface AdminUserRecord {
 
 const COL_FEEDBACKS = 'feedbacks';
 const COL_USERS     = 'users';
+const COL_APP_RATINGS = 'app_ratings';
+
+// Keep this aligned with your admin account used in Firestore rules.
+export const APP_ADMIN_EMAIL = 'clarkcabatuan09@gmail.com';
 
 // ─── User-facing ──────────────────────────────────────────────────────────────
 
@@ -94,6 +110,65 @@ export async function getUserFeedbacks(uid: string): Promise<FeedbackItem[]> {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
+/** True when the user already submitted at least one feedback. */
+export async function hasUserFeedback(uid: string): Promise<boolean> {
+  const items = await getUserFeedbacks(uid);
+  return items.length > 0;
+}
+
+/** Create or update this user's app rating (single rating per user). */
+export async function submitAppRating(
+  uid: string,
+  userName: string,
+  userEmail: string,
+  stars: number,
+  review: string,
+): Promise<void> {
+  const cleanStars = Math.max(1, Math.min(5, Math.round(stars)));
+  const now = Date.now();
+
+  const existingQ = query(collection(db, COL_APP_RATINGS), where('uid', '==', uid));
+  const existingSnap = await getDocs(existingQ);
+
+  if (!existingSnap.empty) {
+    const target = existingSnap.docs[0];
+    await updateDoc(doc(db, COL_APP_RATINGS, target.id), {
+      userName,
+      userEmail,
+      stars: cleanStars,
+      review: review.trim(),
+      updatedAt: now,
+    });
+    return;
+  }
+
+  await addDoc(collection(db, COL_APP_RATINGS), {
+    uid,
+    userName,
+    userEmail,
+    stars: cleanStars,
+    review: review.trim(),
+    createdAt: now,
+    updatedAt: now,
+    appOwnerEmail: APP_ADMIN_EMAIL,
+  });
+}
+
+/** Return the current user's rating if present. */
+export async function getUserAppRating(uid: string): Promise<AppRating | null> {
+  const q = query(collection(db, COL_APP_RATINGS), where('uid', '==', uid));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() } as AppRating;
+}
+
+/** True when the user has already rated the app. */
+export async function hasUserRatedApp(uid: string): Promise<boolean> {
+  const rating = await getUserAppRating(uid);
+  return rating !== null;
+}
+
 // ─── Admin-facing ─────────────────────────────────────────────────────────────
 
 /** Admin: fetch all feedbacks ordered by newest first. */
@@ -101,6 +176,15 @@ export async function getAllFeedbacks(): Promise<FeedbackItem[]> {
   const q    = query(collection(db, COL_FEEDBACKS), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FeedbackItem));
+}
+
+/** Admin: fetch only ratings belonging to this app owner/admin. */
+export async function getAllAppRatingsForAdmin(adminEmail: string): Promise<AppRating[]> {
+  const q = query(collection(db, COL_APP_RATINGS), where('appOwnerEmail', '==', adminEmail));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as AppRating))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 /** Admin: post a reply to a feedback message. */

@@ -60,6 +60,23 @@ export const makeStyles = (c: ColorScheme) =>
       lineHeight: Typography.size.sm * 1.6,
     },
 
+    // ── Rating section ─────────────────────────────────────────────────────
+    ratingSubtitle: {
+      fontSize: Typography.size.sm,
+      color: c.textSecondary,
+      marginBottom: Spacing.sm,
+      lineHeight: Typography.size.sm * 1.5,
+    },
+    starsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: Spacing.md,
+    },
+    starBtn: {
+      padding: 4,
+    },
+
     // ── Form card ──────────────────────────────────────────────────────────
     card: {
       backgroundColor: c.surface,

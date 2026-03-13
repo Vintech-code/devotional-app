@@ -50,8 +50,16 @@ function AppContent({ navRef }: AppContentProps) {
     // Set up notification channel once on startup
     void createNotificationChannel();
 
-    // Tapping a delivered notification opens the Journal tab
-    const notifSub = Notifications.addNotificationResponseReceivedListener(() => {
+    // Route notification taps to the relevant area of the app
+    const notifSub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
+      const type = typeof data.type === 'string' ? data.type : '';
+
+      if (type === 'rate-app-reminder' || type === 'feedback-reminder') {
+        navRef.current?.navigate('Main', { screen: 'Profile' } as never);
+        return;
+      }
+
       navRef.current?.navigate('Main', { screen: 'Journal', params: { screen: 'JournalHome' } } as never);
     });
 

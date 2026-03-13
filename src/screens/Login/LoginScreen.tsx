@@ -7,10 +7,11 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { useColors } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
-import { saveUserProfile, setActiveUid } from '../../services/storageService';
+import { setActiveUid } from '../../services/storageService';
 import {
   signInWithEmail,
   signInWithGoogle,
+  signOut,
   friendlyAuthError,
 } from '../../services/authService';
 import FormInput from '../../components/FormInput/FormInput';
@@ -28,7 +29,6 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setProfile = useAppStore((s) => s.setProfile);
   const setPendingAuthToast = useAppStore((s) => s.setPendingAuthToast);
 
   // ── Native Google Sign-In ────────────────────────────────────────────────
@@ -41,26 +41,20 @@ export default function LoginScreen({ navigation }: Props) {
       const { user, isNewUser } = result;
 
       if (isNewUser) {
-        // New account created via the login screen: walk through onboarding
-        setActiveUid(user.uid);
-        const name = user.displayName ?? user.email?.split('@')[0] ?? 'Friend';
-        const profile = {
-          name,
-          memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-          level: 1,
-          levelTitle: 'Faith Seeker',
-          completedCount: 0,
-          dayStreak: 0,
-          avatarUri: user.photoURL ?? undefined,
-        };
-        await saveUserProfile(profile);
-        setProfile(profile);
-        navigation.navigate('AllSet', { name });
-      } else {
-        // Existing account: show welcome toast; routing handled by hydrateForUser
-        const name = user.displayName ?? user.email?.split('@')[0] ?? 'Friend';
-        setPendingAuthToast(`Welcome back, ${name}! 👋`);
+        // Login screen is for existing users only; block first-time Google accounts here.
+        try {
+          await user.delete();
+        } catch {
+          // If deletion fails, still force sign-out so app does not stay authenticated.
+        }
+        await signOut().catch(() => {});
+        setError('No account found for this Google email. Please create an account first.');
+        return;
       }
+
+      // Existing account: show welcome toast; routing handled by hydrateForUser
+      const name = user.displayName ?? user.email?.split('@')[0] ?? 'Friend';
+      setPendingAuthToast(`Welcome back, ${name}! 👋`);
     } catch (e) {
       setError(friendlyAuthError(e));
     } finally {

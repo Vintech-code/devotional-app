@@ -19,26 +19,15 @@ import { ProfileStackParamList } from '../../navigation/types';
 import { useColors, Spacing } from '../../theme';
 import {
   getAllUsers,
-  getAllFeedbacks,
+  getAllAppRatingsForAdmin,
   toggleUserDisabled,
-  replyToFeedback,
   AdminUserRecord,
-  FeedbackItem,
-  FeedbackCategory,
+  AppRating,
 } from '../../services/feedbackService';
 import { makeStyles } from './Admin.styles';
 import { auth } from '../../services/firebase';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
-
-// ─── Category meta ─────────────────────────────────────────────────────────────
-
-const CAT_META: Record<FeedbackCategory, { label: string; color: string; bg: string }> = {
-  bug:        { label: 'BUG',        color: '#B85A5A', bg: 'rgba(184,90,90,0.15)'  },
-  suggestion: { label: 'SUGGESTION', color: '#C89A3A', bg: 'rgba(200,154,58,0.15)' },
-  question:   { label: 'QUESTION',   color: '#428a9b', bg: 'rgba(66,138,155,0.15)' },
-  other:      { label: 'OTHER',      color: '#888',    bg: 'rgba(136,136,136,0.15)'},
-};
 
 function formatDate(ts: number): string {
   if (!ts) return '—';
@@ -55,21 +44,15 @@ export default function AdminScreen() {
   const navigation = useNavigation<Nav>();
   const adminUid   = auth.currentUser?.uid ?? '';
 
-  const [activeTab,    setActiveTab]    = useState<'users' | 'feedbacks'>('users');
+  const [activeTab,    setActiveTab]    = useState<'users' | 'ratings'>('users');
   const [users,        setUsers]        = useState<AdminUserRecord[]>([]);
-  const [feedbacks,    setFeedbacks]    = useState<FeedbackItem[]>([]);
+  const [ratings,      setRatings]      = useState<AppRating[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [loadingFb,    setLoadingFb]    = useState(true);
+  const [loadingRatings, setLoadingRatings] = useState(true);
   const [errorUsers,   setErrorUsers]   = useState('');
-  const [errorFb,      setErrorFb]      = useState('');
+  const [errorRatings, setErrorRatings] = useState('');
 
   const [search,       setSearch]       = useState('');
-  const [fbFilter,     setFbFilter]     = useState<'all' | 'pending' | 'replied'>('all');
-  const [expandedFbId, setExpandedFbId] = useState<string | null>(null);
-
-  // reply state
-  const [replyDraft,   setReplyDraft]   = useState<Record<string, string>>({});
-  const [sendingReply, setSendingReply] = useState<string | null>(null);
 
   // ── Loaders ─────────────────────────────────────────────────────────────
 
@@ -86,23 +69,28 @@ export default function AdminScreen() {
     }
   }, []);
 
-  const fetchFeedbacks = useCallback(async () => {
-    setLoadingFb(true);
-    setErrorFb('');
+  const fetchRatings = useCallback(async () => {
+    setLoadingRatings(true);
+    setErrorRatings('');
     try {
-      const data = await getAllFeedbacks();
-      setFeedbacks(data);
+      const adminEmail = auth.currentUser?.email ?? '';
+      if (!adminEmail) {
+        setRatings([]);
+        return;
+      }
+      const data = await getAllAppRatingsForAdmin(adminEmail);
+      setRatings(data);
     } catch {
-      setErrorFb('Could not load feedbacks. Check Firestore rules and your connection.');
+      setErrorRatings('Could not load ratings. Check Firestore rules and your connection.');
     } finally {
-      setLoadingFb(false);
+      setLoadingRatings(false);
     }
   }, []);
 
   useEffect(() => {
     void fetchUsers();
-    void fetchFeedbacks();
-  }, [fetchUsers, fetchFeedbacks]);
+    void fetchRatings();
+  }, [fetchUsers, fetchRatings]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -137,31 +125,6 @@ export default function AdminScreen() {
     );
   }
 
-  async function handleSendReply(fb: FeedbackItem) {
-    const draft = (replyDraft[fb.id] ?? '').trim();
-    if (draft.length < 2) {
-      Alert.alert('Reply empty', 'Write a reply before sending.');
-      return;
-    }
-    setSendingReply(fb.id);
-    try {
-      await replyToFeedback(fb.id, draft);
-      setFeedbacks((prev) =>
-        prev.map((f) =>
-          f.id === fb.id
-            ? { ...f, adminReply: draft, repliedAt: Date.now(), status: 'replied' }
-            : f,
-        ),
-      );
-      setReplyDraft((prev) => ({ ...prev, [fb.id]: '' }));
-      setExpandedFbId(null);
-    } catch {
-      Alert.alert('Error', 'Could not send reply. Please try again.');
-    } finally {
-      setSendingReply(null);
-    }
-  }
-
   // ── Derived lists ─────────────────────────────────────────────────────────
 
   const filteredUsers = users.filter((u) => {
@@ -171,13 +134,9 @@ export default function AdminScreen() {
     return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
 
-  const pendingCount = feedbacks.filter((f) => f.status === 'pending').length;
-
-  const filteredFeedbacks = feedbacks.filter((f) => {
-    if (fbFilter === 'pending') return f.status === 'pending';
-    if (fbFilter === 'replied') return f.status === 'replied';
-    return true;
-  });
+  const averageRating = ratings.length === 0
+    ? 0
+    : ratings.reduce((sum, r) => sum + r.stars, 0) / ratings.length;
 
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -203,7 +162,7 @@ export default function AdminScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.greetingTitle}>Welcome, {auth.currentUser?.displayName ?? 'Admin'}</Text>
           <Text style={styles.greetingSubtitle}>
-            Monitor users · Manage accounts · Reply to feedback
+            Monitor users · Manage accounts · Review ratings
           </Text>
         </View>
       </View>
@@ -218,17 +177,17 @@ export default function AdminScreen() {
           </View>
         </View>
         <View style={styles.statPill}>
-          <Icon source="message-alert-outline" size={18} color={colors.warning} />
+          <Icon source="star" size={18} color="#EAB308" />
           <View>
-            <Text style={styles.statPillNum}>{pendingCount}</Text>
-            <Text style={styles.statPillLabel}>Pending</Text>
+            <Text style={styles.statPillNum}>{averageRating.toFixed(1)}</Text>
+            <Text style={styles.statPillLabel}>Avg Rating</Text>
           </View>
         </View>
         <View style={styles.statPill}>
-          <Icon source="message-check-outline" size={18} color={colors.success} />
+          <Icon source="star-check-outline" size={18} color={colors.success} />
           <View>
-            <Text style={styles.statPillNum}>{feedbacks.length - pendingCount}</Text>
-            <Text style={styles.statPillLabel}>Replied</Text>
+            <Text style={styles.statPillNum}>{ratings.length}</Text>
+            <Text style={styles.statPillLabel}>Ratings</Text>
           </View>
         </View>
       </View>
@@ -256,21 +215,21 @@ export default function AdminScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'feedbacks' && styles.tabActive]}
-          onPress={() => setActiveTab('feedbacks')}
+          style={[styles.tab, activeTab === 'ratings' && styles.tabActive]}
+          onPress={() => setActiveTab('ratings')}
           activeOpacity={0.8}
         >
           <Icon
-            source="message-text-outline"
+            source="star-outline"
             size={16}
-            color={activeTab === 'feedbacks' ? colors.textPrimary : colors.textMuted}
+            color={activeTab === 'ratings' ? colors.textPrimary : colors.textMuted}
           />
-          <Text style={[styles.tabText, activeTab === 'feedbacks' && styles.tabTextActive]}>
-            Feedbacks
+          <Text style={[styles.tabText, activeTab === 'ratings' && styles.tabTextActive]}>
+            Ratings
           </Text>
-          {pendingCount > 0 && (
-            <View style={[styles.tabBadge, { backgroundColor: colors.warning }]}>
-              <Text style={styles.tabBadgeText}>{pendingCount}</Text>
+          {ratings.length > 0 && (
+            <View style={[styles.tabBadge, { backgroundColor: colors.success }]}> 
+              <Text style={styles.tabBadgeText}>{ratings.length}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -382,164 +341,67 @@ export default function AdminScreen() {
         </>
       )}
 
-      {/* ── Feedbacks Tab ─────────────────────────────────────────────────── */}
-      {activeTab === 'feedbacks' && (
-        <>
-          <View style={styles.filterRow}>
-            {(['all', 'pending', 'replied'] as const).map((f) => {
-              const active = fbFilter === f;
-              return (
-                <TouchableOpacity
-                  key={f}
-                  style={[
-                    styles.filterChip,
-                    {
-                      backgroundColor: active ? colors.primary : colors.surfaceAlt,
-                      borderColor:     active ? colors.primary : colors.border,
-                    },
-                  ]}
-                  onPress={() => setFbFilter(f)}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.filterChipText,
-                      { color: active ? '#fff' : colors.textSecondary },
-                    ]}
-                  >
-                    {f === 'all' ? 'All' : f === 'pending' ? '⏳ Pending' : '✓ Replied'}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+      {/* ── Ratings Tab ───────────────────────────────────────────────────── */}
+      {activeTab === 'ratings' && (
+        <ScrollView
+          style={styles.safe}
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.ratingsSummaryCard}>
+            <Text style={styles.ratingsSummaryTitle}>App Rating Summary</Text>
+            <View style={styles.ratingsSummaryRow}>
+              <Text style={styles.ratingsSummaryScore}>{averageRating.toFixed(1)}</Text>
+              <Icon source="star" size={18} color="#EAB308" />
+              <Text style={styles.ratingsSummaryMeta}>from {ratings.length} ratings</Text>
+            </View>
           </View>
 
-          <ScrollView
-            style={styles.safe}
-            contentContainerStyle={styles.scroll}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {loadingFb ? (
-              <View style={styles.centeredMsg}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.centeredMsgText}>Loading feedbacks…</Text>
+          {loadingRatings ? (
+            <View style={styles.centeredMsg}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.centeredMsgText}>Loading ratings…</Text>
+            </View>
+          ) : errorRatings ? (
+            <View style={styles.centeredMsg}>
+              <Icon source="alert-circle-outline" size={36} color={colors.error} />
+              <Text style={[styles.centeredMsgText, { color: colors.error }]}>{errorRatings}</Text>
+              <TouchableOpacity
+                onPress={() => { void fetchRatings(); }}
+                style={{ marginTop: Spacing.md, padding: Spacing.sm }}
+              >
+                <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : ratings.length === 0 ? (
+            <View style={styles.emptyWrap}>
+              <Icon source="star-off-outline" size={40} color={colors.textMuted} />
+              <Text style={styles.emptyText}>No ratings submitted yet.</Text>
+            </View>
+          ) : (
+            ratings.map((r) => (
+              <View key={r.id} style={styles.ratingCard}>
+                <View style={styles.ratingHead}>
+                  <Text style={styles.ratingName}>{r.userName || 'User'}</Text>
+                  <Text style={styles.ratingDate}>{formatDate(r.updatedAt || r.createdAt)}</Text>
+                </View>
+                <Text style={styles.ratingEmail}>{r.userEmail}</Text>
+                <View style={styles.ratingStarsRow}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Icon
+                      key={n}
+                      source={n <= r.stars ? 'star' : 'star-outline'}
+                      size={16}
+                      color={n <= r.stars ? '#EAB308' : colors.textMuted}
+                    />
+                  ))}
+                  <Text style={styles.ratingStarsText}>{r.stars}/5</Text>
+                </View>
+                {r.review ? <Text style={styles.ratingReview}>{r.review}</Text> : null}
               </View>
-            ) : errorFb ? (
-              <View style={styles.centeredMsg}>
-                <Icon source="alert-circle-outline" size={36} color={colors.error} />
-                <Text style={[styles.centeredMsgText, { color: colors.error }]}>{errorFb}</Text>
-                <TouchableOpacity
-                  onPress={() => { void fetchFeedbacks(); }}
-                  style={{ marginTop: Spacing.md, padding: Spacing.sm }}
-                >
-                  <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
-                </TouchableOpacity>
-              </View>
-            ) : filteredFeedbacks.length === 0 ? (
-              <View style={styles.emptyWrap}>
-                <Icon source="inbox-outline" size={40} color={colors.textMuted} />
-                <Text style={styles.emptyText}>
-                  {fbFilter !== 'all' ? 'No feedbacks with this filter.' : 'No feedbacks yet.'}
-                </Text>
-              </View>
-            ) : (
-              filteredFeedbacks.map((fb) => {
-                const cat    = CAT_META[fb.category] ?? CAT_META.other;
-                const isOpen = expandedFbId === fb.id;
-                return (
-                  <View key={fb.id} style={styles.fbCard}>
-                    {/* Card header — tap to expand */}
-                    <TouchableOpacity
-                      style={styles.fbCardHead}
-                      onPress={() => setExpandedFbId(isOpen ? null : fb.id)}
-                      activeOpacity={0.8}
-                    >
-                      <View style={[styles.fbCategoryBadge, { backgroundColor: cat.bg }]}>
-                        <Text style={[styles.fbCategoryText, { color: cat.color }]}>
-                          {cat.label}
-                        </Text>
-                      </View>
-                      <Text style={styles.fbSubject} numberOfLines={isOpen ? undefined : 1}>
-                        {fb.subject}
-                      </Text>
-                      <View
-                        style={[
-                          styles.fbStatusDot,
-                          {
-                            backgroundColor:
-                              fb.status === 'replied' ? colors.success : colors.warning,
-                          },
-                        ]}
-                      />
-                      <Icon
-                        source={isOpen ? 'chevron-up' : 'chevron-down'}
-                        size={18}
-                        color={colors.textMuted}
-                      />
-                    </TouchableOpacity>
-
-                    {/* Expanded body */}
-                    {isOpen && (
-                      <View style={styles.fbCardBody}>
-                        <Text style={styles.fbFrom}>
-                          From: <Text style={{ color: colors.textPrimary }}>{fb.userName}</Text>
-                          {'  '}
-                          <Text style={{ color: colors.primary }}>{fb.userEmail}</Text>
-                        </Text>
-                        <Text style={styles.fbMessage}>{fb.message}</Text>
-                        <Text style={styles.fbDate}>{formatDate(fb.createdAt)}</Text>
-
-                        {/* Reply zone */}
-                        <View style={styles.replySection}>
-                          {fb.status === 'replied' && fb.adminReply ? (
-                            <>
-                              <Text style={styles.replyExistingLabel}>YOUR REPLY</Text>
-                              <Text style={styles.replyExistingText}>"{fb.adminReply}"</Text>
-                            </>
-                          ) : (
-                            <>
-                              <Text style={styles.replyInputLabel}>REPLY TO USER</Text>
-                              <TextInput
-                                style={styles.replyInput}
-                                placeholder="Write your reply…"
-                                placeholderTextColor={colors.textMuted}
-                                value={replyDraft[fb.id] ?? ''}
-                                onChangeText={(t) =>
-                                  setReplyDraft((prev) => ({ ...prev, [fb.id]: t }))
-                                }
-                                multiline
-                                numberOfLines={3}
-                              />
-                              <TouchableOpacity
-                                style={[
-                                  styles.replyBtn,
-                                  { backgroundColor: colors.primary },
-                                ]}
-                                onPress={() => { void handleSendReply(fb); }}
-                                disabled={sendingReply === fb.id}
-                                activeOpacity={0.85}
-                              >
-                                {sendingReply === fb.id ? (
-                                  <ActivityIndicator size="small" color="#fff" />
-                                ) : (
-                                  <>
-                                    <Icon source="send" size={15} color="#fff" />
-                                    <Text style={styles.replyBtnText}>Send Reply</Text>
-                                  </>
-                                )}
-                              </TouchableOpacity>
-                            </>
-                          )}
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                );
-              })
-            )}
-          </ScrollView>
-        </>
+            ))
+          )}
+        </ScrollView>
       )}
     </SafeAreaView>
   );

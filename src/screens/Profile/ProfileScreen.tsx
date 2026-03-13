@@ -182,15 +182,17 @@ export default function ProfileScreen() {
           value={isDarkMode}
           onValueChange={toggleTheme}
         />
-        <View style={styles.card}>
-          <SettingsRow
-            icon="help-circle-outline"
-            title="Support & Feedback"
-            subtitle="Send us your suggestions or report a bug"
-            onPress={() => navigation.navigate('Feedback')}
-            style={styles.lastRow}
-          />
-        </View>
+        {!isAdmin && (
+          <View style={styles.card}>
+            <SettingsRow
+              icon="help-circle-outline"
+              title="Support & Feedback"
+              subtitle="Send us your suggestions or report a bug"
+              onPress={() => navigation.navigate('Feedback')}
+              style={styles.lastRow}
+            />
+          </View>
+        )}
 
         {/* Admin — only visible to Clark */}
         {isAdmin && (
@@ -198,7 +200,7 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="shield-account"
               title="Admin Dashboard"
-              subtitle="Monitor users · Reply to feedback"
+              subtitle="Monitor users · Review ratings"
               onPress={() => navigation.navigate('Admin')}
               style={styles.lastRow}
             />

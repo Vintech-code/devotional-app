@@ -93,26 +93,31 @@ export default function WelcomeScreen({ navigation }: Props) {
         </Text>
 
         {/* Credits */}
-        <Text style={styles.credits}>Made with ♥ by Clark Vincent Cabatuan</Text>
+        <Text style={styles.credits}>
+          Crafted with faith and love by{' '}
+          <Text style={styles.creditsName}>Clark Vincent Cabatuan</Text>
+          {'\n'}
+          Vision sparked by <Text style={styles.creditsName}>Rommel Jampit</Text>
+        </Text>
 
         {/* Social icon buttons */}
         <View style={styles.socialRow}>
           <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: '#1877F2' }]}
+            style={[styles.socialBtn, { backgroundColor: '#428A9B' }]}
             onPress={() => void Linking.openURL('https://www.facebook.com/search/top?q=Clark%20Vincent%20Cabatuan')}
             activeOpacity={0.8}
           >
             <Icon source="facebook" size={18} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: '#EA4335' }]}
+            style={[styles.socialBtn, { backgroundColor: '#428A9B' }]}
             onPress={() => void Linking.openURL('mailto:clarkcabatuan09@gmail.com')}
             activeOpacity={0.8}
           >
             <Icon source="gmail" size={18} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: '#E1306C' }]}
+            style={[styles.socialBtn, { backgroundColor: '#428A9B' }]}
             onPress={() => void Linking.openURL('https://instagram.com/it_vinceee')}
             activeOpacity={0.8}
           >

@@ -394,4 +394,81 @@ export const makeStyles = (c: ColorScheme) =>
       fontSize: Typography.size.xs,
       color: c.textMuted,
     },
+
+    // ── Ratings tab ───────────────────────────────────────────────────────
+    ratingsSummaryCard: {
+      backgroundColor: c.surface,
+      borderRadius: Radius.xl,
+      padding: Spacing.md,
+      marginBottom: Spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    ratingsSummaryTitle: {
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semiBold,
+      color: c.textSecondary,
+      marginBottom: 6,
+    },
+    ratingsSummaryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    ratingsSummaryScore: {
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+      color: c.textPrimary,
+    },
+    ratingsSummaryMeta: {
+      fontSize: Typography.size.sm,
+      color: c.textMuted,
+    },
+    ratingCard: {
+      backgroundColor: c.surface,
+      borderRadius: Radius.xl,
+      padding: Spacing.md,
+      marginBottom: Spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    ratingHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Spacing.sm,
+      marginBottom: 2,
+    },
+    ratingName: {
+      flex: 1,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semiBold,
+      color: c.textPrimary,
+    },
+    ratingDate: {
+      fontSize: Typography.size.xs,
+      color: c.textMuted,
+    },
+    ratingEmail: {
+      fontSize: Typography.size.xs,
+      color: c.textSecondary,
+      marginBottom: Spacing.xs,
+    },
+    ratingStarsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      marginBottom: Spacing.xs,
+    },
+    ratingStarsText: {
+      marginLeft: 4,
+      fontSize: Typography.size.xs,
+      color: c.textMuted,
+      fontWeight: Typography.weight.semiBold,
+    },
+    ratingReview: {
+      fontSize: Typography.size.sm,
+      color: c.textSecondary,
+      lineHeight: Typography.size.sm * 1.5,
+    },
   });

@@ -157,3 +157,81 @@ export async function sendImmediateReminder(title: string, body: string): Promis
     trigger: null, // fire immediately
   });
 }
+
+/** Weekly reminder to rate the app if user has not rated yet. */
+export async function scheduleRateAppReminder(): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of scheduled) {
+    if ((n.content.data as Record<string, unknown>)?.type === 'rate-app-reminder') {
+      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
+  }
+
+  const granted = await requestNotificationPermissions();
+  if (!granted) return;
+  await createNotificationChannel();
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Enjoying DevoVerse? ⭐',
+      body: 'Tap to rate the app and help us improve your devotional experience.',
+      sound: true,
+      data: { type: 'rate-app-reminder', screen: 'Profile' },
+      ...(Platform.OS === 'android' && { channelId: 'devotional-reminders' }),
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      weekday: 3, // Tuesday
+      hour: 19,
+      minute: 30,
+    },
+  });
+}
+
+export async function cancelRateAppReminder(): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of scheduled) {
+    if ((n.content.data as Record<string, unknown>)?.type === 'rate-app-reminder') {
+      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
+  }
+}
+
+/** Weekly reminder to open Support & Feedback when user has not sent feedback yet. */
+export async function scheduleFeedbackReminder(): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of scheduled) {
+    if ((n.content.data as Record<string, unknown>)?.type === 'feedback-reminder') {
+      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
+  }
+
+  const granted = await requestNotificationPermissions();
+  if (!granted) return;
+  await createNotificationChannel();
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Need help or want to share feedback?',
+      body: 'Open Support & Feedback and send us your thoughts anytime.',
+      sound: true,
+      data: { type: 'feedback-reminder', screen: 'Profile' },
+      ...(Platform.OS === 'android' && { channelId: 'devotional-reminders' }),
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      weekday: 6, // Friday
+      hour: 18,
+      minute: 0,
+    },
+  });
+}
+
+export async function cancelFeedbackReminder(): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of scheduled) {
+    if ((n.content.data as Record<string, unknown>)?.type === 'feedback-reminder') {
+      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
+  }
+}

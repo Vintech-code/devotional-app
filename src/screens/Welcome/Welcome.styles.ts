@@ -67,15 +67,22 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     color: c.textSecondary,
   },
   signInLink: {
+    fontSize: Typography.size.md,
     color: c.primary,
     fontWeight: Typography.weight.semiBold,
   },
   credits: {
-    fontSize: Typography.size.xs,
+    fontSize: Typography.size.sm,
     color: c.textMuted,
     marginTop: Spacing.lg,
     textAlign: 'center',
-    letterSpacing: 0.4,
+    lineHeight: Typography.size.sm * 1.45,
+    letterSpacing: 0.2,
+    maxWidth: 320,
+  },
+  creditsName: {
+    color: c.textSecondary,
+    fontWeight: Typography.weight.semiBold,
   },
   socialRow: {
     flexDirection: 'row',
