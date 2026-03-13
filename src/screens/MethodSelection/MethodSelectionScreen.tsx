@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AuthStackParamList } from '../../navigation/types';
-import { useColors, Typography, Spacing, Radius } from '../../theme';
+import { useColors } from '../../theme';
 import { DevotionalMethod, DevotionalMethodId } from '../../types';
 import { saveSelectedMethod, markOnboardingDone } from '../../services/storageService';
 import { useAppStore } from '../../store/useAppStore';
@@ -138,12 +138,6 @@ export default function MethodSelectionScreen({ navigation }: Props) {
           style={styles.cta}
         />
 
-        <View style={styles.signInRow}>
-          <Text style={styles.signInText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.signInLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
