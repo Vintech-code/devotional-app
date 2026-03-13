@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Image,
-  Modal, StyleSheet, ActivityIndicator, Platform, TextInput,
+  Modal, StyleSheet, ActivityIndicator, Platform, TextInput, Alert,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,6 +30,15 @@ const TYPE_COLORS: Record<string, string> = {
   Sermon: '#D97706',
   PRAY:   '#A855F7',
   ACTS:   '#10B981',
+};
+
+const EDITABLE_FIELDS: Record<string, string[]> = {
+  SOAP: ['scripture', 'fullVerse', 'observation', 'application', 'prayer'],
+  MCPWA: ['scripture', 'message', 'command', 'promise', 'warning', 'application'],
+  SWORD: ['scripture', 'word', 'observation', 'response', 'dailyLiving'],
+  Sermon: ['title', 'preacher', 'church', 'mainScripture', 'notes'],
+  PRAY: ['scripture', 'fullVerse', 'praise', 'repent', 'ask', 'yield_'],
+  ACTS: ['scripture', 'fullVerse', 'adoration', 'confession', 'thanksgiving', 'supplication'],
 };
 
 // ─── Card themes ──────────────────────────────────────────────────────────────
@@ -382,28 +391,54 @@ export default function DevotionalDetailScreen() {
 
   function enterEditMode() {
     if (!entry) return;
-    setEditData(
-      Object.fromEntries(Object.entries(entry).map(([k, v]) => [k, String(v ?? '')]))
-    );
+    const editableKeys = EDITABLE_FIELDS[entryType] ?? [];
+    const next = editableKeys.reduce<Record<string, string>>((acc, key) => {
+      acc[key] = String(entry[key] ?? '');
+      return acc;
+    }, {});
+    setEditData(next);
     setIsEditing(true);
   }
 
   async function handleSaveEdit() {
     if (!entry || editSaving) return;
     setEditSaving(true);
-    const updated = { ...entry, ...editData };
-    switch (entryType) {
-      case 'SOAP':  await saveSoapEntry(updated as any);  setSoapEntries(soapEntries.map((e)  => e.id === entryId ? updated as any : e)); break;
-      case 'MCPWA': await saveMcpwaEntry(updated as any); setMcpwaEntries(mcpwaEntries.map((e) => e.id === entryId ? updated as any : e)); break;
-      case 'SWORD': await saveSwordEntry(updated as any); setSwordEntries(swordEntries.map((e) => e.id === entryId ? updated as any : e)); break;
-      case 'PRAY':  await savePrayEntry(updated as any);  setPrayEntries(prayEntries.map((e)  => e.id === entryId ? updated as any : e)); break;
-      case 'ACTS':  await saveActsEntry(updated as any);  setActsEntries(actsEntries.map((e)  => e.id === entryId ? updated as any : e)); break;
-      default:      await saveSermonNote(updated as any); setSermonNotes(sermonNotes.map((e)  => e.id === entryId ? updated as any : e)); break;
+    try {
+      const updated = { ...entry, ...editData };
+      switch (entryType) {
+        case 'SOAP':
+          await saveSoapEntry(updated as any);
+          setSoapEntries(soapEntries.map((e) => (e.id === entryId ? updated as any : e)));
+          break;
+        case 'MCPWA':
+          await saveMcpwaEntry(updated as any);
+          setMcpwaEntries(mcpwaEntries.map((e) => (e.id === entryId ? updated as any : e)));
+          break;
+        case 'SWORD':
+          await saveSwordEntry(updated as any);
+          setSwordEntries(swordEntries.map((e) => (e.id === entryId ? updated as any : e)));
+          break;
+        case 'PRAY':
+          await savePrayEntry(updated as any);
+          setPrayEntries(prayEntries.map((e) => (e.id === entryId ? updated as any : e)));
+          break;
+        case 'ACTS':
+          await saveActsEntry(updated as any);
+          setActsEntries(actsEntries.map((e) => (e.id === entryId ? updated as any : e)));
+          break;
+        default:
+          await saveSermonNote(updated as any);
+          setSermonNotes(sermonNotes.map((e) => (e.id === entryId ? updated as any : e)));
+          break;
+      }
+      const updatedProfile = await refreshProfileProgress();
+      setProfile(updatedProfile);
+      setIsEditing(false);
+    } catch {
+      Alert.alert('Save failed', 'Could not save your changes. Please try again.');
+    } finally {
+      setEditSaving(false);
     }
-    const updatedProfile = await refreshProfileProgress();
-    setProfile(updatedProfile);
-    setEditSaving(false);
-    setIsEditing(false);
   }
 
   if (!entry) {

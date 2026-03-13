@@ -7,7 +7,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { useColors } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
-import { saveUserProfile, markOnboardingDone, setActiveUid } from '../../services/storageService';
+import { saveUserProfile, setActiveUid } from '../../services/storageService';
 import {
   signInWithEmail,
   signInWithGoogle,
@@ -28,7 +28,6 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
   const setProfile = useAppStore((s) => s.setProfile);
   const setPendingAuthToast = useAppStore((s) => s.setPendingAuthToast);
 
@@ -76,22 +75,10 @@ export default function LoginScreen({ navigation }: Props) {
     setLoading(true);
     try {
       const user = await signInWithEmail(email, password);
-      // Scope storage to this user before any writes
-      setActiveUid(user.uid);
       const name = user.displayName ?? email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      const profile = {
-        name,
-        memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        level: 1,
-        levelTitle: 'Faith Seeker',
-        completedCount: 0,
-        dayStreak: 0,
-      };
-      await saveUserProfile(profile);
-      await markOnboardingDone();
-      setProfile(profile);
+      // Keep login side-effects minimal; auth observer hydrates user-scoped data.
+      setActiveUid(user.uid);
       setPendingAuthToast(`Welcome back, ${name}! 👋`);
-      setOnboardingDone(true);
     } catch (e) {
       setError(friendlyAuthError(e));
     } finally {

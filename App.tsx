@@ -18,7 +18,7 @@ import { useAppStore } from './src/store/useAppStore';
 import { DarkColors, LightColors, makePaperTheme, makeRneuiTheme } from './src/theme';
 import { auth } from './src/services/firebase';
 import { syncOnLogin } from './src/services/syncService';
-import { LocalUserData } from './src/services/storageService';
+import { LocalUserData, setActiveUid } from './src/services/storageService';
 import { checkIfDisabled, registerOrUpdateUserMeta } from './src/services/feedbackService';
 import { createNotificationChannel } from './src/services/notificationService';
 import { RootStackParamList } from './src/navigation/types';
@@ -40,6 +40,7 @@ function AppContent({ navRef }: AppContentProps) {
   const signOut         = useAppStore((s) => s.signOut);
   const [ready, setReady]           = useState(false);
   const [splashDone, setSplashDone] = useState(false);
+  const authStateVersionRef = useRef(0);
 
   const colors        = isDarkMode ? DarkColors : LightColors;
   const appPaperTheme = useMemo(() => makePaperTheme(colors, isDarkMode), [colors, isDarkMode]);
@@ -59,9 +60,12 @@ function AppContent({ navRef }: AppContentProps) {
 
     // 2. Wait for Firebase auth to resolve (fires from cache on restart = instant)
     const authUnsub = onAuthStateChanged(auth, async (user) => {
+      const version = ++authStateVersionRef.current;
       if (user) {
+        setActiveUid(user.uid);
         // Load this user's UID-scoped data from AsyncStorage
         await hydrateForUser(user.uid);
+        if (version !== authStateVersionRef.current) return;
 
         // Show the app immediately — background tasks run after
         setReady(true);
@@ -100,6 +104,8 @@ function AppContent({ navRef }: AppContentProps) {
 
         return;
       }
+      setActiveUid(null);
+      if (version !== authStateVersionRef.current) return;
       // Whether user is null or set, we're done loading
       setReady(true);
     });
