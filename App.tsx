@@ -154,15 +154,7 @@ function AppContent({ navRef }: AppContentProps) {
     }
   }, [ready]);
 
-  // While Firebase/hydration resolves, show a simple loader.
-  if (!ready) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 12, color: colors.textSecondary }}>Loading DevoVerse…</Text>
-      </View>
-    );
-  }
+  if (!ready) return null;
 
   return (
     <PaperProvider theme={appPaperTheme}>

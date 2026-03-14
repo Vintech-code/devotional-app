@@ -79,6 +79,7 @@ signInLink: {
 
 credits: {
   fontSize: Typography.size.xs,
+  color: c.textSecondary,
   textAlign: 'center',
   lineHeight: Typography.size.xs * 1.8,
   letterSpacing: 0.2,
