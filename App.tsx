@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, ActivityIndicator, Alert } from 'react-native';
+import { View, ActivityIndicator, Alert, Text } from 'react-native';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -18,7 +18,7 @@ import { useAppStore } from './src/store/useAppStore';
 import { DarkColors, LightColors, makePaperTheme, makeRneuiTheme } from './src/theme';
 import { auth } from './src/services/firebase';
 import { syncOnLogin } from './src/services/syncService';
-import { LocalUserData, setActiveUid } from './src/services/storageService';
+import { LocalUserData, markOnboardingDone, setActiveUid } from './src/services/storageService';
 import { checkIfDisabled, registerOrUpdateUserMeta } from './src/services/feedbackService';
 import { createNotificationChannel } from './src/services/notificationService';
 import { RootStackParamList } from './src/navigation/types';
@@ -36,6 +36,7 @@ function AppContent({ navRef }: AppContentProps) {
   const setMcpwaEntries = useAppStore((s) => s.setMcpwaEntries);
   const setSwordEntries = useAppStore((s) => s.setSwordEntries);
   const setSermonNotes  = useAppStore((s) => s.setSermonNotes);
+  const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
   const soapEntries     = useAppStore((s) => s.soapEntries);
   const signOut         = useAppStore((s) => s.signOut);
   const [ready, setReady]           = useState(false);
@@ -72,8 +73,25 @@ function AppContent({ navRef }: AppContentProps) {
       if (user) {
         setActiveUid(user.uid);
         // Load this user's UID-scoped data from AsyncStorage
-        await hydrateForUser(user.uid);
+        try {
+          await Promise.race([
+            hydrateForUser(user.uid),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('hydrate-timeout')), 8000)),
+          ]);
+        } catch {
+          // If hydration hangs, fall back to showing the app shell.
+          setReady(true);
+        }
         if (version !== authStateVersionRef.current) return;
+
+        const creation = user.metadata.creationTime ?? '';
+        const lastSignIn = user.metadata.lastSignInTime ?? '';
+        const isFirstSignIn = creation !== '' && lastSignIn !== '' && creation === lastSignIn;
+
+        if (!isFirstSignIn) {
+          void markOnboardingDone();
+          setOnboardingDone(true);
+        }
 
         // Show the app immediately — background tasks run after
         setReady(true);
@@ -124,8 +142,27 @@ function AppContent({ navRef }: AppContentProps) {
     };
   }, []);
 
-  // While Firebase/hydration resolves, keep the native splash visible.
-  if (!ready) return null;
+  useEffect(() => {
+    if (ready) return;
+    const timer = setTimeout(() => setReady(true), 10000);
+    return () => clearTimeout(timer);
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready) {
+      void SplashScreen.hideAsync();
+    }
+  }, [ready]);
+
+  // While Firebase/hydration resolves, show a simple loader.
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 12, color: colors.textSecondary }}>Loading DevoVerse…</Text>
+      </View>
+    );
+  }
 
   return (
     <PaperProvider theme={appPaperTheme}>

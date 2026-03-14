@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { AuthStackParamList } from '../../navigation/types';
 import { useColors } from '../../theme';
@@ -20,6 +21,8 @@ import { makeStyles } from './Login.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
+const REMEMBER_KEY = '@devotional/remember_login';
+
 export default function LoginScreen({ navigation }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
@@ -30,6 +33,21 @@ export default function LoginScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const setPendingAuthToast = useAppStore((s) => s.setPendingAuthToast);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(REMEMBER_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw) as { email?: string; password?: string };
+        if (saved.email) setEmail(saved.email);
+        if (saved.password) setPassword(saved.password);
+        if (saved.email || saved.password) setRememberMe(true);
+      } catch {
+        // ignore corrupted saved data
+      }
+    })();
+  }, []);
 
   // ── Native Google Sign-In ────────────────────────────────────────────────
   async function handleGoogleSignIn() {
@@ -73,6 +91,12 @@ export default function LoginScreen({ navigation }: Props) {
       // Keep login side-effects minimal; auth observer hydrates user-scoped data.
       setActiveUid(user.uid);
       setPendingAuthToast(`Welcome back, ${name}! 👋`);
+
+      if (rememberMe) {
+        await AsyncStorage.setItem(REMEMBER_KEY, JSON.stringify({ email, password }));
+      } else {
+        await AsyncStorage.removeItem(REMEMBER_KEY);
+      }
     } catch (e) {
       setError(friendlyAuthError(e));
     } finally {
@@ -91,7 +115,7 @@ export default function LoginScreen({ navigation }: Props) {
         <View style={styles.logoWrap}>
           <Image
             // eslint-disable-next-line @typescript-eslint/no-var-requires
-            source={require('../../../assets/logotransparent1.png')}
+            source={require('../../../assets/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -124,7 +148,12 @@ export default function LoginScreen({ navigation }: Props) {
         <View style={styles.rememberRow}>
           <TouchableOpacity
             style={styles.rememberLeft}
-            onPress={() => setRememberMe((v) => !v)}
+            onPress={() => {
+              setRememberMe((v) => !v);
+              if (rememberMe) {
+                void AsyncStorage.removeItem(REMEMBER_KEY);
+              }
+            }}
             activeOpacity={0.8}
           >
             <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>

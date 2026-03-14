@@ -5,10 +5,10 @@
     "version": "1.0.0",
     "scheme": "devotionalapp",
     "orientation": "portrait",
-    "icon": "./assets/appicon.png",
+    "icon": "./assets/appicon1.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/appicon.png",
+      "image": "./assets/appicon1.png",
       "resizeMode": "contain",
       "backgroundColor": "#111111"
     },
@@ -25,7 +25,7 @@
     "android": {
       "package": "com.clarkvincent.devoverse",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/appicon.png",
+        "foregroundImage": "./assets/appicon1.png",
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
@@ -56,12 +56,12 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#111111",
-          "image": "./assets/appicon.png",
+          "image": "./assets/appicon1.png",
           "imageWidth": 180,
           "resizeMode": "contain",
           "dark": {
             "backgroundColor": "#111111",
-            "image": "./assets/appicon.png"
+            "image": "./assets/appicon1.png"
           }
         }
       ],
@@ -73,7 +73,7 @@
       ]
     ],
     "web": {
-      "favicon": "./assets/appicon.png"
+      "favicon": "./assets/appicon1.png"
     },
     "extra": {
       "eas": {

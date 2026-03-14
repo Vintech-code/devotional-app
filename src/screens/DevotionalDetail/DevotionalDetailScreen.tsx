@@ -161,7 +161,7 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
   return (
     <View style={[cs.card, { backgroundColor: t.bg }]}>
       <View style={[cs.cardHeader, { backgroundColor: t.header }]}>
-        <Image source={require('../../../assets/logotransparent1.png')} style={cs.appLogo} />
+        <Image source={require('../../../assets/logo.png')} style={cs.appLogo} />
         <View style={cs.typePill}>
           <Text style={cs.typePillText}>{entryType.toUpperCase()}</Text>
         </View>
@@ -261,7 +261,7 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
 
       <View style={[cs.cardFooter, { backgroundColor: t.surface, borderTopColor: t.border }]}>
         <Text style={[cs.footerLeft, { color: t.muted }]}>DevoVerse Devotional App</Text>
-        <Image source={require('../../../assets/logotransparent1.png')} style={cs.footerLogo} />
+        <Image source={require('../../../assets/logo.png')} style={cs.footerLogo} />
       </View>
     </View>
   );

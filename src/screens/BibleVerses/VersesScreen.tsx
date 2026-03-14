@@ -481,7 +481,7 @@ export default function VersesScreen() {
               {/* Capturable card */}
               <View ref={shareCardRef} collapsable={false} style={scm.card}>
                 <View style={scm.band}>
-                  <Image source={require('../../../assets/logotransparent1.png')} style={scm.bandLogo} />
+                  <Image source={require('../../../assets/logo.png')} style={scm.bandLogo} />
                   <Text style={scm.bandRight}>VERSE CARD</Text>
                 </View>
                 <View style={scm.body}>
@@ -492,7 +492,7 @@ export default function VersesScreen() {
                 </View>
                 <View style={scm.footer}>
                   <Text style={scm.footerLeft}>{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
-                  <Image source={require('../../../assets/logotransparent1.png')} style={scm.footerLogo} />
+                  <Image source={require('../../../assets/logo.png')} style={scm.footerLogo} />
                 </View>
               </View>
             </ScrollView>

@@ -30,7 +30,7 @@ export type ColorScheme = {
 
 export const DarkColors: ColorScheme = {
   // Primary – teal (user preference)
-  primary: '#428a9b',
+  primary: '#176e74',
   primaryDark: '#008A88',
   primaryLight: '#058583',
 
@@ -51,7 +51,7 @@ export const DarkColors: ColorScheme = {
 
   // Border
   border: '#2A2A2A',
-  borderFocus: '#00ACAA',
+  borderFocus: '#176e74',
 
   // Status
   success: '#5A9E6F',
@@ -60,10 +60,10 @@ export const DarkColors: ColorScheme = {
   error: '#B85A5A',
   info: '#5A82B8',
 
-  // Tags / Chips
+  // Tags #f9f9f5 / Chips
   tagActive: '#1A3A3A',
   tagInactive: '#222222',
-  tagTextActive: '#00ACAA',
+  tagTextActive: '#176e74',
   tagTextInactive: '#888888',
 
   // Misc
@@ -75,7 +75,7 @@ export const DarkColors: ColorScheme = {
 
 export const LightColors: ColorScheme = {
   // Primary – darker teal for contrast on cream
-  primary: '#007A78',
+  primary: '#176e74',
   primaryDark: '#005C5A',
   primaryLight: '#00A09E',
 
@@ -84,7 +84,7 @@ export const LightColors: ColorScheme = {
   accentLight: '#B89050',
 
   // Backgrounds – warm cream / parchment
-  background: '#F5F3EE',
+  background: '#f9f9f5',
   surface: '#FFFFFF',
   surfaceAlt: '#EEECE8',
 
@@ -96,7 +96,7 @@ export const LightColors: ColorScheme = {
 
   // Border
   border: '#E4E2DC',
-  borderFocus: '#007A78',
+  borderFocus: '#176e74',
 
   // Status
   success: '#2E7D4F',

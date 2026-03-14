@@ -79,18 +79,17 @@ signInLink: {
 
 credits: {
   fontSize: Typography.size.xs,
-  color: c.textSecondary,                     // same color for all text
-  marginTop: Spacing.lg,
   textAlign: 'center',
   lineHeight: Typography.size.xs * 1.8,
   letterSpacing: 0.2,
   maxWidth: 340,
+  marginTop: Spacing.md, 
 },
 
 creditsName: {
-  color: c.textSecondary,                     // same as credits text
-  fontWeight: Typography.weight.regular, // no bold
-},
+  color: c.textSecondary,                   
+  fontWeight: Typography.weight.regular, 
+},  
   socialRow: {
     flexDirection: 'row',
     gap: Spacing.sm,

@@ -178,7 +178,7 @@ function VerseShareCard({
     <View style={vcs.card}>
       {/* ─── Watermark band (always visible) ─── */}
       <View style={vcs.band}>
-        <Image source={require('../../../assets/logotransparent1.png')} style={vcs.bandLogo} />
+        <Image source={require('../../../assets/logo.png')} style={vcs.bandLogo} />
         <Text style={vcs.bandRight}>VERSE OF THE DAY</Text>
       </View>
 
@@ -187,7 +187,7 @@ function VerseShareCard({
       {/* ─── Footer watermark (always visible) ─── */}
       <View style={[vcs.footer, footerStyle]}>
         <Text style={[vcs.footerLeft, hasCustomBg ? { color: 'rgba(255,255,255,0.5)' } : {}]}>{date}</Text>
-        <Image source={require('../../../assets/logotransparent1.png')} style={vcs.footerLogo} />
+        <Image source={require('../../../assets/logo.png')} style={vcs.footerLogo} />
       </View>
     </View>
   );

@@ -40,7 +40,7 @@ export default function WelcomeScreen({ navigation }: Props) {
         <View style={styles.logoWrap}>
           {/* eslint-disable-next-line @typescript-eslint/no-var-requires */}
           <Image
-            source={require('../../../assets/logotransparent1.png')}
+            source={require('../../../assets/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -92,38 +92,38 @@ export default function WelcomeScreen({ navigation }: Props) {
           </Text>
         </Text>
 
-        {/* Credits */}
-        <Text style={styles.credits}>
-  Crafted with faith and love by{' '}
-  <Text style={styles.creditsName}>Clark Vincent Cabatuan</Text>
-  {'\n'}
-  Vision sparked by <Text style={styles.creditsName}>Rommel Jampit</Text>
-</Text>
-
         {/* Social icon buttons */}
         <View style={styles.socialRow}>
           <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: '#428A9B' }]}
+            style={[styles.socialBtn, { backgroundColor: '#176e74' }]}
             onPress={() => void Linking.openURL('https://www.facebook.com/search/top?q=Clark%20Vincent%20Cabatuan')}
             activeOpacity={0.8}
           >
-            <Icon source="facebook" size={18} color="#fff" />
+            <Icon source="facebook" size={18} color="#f8f8ec" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: '#428A9B' }]}
+            style={[styles.socialBtn, { backgroundColor: '#176e74' }]}
             onPress={() => void Linking.openURL('mailto:clarkcabatuan09@gmail.com')}
             activeOpacity={0.8}
           >
-            <Icon source="gmail" size={18} color="#fff" />
+            <Icon source="gmail" size={18} color="#f8f8ec" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: '#428A9B' }]}
+            style={[styles.socialBtn, { backgroundColor: '#176e74' }]}
             onPress={() => void Linking.openURL('https://instagram.com/it_vinceee')}
             activeOpacity={0.8}
           >
-            <Icon source="instagram" size={18} color="#fff" />
+            <Icon source="instagram" size={18} color="#f8f8ec" />
           </TouchableOpacity>
         </View>
+
+        {/* Credits */}
+        <Text style={styles.credits}>
+          Crafted with faith and love by{' '}
+          <Text style={styles.creditsName}>Clark Vincent Cabatuan</Text>
+          {'\n'}
+          Vision sparked by <Text style={styles.creditsName}>Rommel Jampit</Text>
+        </Text>
       </ScrollView>
 
       <AppToast

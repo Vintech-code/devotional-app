@@ -124,7 +124,7 @@ export default function AnimatedSplash({ onComplete }: Props) {
         >
           <Image
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            source={require('../../../assets/appicon.png')}
+            source={require('../../../assets/appicon1.png')}
             style={styles.logo}
             resizeMode="cover"
           />
