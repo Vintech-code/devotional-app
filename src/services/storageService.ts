@@ -263,6 +263,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<void> {
 }
 
 export async function refreshProfileProgress(): Promise<UserProfile> {
+  const hasStoredProfile = (await AsyncStorage.getItem(uk(K.PROFILE))) !== null;
   const [soap, mcpwa, sword, sermons, pray, acts, profile] = await Promise.all([
     getSoapEntries(),
     getMcpwaEntries(),
@@ -290,7 +291,10 @@ export async function refreshProfileProgress(): Promise<UserProfile> {
     level,
     levelTitle,
   };
-  await saveUserProfile(next);
+  // Avoid persisting placeholder defaults before signup has saved the real profile.
+  if (hasStoredProfile) {
+    await saveUserProfile(next);
+  }
   return next;
 }
 

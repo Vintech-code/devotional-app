@@ -18,7 +18,7 @@ import { useAppStore } from './src/store/useAppStore';
 import { DarkColors, LightColors, makePaperTheme, makeRneuiTheme } from './src/theme';
 import { auth } from './src/services/firebase';
 import { syncOnLogin } from './src/services/syncService';
-import { LocalUserData, markOnboardingDone, setActiveUid } from './src/services/storageService';
+import { LocalUserData, markOnboardingDone, saveUserProfile, setActiveUid } from './src/services/storageService';
 import { checkIfDisabled, registerOrUpdateUserMeta } from './src/services/feedbackService';
 import { createNotificationChannel } from './src/services/notificationService';
 import { RootStackParamList } from './src/navigation/types';
@@ -83,6 +83,19 @@ function AppContent({ navRef }: AppContentProps) {
           setReady(true);
         }
         if (version !== authStateVersionRef.current) return;
+
+        const hydratedProfile = useAppStore.getState().profile;
+        const authName = (user.displayName ?? user.email?.split('@')[0] ?? '').trim();
+        const needsNameRepair = !!(
+          hydratedProfile
+          && authName
+          && (!hydratedProfile.name || hydratedProfile.name.trim() === '' || hydratedProfile.name === 'New Member')
+        );
+        if (needsNameRepair && hydratedProfile) {
+          const repairedProfile = { ...hydratedProfile, name: authName };
+          await saveUserProfile(repairedProfile);
+          setProfile(repairedProfile);
+        }
 
         const creation = user.metadata.creationTime ?? '';
         const lastSignIn = user.metadata.lastSignInTime ?? '';
