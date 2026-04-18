@@ -1,4 +1,5 @@
 ﻿import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   DevotionalMethodId,
   UserProfile,
@@ -17,15 +18,17 @@ import {
 import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
 import { pushToCloud, pullFromCloud, mergeById } from '../services/userDataSyncService';
-import { syncPublicStats } from '../services/partnerService';
 import {
   scheduleDailyReminder,
   scheduleRateAppReminder,
   cancelRateAppReminder,
   scheduleFeedbackReminder,
   cancelFeedbackReminder,
+  scheduleDraftNudge,
 } from '../services/notificationService';
 import { hasUserRatedApp, hasUserFeedback } from '../services/feedbackService';
+import { hasAnyDraft } from '../services/draftService';
+import { trackEvent } from '../services/analyticsService';
 
 interface AppState {
   // Auth / onboarding
@@ -120,7 +123,9 @@ export const useAppStore = create<AppState>((set) => ({
         reminders:   s.reminderSettings,
         method:      s.selectedMethod,
         onboarding:  s.isOnboardingDone,
-      }).catch(() => {});
+      }).catch(() => {
+        void trackEvent('sync_fail', { context: 'signout_push' });
+      });
     }
 
     // 2. Sign out of Firebase
@@ -164,11 +169,7 @@ export const useAppStore = create<AppState>((set) => ({
   setSelectedMethod: (method) => set({ selectedMethod: method }),
 
   profile: null,
-  setProfile: (profile) => {
-    const uid = useAppStore.getState().firebaseUid;
-    if (uid) void syncPublicStats(uid, profile.dayStreak ?? 0, profile.completedCount ?? 0, profile.avatarUri).catch(() => {});
-    set({ profile });
-  },
+  setProfile: (profile) => set({ profile }),
 
   reminderSettings: null,
   setReminderSettings: (settings) => set({ reminderSettings: settings }),
@@ -259,7 +260,10 @@ export const useAppStore = create<AppState>((set) => ({
       storage.refreshProfileProgress(),
       storage.getAvatarUri(),
     ]);
-    const profileWithAvatar: UserProfile = { ...freshProfile, avatarUri: avatarUri ?? undefined };
+    const profileWithAvatar: UserProfile = {
+      ...freshProfile,
+      avatarUri: avatarUri ?? freshProfile.avatarUri,
+    };
 
     set({
       isOnboardingDone: onboardingDone,
@@ -277,14 +281,29 @@ export const useAppStore = create<AppState>((set) => ({
       actsEntries,
     });
 
-    // Push fresh stats to Firestore so partners see up-to-date streak/completed/lastActive
-    void syncPublicStats(uid, profileWithAvatar.dayStreak ?? 0, profileWithAvatar.completedCount ?? 0, profileWithAvatar.avatarUri).catch(() => {});
-
     // Re-schedule daily reminder after sign-in so notifications fire even after
     // the OS clears them (device restart, battery optimisation, re-install, etc.)
     if (reminderSettings?.dailyEnabled) {
       void scheduleDailyReminder(reminderSettings).catch(() => {});
     }
+
+    // Day 2 / Day 3 draft nudges for retention.
+    void (async () => {
+      try {
+        const key = '@devotional/onboarding_started_at';
+        const raw = await AsyncStorage.getItem(key);
+        const startedAt = raw ? Number(raw) : Date.now();
+        if (!raw) {
+          await AsyncStorage.setItem(key, String(startedAt));
+        }
+        const day = Math.max(1, Math.floor((Date.now() - startedAt) / 86_400_000) + 1);
+        const hasDraft = await hasAnyDraft();
+        if (day === 2) await scheduleDraftNudge(2, hasDraft);
+        if (day === 3) await scheduleDraftNudge(3, hasDraft);
+      } catch {
+        // Ignore nudge scheduling failures.
+      }
+    })();
 
     // Schedule engagement reminders based on current user activity.
     void (async () => {
@@ -355,14 +374,30 @@ export const useAppStore = create<AppState>((set) => ({
         if (cloud.settings?.profile) {
           const cp = cloud.settings.profile;
           if ((cp.completedCount ?? 0) > (profileWithAvatar.completedCount ?? 0)) {
-            const merged = { ...cp, avatarUri: profileWithAvatar.avatarUri };
+            const merged = {
+              ...cp,
+              avatarUri: profileWithAvatar.avatarUri ?? cp.avatarUri,
+            };
             await storage.saveUserProfile(merged);
             updates.profile = merged;
           }
         }
 
-        if (Object.keys(updates).length > 0) set(updates as unknown as AppState);
-      } catch { /* stay silent if cloud pull fails */ }
+        if (Object.keys(updates).length > 0) {
+          set(updates as unknown as AppState);
+
+          // Recompute profile from merged local journals so streak/count stay correct.
+          const refreshed = await storage.refreshProfileProgress();
+          const avatar = await storage.getAvatarUri();
+          const profileAfterMerge: UserProfile = {
+            ...refreshed,
+            avatarUri: avatar ?? refreshed.avatarUri,
+          };
+          set({ profile: profileAfterMerge });
+        }
+      } catch {
+        void trackEvent('sync_fail', { context: 'hydrate_pull' });
+      }
     })();
   },
 }));

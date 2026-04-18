@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Icon, Snackbar } from 'react-native-paper';
 import AppToast from '../../components/AppToast/AppToast';
@@ -9,6 +9,7 @@ import { JournalStackParamList } from '../../navigation/types';
 import { SwordEntry } from '../../types';
 import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { saveSwordEntry, refreshProfileProgress } from '../../services/storageService';
+import { clearDraft, loadDraft, saveDraft } from '../../services/draftService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import JournalSection from '../../components/JournalSection/JournalSection';
@@ -31,6 +32,7 @@ const SECTIONS = [
 ] as const;
 
 type FieldKey = 'scripture' | 'word' | 'observation' | 'response' | 'dailyLiving';
+type SwordDraft = Record<FieldKey, string>;
 
 const PLACEHOLDERS: Record<FieldKey, string> = {
   scripture: 'Philippians 4:13',
@@ -47,6 +49,11 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.swordEntries);
   const prefill = route.params?.prefill;
+  const entryId = route.params?.entryId;
+  const editingEntry = useMemo(
+    () => (entryId ? existingEntries.find((e) => e.id === entryId) : undefined),
+    [entryId, existingEntries]
+  );
 
   const [fields, setFields] = useState<Record<FieldKey, string>>({
     scripture: prefill?.reference ?? '',
@@ -57,6 +64,48 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
   });
   const [saving, setSaving] = useState(false);
   const [snackVisible, setSnackVisible] = useState(false);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (!editingEntry) return;
+    setFields({
+      scripture: editingEntry.scripture ?? '',
+      word: editingEntry.word ?? '',
+      observation: editingEntry.observation ?? '',
+      response: editingEntry.response ?? '',
+      dailyLiving: editingEntry.dailyLiving ?? '',
+    });
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry) {
+      hydratedRef.current = true;
+      return;
+    }
+    void (async () => {
+      const draft = await loadDraft<SwordDraft>('sword-journal');
+      if (!draft) {
+        hydratedRef.current = true;
+        return;
+      }
+      setFields({
+        scripture: draft.scripture ?? '',
+        word: draft.word ?? '',
+        observation: draft.observation ?? '',
+        response: draft.response ?? '',
+        dailyLiving: draft.dailyLiving ?? '',
+      });
+      hydratedRef.current = true;
+    })();
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry || !hydratedRef.current) return;
+    const timer = setTimeout(() => {
+      void saveDraft<SwordDraft>('sword-journal', fields);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [editingEntry, fields]);
 
   function updateField(key: FieldKey) {
     return (value: string) => setFields((f) => ({ ...f, [key]: value }));
@@ -68,15 +117,22 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
       weekday: 'long', month: 'long', day: 'numeric',
     });
     const entry: SwordEntry = {
-      id: generateId(),
-      date: today,
+      id: editingEntry?.id ?? generateId(),
+      date: editingEntry?.date ?? today,
       ...fields,
-      createdAt: Date.now(),
+      createdAt: editingEntry?.createdAt ?? Date.now(),
     };
     await saveSwordEntry(entry);
-    setSwordEntries([entry, ...existingEntries]);
+    if (editingEntry) {
+      setSwordEntries(existingEntries.map((e) => (e.id === entry.id ? entry : e)));
+    } else {
+      setSwordEntries([entry, ...existingEntries]);
+    }
     const profile = await refreshProfileProgress();
     setProfile(profile);
+    if (!editingEntry) {
+      void clearDraft('sword-journal');
+    }
     setSaving(false);
     setSnackVisible(true);
     setTimeout(() => navigation.goBack(), 1500);
@@ -120,7 +176,12 @@ export default function SwordJournalScreen({ navigation, route }: Props) {
           </JournalSection>
         ))}
 
-        <PrimaryButton label="Save Devotional" onPress={handleSave} loading={saving} style={styles.btn} />
+        <PrimaryButton
+          label={editingEntry ? 'Update Devotional' : 'Save Devotional'}
+          onPress={handleSave}
+          loading={saving}
+          style={styles.btn}
+        />
         <Text style={styles.hint}>
           Saved entries will appear in your{' '}
           <Text style={styles.hintLink}>Journal History</Text>.

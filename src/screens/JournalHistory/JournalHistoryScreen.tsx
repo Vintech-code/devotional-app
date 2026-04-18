@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
-  View, Text, FlatList, ScrollView, TouchableOpacity, TextInput, Alert,
+  View, Text, FlatList, ScrollView, TouchableOpacity, TextInput, Alert, Modal,
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
@@ -25,6 +26,21 @@ import { makeStyles } from './JournalHistory.styles';
 type Nav = NativeStackNavigationProp<HistoryStackParamList>;
 
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const CAL_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const RECENT_SEARCHES_KEY = '@devotional/history_recent_searches';
+
+function startOfDay(ts: number): number {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function fmtDate(ts: number | null): string {
+  if (!ts) return 'Select';
+  return new Date(ts).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+}
 
 export default function JournalHistoryScreen() {
   const colors = useColors();
@@ -55,6 +71,14 @@ export default function JournalHistoryScreen() {
 
   const [search, setSearch] = useState('');
   const [activeType, setActiveType] = useState('');
+  const [selectedDate, setSelectedDate] = useState<number | null>(null);
+  const [calendarVisible, setCalendarVisible] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -114,13 +138,91 @@ export default function JournalHistoryScreen() {
     })),
   ].sort((a, b) => b.createdAt - a.createdAt), [soapEntries, mcpwaEntries, swordEntries, sermonNotes, prayEntries, actsEntries]);
 
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as string[];
+        setRecentSearches(parsed.slice(0, 6));
+      } catch {
+        // Ignore recent search read failures.
+      }
+    })();
+  }, []);
+
+  async function persistRecentSearch(query: string) {
+    const q = query.trim();
+    if (q.length < 2) return;
+    const next = [q, ...recentSearches.filter((s) => s.toLowerCase() !== q.toLowerCase())].slice(0, 6);
+    setRecentSearches(next);
+    try {
+      await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+    } catch {
+      // Ignore recent search write failures.
+    }
+  }
+
   const filtered = useMemo(() => {
     let result = allEntries;
+
+    if (selectedDate) {
+      const selectedDay = startOfDay(selectedDate);
+      result = result.filter((e) => startOfDay(e.createdAt) === selectedDay);
+    }
+
     if (activeType) result = result.filter((e) => e.type === activeType);
     if (!search.trim()) return result;
     const q = search.toLowerCase();
     return result.filter((e) => e.searchText.includes(q));
-  }, [allEntries, search, activeType]);
+  }, [allEntries, search, activeType, selectedDate]);
+
+  const daysWithEntries = useMemo(() => {
+    const set = new Set<number>();
+    allEntries.forEach((e) => set.add(startOfDay(e.createdAt)));
+    return set;
+  }, [allEntries]);
+
+  const selectedDateHasEntries = selectedDate ? daysWithEntries.has(startOfDay(selectedDate)) : false;
+
+  const calendarCells = useMemo(() => {
+    const y = calendarMonth.getFullYear();
+    const m = calendarMonth.getMonth();
+    const first = new Date(y, m, 1);
+    const startDay = first.getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const total = Math.ceil((startDay + daysInMonth) / 7) * 7;
+    return Array.from({ length: total }, (_, i) => {
+      const dayNum = i - startDay + 1;
+      if (dayNum < 1 || dayNum > daysInMonth) return null;
+      const d = new Date(y, m, dayNum);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    });
+  }, [calendarMonth]);
+
+  function openCalendar() {
+    const base = selectedDate;
+    if (base) {
+      const d = new Date(base);
+      d.setDate(1);
+      d.setHours(0, 0, 0, 0);
+      setCalendarMonth(d);
+    }
+    setCalendarVisible(true);
+  }
+
+  function selectCalendarDate(ts: number) {
+    const next = startOfDay(ts);
+    setSelectedDate(next);
+    setCalendarVisible(false);
+  }
+
+  function monthTitle() {
+    return calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
 
   // Determine which days this week had entries
   const today = new Date();
@@ -221,7 +323,7 @@ export default function JournalHistoryScreen() {
         <Text style={styles.consistencyTitle}>CONSISTENCY</Text>
         <View style={styles.statsRow}>
           <View style={styles.statBadge}>
-            <Icon source="fire" size={24} color={colors.textPrimary} />
+            <Text style={styles.streakEmoji}>🔥</Text>
             <View>
               <Text style={styles.statBadgeValue}>{profile?.dayStreak ?? 0} Days</Text>
               <Text style={styles.statBadgeLabel}>CURRENT STREAK</Text>
@@ -273,21 +375,35 @@ export default function JournalHistoryScreen() {
         ))}
       </ScrollView>
 
+      {/* ─── Calendar day-check filter ─── */}
+      <View style={styles.dateRangeWrap}>
+        <TouchableOpacity style={styles.datePickerBtn} onPress={openCalendar}>
+          <Icon source="calendar" size={16} color={colors.textSecondary} />
+          <Text style={styles.datePickerLabel}>Jump to Date: {fmtDate(selectedDate)}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.clearDateBtn}
+          onPress={() => {
+            setSelectedDate(null);
+          }}
+        >
+          <Text style={styles.clearDateText}>Show All</Text>
+        </TouchableOpacity>
+      </View>
+
+      {selectedDate && (
+        <Text style={styles.dateStatusText}>
+          {selectedDateHasEntries
+            ? `You have notes on ${fmtDate(selectedDate)}.`
+            : `No notes found on ${fmtDate(selectedDate)}.`}
+        </Text>
+      )}
+
       {/* ─── Entries header + search ─── */}
       <View style={styles.entriesHeader}>
         <Text style={styles.sectionLabel}>ENTRIES</Text>
         <View style={styles.entriesHeaderRight}>
           <Text style={styles.entryCount}>{filtered.length}</Text>
-          {filtered.length > 0 && (
-            <TouchableOpacity
-              style={[styles.selectBtn, selectMode && styles.selectBtnCancel]}
-              onPress={() => { setSelectMode((v) => !v); setSelectedIds(new Set()); }}
-            >
-              <Text style={[styles.selectBtnText, selectMode && styles.selectBtnCancelText]}>
-                {selectMode ? 'CANCEL' : 'SELECT'}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
@@ -299,6 +415,7 @@ export default function JournalHistoryScreen() {
           placeholderTextColor={colors.textMuted}
           value={search}
           onChangeText={setSearch}
+          onEndEditing={() => { void persistRecentSearch(search); }}
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
@@ -307,12 +424,29 @@ export default function JournalHistoryScreen() {
         )}
       </View>
 
+      {recentSearches.length > 0 && !search.trim() && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recentSearchScroll} contentContainerStyle={styles.recentSearchRow}>
+          {recentSearches.map((q) => (
+            <TouchableOpacity
+              key={q}
+              style={styles.recentSearchChip}
+              onPress={() => setSearch(q)}
+            >
+              <Icon source="history" size={12} color={colors.textMuted} />
+              <Text style={styles.recentSearchText}>{q}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
       {filtered.length === 0 ? (
         <View style={styles.empty}>
           <Icon source="book-open-variant" size={48} color={colors.textSecondary} />
-          <Text style={styles.emptyTitle}>{search ? 'No results found' : 'No entries yet'}</Text>
+          <Text style={styles.emptyTitle}>{search || selectedDate || activeType ? 'No results found' : 'No entries yet'}</Text>
           <Text style={styles.emptySubtitle}>
-            {search ? 'Try a different search term.' : 'Start journaling to see your history here.'}
+            {search || selectedDate || activeType
+              ? 'Try a different date, filter, or search.'
+              : 'Start journaling to see your history here.'}
           </Text>
         </View>
       ) : (
@@ -321,6 +455,10 @@ export default function JournalHistoryScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={[styles.list, selectMode && { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={9}
+          removeClippedSubviews
           renderItem={({ item }) => {
             const isSelected = selectedIds.has(item.id);
             return (
@@ -338,6 +476,19 @@ export default function JournalHistoryScreen() {
                   } else {
                     navigation.navigate('DevotionalDetail', { entryId: item.id, entryType: item.type });
                   }
+                }}
+                onLongPress={() => {
+                  if (!selectMode) {
+                    setSelectMode(true);
+                    setSelectedIds(new Set([item.id]));
+                    return;
+                  }
+                  setSelectedIds((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(item.id)) next.delete(item.id);
+                    else next.add(item.id);
+                    return next;
+                  });
                 }}
               >
                 <View style={styles.entryMeta}>
@@ -393,6 +544,74 @@ export default function JournalHistoryScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      <Modal visible={calendarVisible} transparent animationType="fade" onRequestClose={() => setCalendarVisible(false)}>
+        <View style={styles.calendarOverlay}>
+          <View style={styles.calendarCard}>
+            <View style={styles.calendarHeaderRow}>
+              <TouchableOpacity
+                onPress={() => {
+                  const prev = new Date(calendarMonth);
+                  prev.setMonth(prev.getMonth() - 1);
+                  setCalendarMonth(prev);
+                }}
+                style={styles.calendarNavBtn}
+              >
+                <Icon source="chevron-left" size={18} color={colors.textPrimary} />
+              </TouchableOpacity>
+              <Text style={styles.calendarTitle}>{monthTitle()}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  const next = new Date(calendarMonth);
+                  next.setMonth(next.getMonth() + 1);
+                  setCalendarMonth(next);
+                }}
+                style={styles.calendarNavBtn}
+              >
+                <Icon source="chevron-right" size={18} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.calendarHint}>Tap any date to check if notes were written.</Text>
+
+            <View style={styles.calendarWeekHeader}>
+              {CAL_DAYS.map((d, idx) => (
+                <Text key={`${d}-${idx}`} style={styles.calendarWeekDay}>{d}</Text>
+              ))}
+            </View>
+
+            <View style={styles.calendarGrid}>
+              {calendarCells.map((cellTs, idx) => {
+                if (!cellTs) return <View key={`empty-${idx}`} style={styles.calendarCell} />;
+                const hasEntry = daysWithEntries.has(cellTs);
+                const selected = selectedDate ? cellTs === startOfDay(selectedDate) : false;
+                return (
+                  <TouchableOpacity
+                    key={String(cellTs)}
+                    style={[
+                      styles.calendarCell,
+                      hasEntry && styles.calendarCellHasEntry,
+                      selected && styles.calendarCellSelected,
+                    ]}
+                    onPress={() => selectCalendarDate(cellTs)}
+                  >
+                    <Text style={[styles.calendarCellText, selected && styles.calendarCellTextSelected]}>
+                      {new Date(cellTs).getDate()}
+                    </Text>
+                    {hasEntry && <View style={styles.calendarEntryDot} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.calendarActions}>
+              <TouchableOpacity style={styles.calendarActionBtn} onPress={() => setCalendarVisible(false)}>
+                <Text style={styles.calendarActionText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

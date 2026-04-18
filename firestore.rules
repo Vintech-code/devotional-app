@@ -34,6 +34,66 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // ── New sync documents (journal/settings split) ─────────────────────────
+    match /userJournals/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+      allow read, write: if isAdmin();
+    }
+
+    match /userSettings/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+      allow read, write: if isAdmin();
+    }
+
+    // ── Accountability partner system ───────────────────────────────────────
+    match /publicProfiles/{userId} {
+      // Any authenticated user can discover partner codes and read public stats.
+      allow read: if request.auth != null;
+
+      // Only owner/admin can update this profile.
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId;
+      allow create, update: if isAdmin();
+
+      allow delete: if false;
+    }
+
+    match /partnerRequests/{requestId} {
+      // Request document ids are fromUid_toUid.
+      allow read: if request.auth != null
+                  && (resource.data.fromUid == request.auth.uid
+                      || resource.data.toUid == request.auth.uid);
+
+      allow create: if request.auth != null
+                    && request.resource.data.fromUid == request.auth.uid
+                    && request.resource.data.toUid is string
+                    && request.resource.data.fromUid != request.resource.data.toUid;
+
+      // Sender/receiver/admin may delete (accept/reject/cleanup).
+      allow delete: if request.auth != null
+                    && (resource.data.fromUid == request.auth.uid
+                        || resource.data.toUid == request.auth.uid
+                        || isAdmin());
+
+      allow update: if false;
+    }
+
+    match /partnerConnections/{userId} {
+      // Owner/admin can read their own partner list.
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+      allow read: if isAdmin();
+
+      // Owner/admin can write their own partner list.
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId;
+      allow create, update: if isAdmin();
+
+      allow delete: if false;
+    }
+
     // ── Feedback submissions ─────────────────────────────────────────────────
     match /feedbacks/{feedbackId} {
       // Any signed-in user may submit feedback

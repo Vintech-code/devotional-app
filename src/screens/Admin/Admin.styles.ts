@@ -395,6 +395,28 @@ export const makeStyles = (c: ColorScheme) =>
       color: c.textMuted,
     },
 
+    opsCard: {
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.md,
+      padding: Spacing.md,
+      borderRadius: Radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      gap: 4,
+    },
+    opsTitle: {
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.bold,
+      color: c.textPrimary,
+      marginBottom: 4,
+    },
+    opsLine: {
+      fontSize: Typography.size.xs,
+      color: c.textSecondary,
+      lineHeight: 18,
+    },
+
     // ── Ratings tab ───────────────────────────────────────────────────────
     ratingsSummaryCard: {
       backgroundColor: c.surface,

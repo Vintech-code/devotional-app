@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Icon, Snackbar } from 'react-native-paper';
 import AppToast from '../../components/AppToast/AppToast';
@@ -9,6 +9,7 @@ import { JournalStackParamList } from '../../navigation/types';
 import { McpwaEntry } from '../../types';
 import { useColors, Typography, Spacing } from '../../theme';
 import { saveMcpwaEntry, refreshProfileProgress } from '../../services/storageService';
+import { clearDraft, loadDraft, saveDraft } from '../../services/draftService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import JournalSection from '../../components/JournalSection/JournalSection';
@@ -31,6 +32,7 @@ const SECTIONS = [
 ] as const;
 
 type FieldKey = 'message' | 'command' | 'promise' | 'warning' | 'application';
+type McpwaDraft = { scripture: string } & Record<FieldKey, string>;
 
 export default function McpwaJournalScreen({ navigation, route }: Props) {
   const colors = useColors();
@@ -39,6 +41,11 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.mcpwaEntries);
   const prefill = route.params?.prefill;
+  const entryId = route.params?.entryId;
+  const editingEntry = useMemo(
+    () => (entryId ? existingEntries.find((e) => e.id === entryId) : undefined),
+    [entryId, existingEntries]
+  );
 
   const [scripture, setScripture] = useState(prefill?.reference ?? '');
   const [fields, setFields] = useState<Record<FieldKey, string>>({
@@ -50,6 +57,53 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
   });
   const [saving, setSaving] = useState(false);
   const [snackVisible, setSnackVisible] = useState(false);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (!editingEntry) return;
+    setScripture(editingEntry.scripture ?? '');
+    setFields({
+      message: editingEntry.message ?? '',
+      command: editingEntry.command ?? '',
+      promise: editingEntry.promise ?? '',
+      warning: editingEntry.warning ?? '',
+      application: editingEntry.application ?? '',
+    });
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry) {
+      hydratedRef.current = true;
+      return;
+    }
+    void (async () => {
+      const draft = await loadDraft<McpwaDraft>('mcpwa-journal');
+      if (!draft) {
+        hydratedRef.current = true;
+        return;
+      }
+      setScripture(draft.scripture ?? '');
+      setFields({
+        message: draft.message ?? '',
+        command: draft.command ?? '',
+        promise: draft.promise ?? '',
+        warning: draft.warning ?? '',
+        application: draft.application ?? '',
+      });
+      hydratedRef.current = true;
+    })();
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry || !hydratedRef.current) return;
+    const timer = setTimeout(() => {
+      void saveDraft<McpwaDraft>('mcpwa-journal', {
+        scripture,
+        ...fields,
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [editingEntry, scripture, fields]);
 
   function updateField(key: FieldKey) {
     return (value: string) => setFields((f) => ({ ...f, [key]: value }));
@@ -61,16 +115,23 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
       weekday: 'long', month: 'long', day: 'numeric',
     });
     const entry: McpwaEntry = {
-      id: generateId(),
-      date: today,
+      id: editingEntry?.id ?? generateId(),
+      date: editingEntry?.date ?? today,
       scripture,
       ...fields,
-      createdAt: Date.now(),
+      createdAt: editingEntry?.createdAt ?? Date.now(),
     };
     await saveMcpwaEntry(entry);
-    setMcpwaEntries([entry, ...existingEntries]);
+    if (editingEntry) {
+      setMcpwaEntries(existingEntries.map((e) => (e.id === entry.id ? entry : e)));
+    } else {
+      setMcpwaEntries([entry, ...existingEntries]);
+    }
     const profile = await refreshProfileProgress();
     setProfile(profile);
+    if (!editingEntry) {
+      void clearDraft('mcpwa-journal');
+    }
     setSaving(false);
     setSnackVisible(true);
     setTimeout(() => navigation.goBack(), 1500);
@@ -120,7 +181,12 @@ export default function McpwaJournalScreen({ navigation, route }: Props) {
           </JournalSection>
         ))}
 
-        <PrimaryButton label="Save Devotional" onPress={handleSave} loading={saving} style={styles.btn} />
+        <PrimaryButton
+          label={editingEntry ? 'Update Devotional' : 'Save Devotional'}
+          onPress={handleSave}
+          loading={saving}
+          style={styles.btn}
+        />
         <Text style={styles.footer}>FAITHFUL IS HE WHO CALLED YOU</Text>
       </ScrollView>
       <AppToast

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Snackbar } from 'react-native-paper';
 import AppToast from '../../components/AppToast/AppToast';
@@ -9,6 +9,7 @@ import { JournalStackParamList } from '../../navigation/types';
 import { SoapEntry } from '../../types';
 import { useColors, Typography, Spacing, Radius } from '../../theme';
 import { saveSoapEntry, refreshProfileProgress } from '../../services/storageService';
+import { clearDraft, loadDraft, saveDraft } from '../../services/draftService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import JournalSection from '../../components/JournalSection/JournalSection';
@@ -22,6 +23,14 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+type SoapDraft = {
+  scripture: string;
+  fullVerse: string;
+  observation: string;
+  application: string;
+  prayer: string;
+};
+
 export default function SoapJournalScreen({ navigation, route }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
@@ -29,6 +38,11 @@ export default function SoapJournalScreen({ navigation, route }: Props) {
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.soapEntries);
   const prefill = route.params?.prefill;
+  const entryId = route.params?.entryId;
+  const editingEntry = useMemo(
+    () => (entryId ? existingEntries.find((e) => e.id === entryId) : undefined),
+    [entryId, existingEntries]
+  );
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -46,23 +60,74 @@ export default function SoapJournalScreen({ navigation, route }: Props) {
   const [prayer, setPrayer] = useState('');
   const [saving, setSaving] = useState(false);
   const [snackVisible, setSnackVisible] = useState(false);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (!editingEntry) return;
+    setScripture(editingEntry.scripture ?? '');
+    setFullVerse(editingEntry.fullVerse ?? '');
+    setObservation(editingEntry.observation ?? '');
+    setApplication(editingEntry.application ?? '');
+    setPrayer(editingEntry.prayer ?? '');
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry) {
+      hydratedRef.current = true;
+      return;
+    }
+    void (async () => {
+      const draft = await loadDraft<SoapDraft>('soap-journal');
+      if (!draft) {
+        hydratedRef.current = true;
+        return;
+      }
+      setScripture(draft.scripture ?? '');
+      setFullVerse(draft.fullVerse ?? '');
+      setObservation(draft.observation ?? '');
+      setApplication(draft.application ?? '');
+      setPrayer(draft.prayer ?? '');
+      hydratedRef.current = true;
+    })();
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry || !hydratedRef.current) return;
+    const timer = setTimeout(() => {
+      void saveDraft<SoapDraft>('soap-journal', {
+        scripture,
+        fullVerse,
+        observation,
+        application,
+        prayer,
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [editingEntry, scripture, fullVerse, observation, application, prayer]);
 
   async function handleSave() {
     setSaving(true);
     const entry: SoapEntry = {
-      id: generateId(),
-      date: today,
+      id: editingEntry?.id ?? generateId(),
+      date: editingEntry?.date ?? today,
       scripture,
       fullVerse,
       observation,
       application,
       prayer,
-      createdAt: Date.now(),
+      createdAt: editingEntry?.createdAt ?? Date.now(),
     };
     await saveSoapEntry(entry);
-    setSoapEntries([entry, ...existingEntries]);
+    if (editingEntry) {
+      setSoapEntries(existingEntries.map((e) => (e.id === entry.id ? entry : e)));
+    } else {
+      setSoapEntries([entry, ...existingEntries]);
+    }
     const profile = await refreshProfileProgress();
     setProfile(profile);
+    if (!editingEntry) {
+      void clearDraft('soap-journal');
+    }
     setSaving(false);
     setSnackVisible(true);
     setTimeout(() => navigation.goBack(), 1500);
@@ -180,7 +245,12 @@ export default function SoapJournalScreen({ navigation, route }: Props) {
           </Text>
         </View>
 
-        <PrimaryButton label="Save Devotional" onPress={handleSave} loading={saving} style={styles.saveBtn} />
+        <PrimaryButton
+          label={editingEntry ? 'Update Devotional' : 'Save Devotional'}
+          onPress={handleSave}
+          loading={saving}
+          style={styles.saveBtn}
+        />
         <Text style={styles.savedHint}>Saved entries will appear in your Journal History.</Text>
       </ScrollView>
       <AppToast

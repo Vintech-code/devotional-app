@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Snackbar } from 'react-native-paper';
 import AppToast from '../../components/AppToast/AppToast';
@@ -9,6 +9,7 @@ import { JournalStackParamList } from '../../navigation/types';
 import { PrayEntry } from '../../types';
 import { useColors, Spacing } from '../../theme';
 import { savePrayEntry, refreshProfileProgress } from '../../services/storageService';
+import { clearDraft, loadDraft, saveDraft } from '../../services/draftService';
 import { useAppStore } from '../../store/useAppStore';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
 import JournalSection from '../../components/JournalSection/JournalSection';
@@ -22,6 +23,15 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+type PrayDraft = {
+  scripture: string;
+  fullVerse: string;
+  praise: string;
+  repent: string;
+  ask: string;
+  yieldText: string;
+};
+
 export default function PrayJournalScreen({ navigation, route }: Props) {
   const colors = useColors();
   const styles = makeStyles(colors);
@@ -29,6 +39,11 @@ export default function PrayJournalScreen({ navigation, route }: Props) {
   const setProfile = useAppStore((s) => s.setProfile);
   const existingEntries = useAppStore((s) => s.prayEntries);
   const prefill = route.params?.prefill;
+  const entryId = route.params?.entryId;
+  const editingEntry = useMemo(
+    () => (entryId ? existingEntries.find((e) => e.id === entryId) : undefined),
+    [entryId, existingEntries]
+  );
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -44,24 +59,78 @@ export default function PrayJournalScreen({ navigation, route }: Props) {
   const [yieldText, setYieldText] = useState('');
   const [saving, setSaving] = useState(false);
   const [snackVisible, setSnackVisible] = useState(false);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (!editingEntry) return;
+    setScripture(editingEntry.scripture ?? '');
+    setFullVerse(editingEntry.fullVerse ?? '');
+    setPraise(editingEntry.praise ?? '');
+    setRepent(editingEntry.repent ?? '');
+    setAsk(editingEntry.ask ?? '');
+    setYieldText(editingEntry.yield_ ?? '');
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry) {
+      hydratedRef.current = true;
+      return;
+    }
+    void (async () => {
+      const draft = await loadDraft<PrayDraft>('pray-journal');
+      if (!draft) {
+        hydratedRef.current = true;
+        return;
+      }
+      setScripture(draft.scripture ?? '');
+      setFullVerse(draft.fullVerse ?? '');
+      setPraise(draft.praise ?? '');
+      setRepent(draft.repent ?? '');
+      setAsk(draft.ask ?? '');
+      setYieldText(draft.yieldText ?? '');
+      hydratedRef.current = true;
+    })();
+  }, [editingEntry]);
+
+  useEffect(() => {
+    if (editingEntry || !hydratedRef.current) return;
+    const timer = setTimeout(() => {
+      void saveDraft<PrayDraft>('pray-journal', {
+        scripture,
+        fullVerse,
+        praise,
+        repent,
+        ask,
+        yieldText,
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [editingEntry, scripture, fullVerse, praise, repent, ask, yieldText]);
 
   async function handleSave() {
     setSaving(true);
     const entry: PrayEntry = {
-      id: generateId(),
-      date: today,
+      id: editingEntry?.id ?? generateId(),
+      date: editingEntry?.date ?? today,
       scripture,
       fullVerse,
       praise,
       repent,
       ask,
       yield_: yieldText,
-      createdAt: Date.now(),
+      createdAt: editingEntry?.createdAt ?? Date.now(),
     };
     await savePrayEntry(entry);
-    setPrayEntries([entry, ...existingEntries]);
+    if (editingEntry) {
+      setPrayEntries(existingEntries.map((e) => (e.id === entry.id ? entry : e)));
+    } else {
+      setPrayEntries([entry, ...existingEntries]);
+    }
     const profile = await refreshProfileProgress();
     setProfile(profile);
+    if (!editingEntry) {
+      void clearDraft('pray-journal');
+    }
     setSaving(false);
     setSnackVisible(true);
     setTimeout(() => navigation.goBack(), 1500);
@@ -196,7 +265,12 @@ export default function PrayJournalScreen({ navigation, route }: Props) {
           </Text>
         </View>
 
-        <PrimaryButton label="Save Prayer" onPress={handleSave} loading={saving} style={styles.saveBtn} />
+        <PrimaryButton
+          label={editingEntry ? 'Update Prayer' : 'Save Prayer'}
+          onPress={handleSave}
+          loading={saving}
+          style={styles.saveBtn}
+        />
         <Text style={styles.savedHint}>Saved entries will appear in your Journal History.</Text>
       </ScrollView>
       <AppToast

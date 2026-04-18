@@ -30,6 +30,7 @@ import {
 } from '../../services/feedbackService';
 import { makeStyles } from './Admin.styles';
 import { auth } from '../../services/firebase';
+import { DiagnosticsSnapshot, getDiagnosticsSnapshot } from '../../services/diagnosticsService';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -71,6 +72,7 @@ export default function AdminScreen() {
   const [expandedFbId, setExpandedFbId] = useState<string | null>(null);
   const [replyDraft,   setReplyDraft]   = useState<Record<string, string>>({});
   const [sendingReply, setSendingReply] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsSnapshot | null>(null);
 
   // ── Loaders ─────────────────────────────────────────────────────────────
 
@@ -122,6 +124,10 @@ export default function AdminScreen() {
     void fetchUsers();
     void fetchFeedbacks();
     void fetchRatings();
+    void (async () => {
+      const snap = await getDiagnosticsSnapshot();
+      setDiagnostics(snap);
+    })();
   }, [fetchUsers, fetchFeedbacks, fetchRatings]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
@@ -257,6 +263,25 @@ export default function AdminScreen() {
           </View>
         </View>
       </View>
+
+      {diagnostics && (
+        <View style={styles.opsCard}>
+          <Text style={styles.opsTitle}>Diagnostics</Text>
+          <Text style={styles.opsLine}>App Version: {diagnostics.appVersion}</Text>
+          <Text style={styles.opsLine}>Runtime: {diagnostics.runtimeVersion}</Text>
+          <Text style={styles.opsLine}>Auth: {diagnostics.authState} ({diagnostics.authUid})</Text>
+          <Text style={styles.opsLine}>Sync Queue: {diagnostics.syncQueue}</Text>
+          <Text style={styles.opsLine}>
+            Local Counts: SOAP {diagnostics.localCounts.soap} · MCPWA {diagnostics.localCounts.mcpwa} · SWORD {diagnostics.localCounts.sword} · PRAY {diagnostics.localCounts.pray} · ACTS {diagnostics.localCounts.acts} · Sermon {diagnostics.localCounts.sermon}
+          </Text>
+          <Text style={styles.opsLine}>
+            Failures: save {diagnostics.analytics.saveFailCount} · sync {diagnostics.analytics.syncFailCount} · partner connect {diagnostics.analytics.partnerConnectFailCount}
+          </Text>
+          <Text style={styles.opsLine}>
+            Drop-off: {Object.entries(diagnostics.analytics.methodDropoff).map(([k, v]) => `${k} ${v}`).join(' · ') || 'No drop-off data yet'}
+          </Text>
+        </View>
+      )}
 
       {/* Tabs */}
       <View style={styles.tabsWrap}>

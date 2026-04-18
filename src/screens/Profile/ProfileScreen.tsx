@@ -142,7 +142,7 @@ export default function ProfileScreen() {
             <Text style={styles.statSub}>{lastMonthCount > 0 ? '+' : ''}{lastMonthCount} from last month</Text>
           </View>
           <View style={styles.statCard}>
-          <Icon source="fire" size={24} color={colors.textPrimary} />
+            <Text style={{ fontSize: 24 }}>🔥</Text>
             <Text style={styles.statNum}>{profile?.dayStreak ?? 0}</Text>
             <Text style={styles.statLabel}>DAY STREAK</Text>
             <Text style={styles.statSub}>Your personal best!</Text>
@@ -158,12 +158,6 @@ export default function ProfileScreen() {
         {/* My Progress */}
         <Text style={styles.sectionLabel}>MY PROGRESS</Text>
         <View style={styles.card}>
-          <SettingsRow
-            icon="account-group"
-            title="Accountability Partner"
-            subtitle="Connect with a friend · share your progress"
-            onPress={() => navigation.navigate('Accountability')}
-          />
           <SettingsRow
             icon="bell"
             title="Reminders"

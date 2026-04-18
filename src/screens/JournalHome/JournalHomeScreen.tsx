@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { JournalStackParamList } from '../../navigation/types';
 import { useColors, Spacing } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
+import { trackEvent } from '../../services/analyticsService';
 import { makeStyles } from './JournalHome.styles';
 
 type Nav = NativeStackNavigationProp<JournalStackParamList>;
@@ -96,6 +97,7 @@ export default function JournalHomeScreen() {
   const prayEntries  = useAppStore((s) => s.prayEntries);
   const actsEntries  = useAppStore((s) => s.actsEntries);
   const profile      = useAppStore((s) => s.profile);
+  const selectedMethod = useAppStore((s) => s.selectedMethod);
 
   const totalEntries = soapEntries.length + mcpwaEntries.length + swordEntries.length + sermonNotes.length + prayEntries.length + actsEntries.length;
 
@@ -114,6 +116,14 @@ export default function JournalHomeScreen() {
     ];
     return all.sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
   }, [soapEntries, mcpwaEntries, swordEntries, sermonNotes, prayEntries, actsEntries]);
+
+  const personalizedMethods = useMemo(() => {
+    return [...METHODS].sort((a, b) => {
+      if (a.key === selectedMethod) return -1;
+      if (b.key === selectedMethod) return 1;
+      return 0;
+    });
+  }, [selectedMethod]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -162,16 +172,19 @@ export default function JournalHomeScreen() {
 
         {/* ── Method cards (image-based) ─────────────────────────────────── */}
         <Text style={styles.sectionLabel}>CHOOSE A METHOD</Text>
-        {METHODS.map((m) => (
+        {personalizedMethods.map((m) => (
           <TouchableOpacity
             key={m.key}
             activeOpacity={0.88}
             style={styles.imageCardWrap}
             onPress={() =>
-              navigation.navigate(
-                m.screen as 'SoapJournal',
-                prefill ? { prefill } : {}
-              )
+              {
+                void trackEvent('method_open', { method: m.key });
+                navigation.navigate(
+                  m.screen as 'SoapJournal',
+                  prefill ? { prefill } : {}
+                );
+              }
             }
           >
             <ImageBackground

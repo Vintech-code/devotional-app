@@ -36,7 +36,7 @@ const EDITABLE_FIELDS: Record<string, string[]> = {
   SOAP: ['scripture', 'fullVerse', 'observation', 'application', 'prayer'],
   MCPWA: ['scripture', 'message', 'command', 'promise', 'warning', 'application'],
   SWORD: ['scripture', 'word', 'observation', 'response', 'dailyLiving'],
-  Sermon: ['title', 'preacher', 'church', 'mainScripture', 'notes'],
+  Sermon: ['title', 'preacher', 'church', 'notes'],
   PRAY: ['scripture', 'fullVerse', 'praise', 'repent', 'ask', 'yield_'],
   ACTS: ['scripture', 'fullVerse', 'adoration', 'confession', 'thanksgiving', 'supplication'],
 };
@@ -73,71 +73,73 @@ const CARD_THEMES: CardTheme[] = [
 // cs holds layout-only styles; colors are applied inline via the active CardTheme
 const cs = StyleSheet.create({
   card: {
-    width: 360,
+    width: '100%',
+    maxWidth: 420,
     borderRadius: 14,
     overflow: 'hidden',
-    elevation: 8,
+    borderWidth: 1,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
   },
   cardHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  appLogo:     { width: 130, height: 38, resizeMode: 'contain' },
+  appLogo:     { width: 98, height: 28, resizeMode: 'contain' },
   typePill:    {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.35)',
   },
-  typePillText: { color: '#fff', fontSize: 9, fontWeight: '700', letterSpacing: 1.5 },
+  typePillText: { color: '#fff', fontSize: 8, fontWeight: '700', letterSpacing: 1.2 },
 
-  cardBody:  { padding: 20 },
+  cardBody:  { padding: 14 },
   cardTitle: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '700',
-    lineHeight: 26,
-    marginBottom: 3,
+    lineHeight: 24,
+    marginBottom: 2,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
-  cardDate:  { fontSize: 11, marginBottom: 14, letterSpacing: 0.3 },
-  accentBar: { width: 32, height: 3, borderRadius: 2, marginBottom: 16 },
+  cardDate:  { fontSize: 10, marginBottom: 9, letterSpacing: 0.35, textTransform: 'uppercase' },
+  accentBar: { width: 34, height: 3, borderRadius: 2, marginBottom: 10 },
 
-  sLabel: { fontSize: 8, fontWeight: '700', letterSpacing: 2, marginBottom: 5 },
-  sText:  { fontSize: 12, lineHeight: 19, marginBottom: 14 },
+  sLabel: { fontSize: 8, fontWeight: '700', letterSpacing: 1.6, marginBottom: 4 },
+  sText:  { fontSize: 12, lineHeight: 18, marginBottom: 10 },
   verseBox: {
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 14,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
   },
   verseText: {
-    fontSize: 13,
-    lineHeight: 21,
+    fontSize: 12,
+    lineHeight: 18,
     fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
-  tagRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 14 },
-  tagChip: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  tagChipText: { fontSize: 9 },
+  tagRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 10 },
+  tagChip: { borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2 },
+  tagChipText: { fontSize: 8 },
 
   cardFooter: {
     borderTopWidth: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  footerLeft:  { fontSize: 9, letterSpacing: 0.3 },
-  footerLogo:  { width: 110, height: 30, resizeMode: 'contain', opacity: 0.7 },
+  footerLeft:  { fontSize: 8, letterSpacing: 0.2 },
+  footerLogo:  { width: 94, height: 24, resizeMode: 'contain', opacity: 0.65 },
 });
 
 // ─── CardRow ─────────────────────────────────────────────────────────────────
@@ -235,10 +237,12 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
         {entryType === 'Sermon' && (
           <>
             {(entry.preacher || entry.church) && (
-              <>
-                <Text style={[cs.sLabel, { color: t.label_ }]}>PREACHER</Text>
-                <Text style={[cs.sText,  { color: t.body   }]}>{[entry.preacher, entry.church].filter(Boolean).join(' · ')}</Text>
-              </>
+              <View style={[cs.verseBox, { backgroundColor: t.surface, borderLeftColor: t.accent }] }>
+                <Text style={[cs.sLabel, { color: t.label_ }]}>MINISTERING</Text>
+                <Text style={[cs.sText, { color: t.body, marginBottom: 0 }]}>
+                  {[entry.preacher, entry.church].filter(Boolean).join(' • ')}
+                </Text>
+              </View>
             )}
             {entry.mainScripture ? (
               <View style={[cs.verseBox, { backgroundColor: t.surface, borderLeftColor: t.accent }]}>
@@ -246,6 +250,25 @@ function ShareCardContent({ entry, entryType, t }: { entry: Record<string, any>;
               </View>
             ) : null}
             <CardRow label="NOTES" content={entry.notes} t={t} />
+            {Array.isArray(entry.imageUris) && entry.imageUris.length > 0 && (
+              <>
+                <Text style={[cs.sLabel, { color: t.label_ }]}>ATTACHED PHOTOS</Text>
+                <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+                  {entry.imageUris.slice(0, 3).map((uri: string, i: number) => (
+                    <Image
+                      key={`${uri}-${i}`}
+                      source={{ uri }}
+                      style={{ width: 72, height: 72, borderRadius: 8 }}
+                    />
+                  ))}
+                  {entry.imageUris.length > 3 && (
+                    <View style={{ width: 72, height: 72, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: t.surface }}>
+                      <Text style={{ color: t.muted, fontSize: 12, fontWeight: '700' }}>+{entry.imageUris.length - 3}</Text>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
             {entry.tags?.length > 0 && (
               <View style={cs.tagRow}>
                 {entry.tags.map((tag: string, i: number) => (
@@ -390,6 +413,26 @@ export default function DevotionalDetailScreen() {
   }
 
   function enterEditMode() {
+    const targetByType: Record<string, { screen: string; params: Record<string, string> }> = {
+      SOAP:   { screen: 'SoapJournal',  params: { entryId } },
+      MCPWA:  { screen: 'McpwaJournal', params: { entryId } },
+      SWORD:  { screen: 'SwordJournal', params: { entryId } },
+      PRAY:   { screen: 'PrayJournal',  params: { entryId } },
+      ACTS:   { screen: 'ActsJournal',  params: { entryId } },
+      Sermon: { screen: 'SermonNotes',  params: { noteId: entryId } },
+    };
+    const target = targetByType[entryType];
+    if (target) {
+      const parentNav = navigation.getParent();
+      if (parentNav) {
+        (parentNav as any).navigate('Journal', {
+          screen: target.screen,
+          params: target.params,
+        });
+        return;
+      }
+    }
+
     if (!entry) return;
     const editableKeys = EDITABLE_FIELDS[entryType] ?? [];
     const next = editableKeys.reduce<Record<string, string>>((acc, key) => {
@@ -479,8 +522,6 @@ export default function DevotionalDetailScreen() {
           if (isEditing) { setIsEditing(false); return; }
           navigation.goBack();
         }}
-        rightIcon={isEditing ? undefined : 'pencil-outline'}
-        onRightPress={isEditing ? undefined : enterEditMode}
       />
 
       <ScrollView
@@ -528,7 +569,6 @@ export default function DevotionalDetailScreen() {
               <EditField label="SERMON TITLE"   value={String(editData.title ?? '')}         onChange={(t) => setEditData((p) => ({ ...p, title: t }))}         s={styles} />
               <EditField label="PREACHER"       value={String(editData.preacher ?? '')}      onChange={(t) => setEditData((p) => ({ ...p, preacher: t }))}      s={styles} />
               <EditField label="CHURCH"         value={String(editData.church ?? '')}        onChange={(t) => setEditData((p) => ({ ...p, church: t }))}        s={styles} />
-              <EditField label="MAIN SCRIPTURE" value={String(editData.mainScripture ?? '')} onChange={(t) => setEditData((p) => ({ ...p, mainScripture: t }))} s={styles} />
               <EditField label="NOTES"          value={String(editData.notes ?? '')}         onChange={(t) => setEditData((p) => ({ ...p, notes: t }))}         s={styles} multiline />
             </>}
             {entryType === 'PRAY' && <>
@@ -565,89 +605,19 @@ export default function DevotionalDetailScreen() {
           </>
         ) : (
           <>
-            {/* ─── SOAP ─── */}
-            {entryType === 'SOAP' && (
-              <>
-                <Section label="SCRIPTURE REFERENCE" content={entry.scripture} styles={styles} />
-                <Section label="FULL VERSE"           content={entry.fullVerse}   styles={styles} verse />
-                <Section label="OBSERVATION"          content={entry.observation} styles={styles} />
-                <Section label="APPLICATION"          content={entry.application} styles={styles} />
-                <Section label="PRAYER"               content={entry.prayer}      styles={styles} />
-              </>
-            )}
-            {/* ─── MCPWA ─── */}
-            {entryType === 'MCPWA' && (
-              <>
-                <Section label="SCRIPTURE"   content={entry.scripture}   styles={styles} />
-                <Section label="MESSAGE"     content={entry.message}     styles={styles} />
-                <Section label="COMMAND"     content={entry.command}     styles={styles} />
-                <Section label="PROMISE"     content={entry.promise}     styles={styles} />
-                <Section label="WARNING"     content={entry.warning}     styles={styles} />
-                <Section label="APPLICATION" content={entry.application} styles={styles} />
-              </>
-            )}
-            {/* ─── SWORD ─── */}
-            {entryType === 'SWORD' && (
-              <>
-                <Section label="SCRIPTURE"    content={entry.scripture}   styles={styles} />
-                <Section label="WORD"         content={entry.word}        styles={styles} />
-                <Section label="OBSERVATION"  content={entry.observation} styles={styles} />
-                <Section label="RESPONSE"     content={entry.response}    styles={styles} />
-                <Section label="DAILY LIVING" content={entry.dailyLiving} styles={styles} />
-              </>
-            )}
-            {/* ─── Sermon ─── */}
-            {entryType === 'Sermon' && (
-              <>
-                <Section label="PREACHER"        content={entry.preacher}       styles={styles} />
-                <Section label="CHURCH"          content={entry.church}         styles={styles} />
-                <Section label="MAIN SCRIPTURE"  content={entry.mainScripture}  styles={styles} />
-                <Section label="NOTES"           content={entry.notes}          styles={styles} />
-                {entry.tags?.length > 0 && (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>TAGS</Text>
-                    <View style={styles.tagRow}>
-                      {entry.tags.map((tag: string, i: number) => (
-                        <View key={i} style={styles.tag}>
-                          <Text style={styles.tagText}>#{tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </>
-            )}
-            {/* ─── PRAY ─── */}
-            {entryType === 'PRAY' && (
-              <>
-                <Section label="SCRIPTURE REFERENCE" content={entry.scripture} styles={styles} />
-                <Section label="FULL VERSE"           content={entry.fullVerse} styles={styles} verse />
-                <Section label="PRAISE"               content={entry.praise}   styles={styles} />
-                <Section label="REPENT"               content={entry.repent}   styles={styles} />
-                <Section label="ASK"                  content={entry.ask}      styles={styles} />
-                <Section label="YIELD"                content={entry.yield_}   styles={styles} />
-              </>
-            )}
-            {/* ─── ACTS ─── */}
-            {entryType === 'ACTS' && (
-              <>
-                <Section label="SCRIPTURE REFERENCE" content={entry.scripture}    styles={styles} />
-                <Section label="FULL VERSE"           content={entry.fullVerse}    styles={styles} verse />
-                <Section label="ADORATION"            content={entry.adoration}    styles={styles} />
-                <Section label="CONFESSION"           content={entry.confession}   styles={styles} />
-                <Section label="THANKSGIVING"         content={entry.thanksgiving} styles={styles} />
-                <Section label="SUPPLICATION"         content={entry.supplication} styles={styles} />
-              </>
-            )}
-            {/* Edit + Share buttons */}
+            <View style={{ alignItems: 'center', marginBottom: Spacing.md }}>
+              <ShareCardContent entry={entry} entryType={entryType} t={selectedTheme} />
+            </View>
+
             <TouchableOpacity
               style={[styles.shareBtn, { marginBottom: Spacing.sm, backgroundColor: colors.surfaceAlt }]}
               activeOpacity={0.85}
               onPress={enterEditMode}
             >
               <Icon source="pencil-outline" size={18} color={colors.primary} />
-              <Text style={[styles.shareBtnText, { color: colors.primary }]}>Edit Entry</Text>
+              <Text style={[styles.shareBtnText, { color: colors.primary }]}>Edit</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.shareBtn}
               onPress={() => setShowShareModal(true)}

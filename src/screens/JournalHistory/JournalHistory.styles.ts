@@ -43,6 +43,9 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     color: c.textMuted,
     letterSpacing: 0.5,
   },
+  streakEmoji: {
+    fontSize: 24,
+  },
 
   // Day grid
   dayGrid: {
@@ -210,6 +213,181 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   },
   typeChipTextActive: {
     color: c.textOnPrimary,
+  },
+
+  dateRangeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    backgroundColor: c.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: c.border,
+  },
+  datePickerBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 36,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: c.border,
+    backgroundColor: c.surfaceAlt,
+  },
+  datePickerLabel: {
+    fontSize: 11,
+    fontWeight: Typography.weight.bold,
+    color: c.textSecondary,
+    letterSpacing: 0.4,
+  },
+  clearDateBtn: {
+    marginLeft: 'auto',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.md,
+    backgroundColor: c.surfaceAlt,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  clearDateText: {
+    fontSize: 11,
+    fontWeight: Typography.weight.bold,
+    color: c.textMuted,
+  },
+  recentSearchScroll: {
+    flexGrow: 0,
+    marginBottom: Spacing.xs,
+  },
+  recentSearchRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.xs,
+  },
+  recentSearchChip: {
+    height: 28,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: c.border,
+    backgroundColor: c.surfaceAlt,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: Spacing.sm,
+  },
+  recentSearchText: {
+    fontSize: Typography.size.xs,
+    color: c.textSecondary,
+  },
+  dateStatusText: {
+    fontSize: Typography.size.xs,
+    color: c.textSecondary,
+    paddingHorizontal: Spacing.md,
+    paddingTop: 6,
+    paddingBottom: 2,
+  },
+  calendarOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.md,
+  },
+  calendarCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: Radius.lg,
+    backgroundColor: c.surface,
+    padding: Spacing.md,
+  },
+  calendarHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+  },
+  calendarNavBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.surfaceAlt,
+  },
+  calendarTitle: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    color: c.textPrimary,
+  },
+  calendarHint: {
+    fontSize: Typography.size.xs,
+    color: c.textMuted,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  calendarWeekHeader: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  calendarWeekDay: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    color: c.textMuted,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  calendarCell: {
+    width: '13.6%',
+    aspectRatio: 1,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calendarCellHasEntry: {
+    backgroundColor: c.primary + '1A',
+  },
+  calendarCellSelected: {
+    backgroundColor: c.primary,
+  },
+  calendarCellText: {
+    fontSize: Typography.size.sm,
+    color: c.textPrimary,
+    fontWeight: Typography.weight.medium,
+  },
+  calendarCellTextSelected: {
+    color: c.textOnPrimary,
+    fontWeight: Typography.weight.bold,
+  },
+  calendarEntryDot: {
+    position: 'absolute',
+    bottom: 5,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: c.primary,
+  },
+  calendarActions: {
+    marginTop: Spacing.md,
+    alignItems: 'flex-end',
+  },
+  calendarActionBtn: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    borderRadius: Radius.md,
+    backgroundColor: c.surfaceAlt,
+  },
+  calendarActionText: {
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.bold,
+    color: c.textSecondary,
   },
 
   /* ─── multi-select ─── */

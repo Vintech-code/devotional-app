@@ -17,8 +17,7 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { useAppStore } from './src/store/useAppStore';
 import { DarkColors, LightColors, makePaperTheme, makeRneuiTheme } from './src/theme';
 import { auth } from './src/services/firebase';
-import { syncOnLogin } from './src/services/syncService';
-import { LocalUserData, markOnboardingDone, saveUserProfile, setActiveUid } from './src/services/storageService';
+import { markOnboardingDone, saveUserProfile, setActiveUid } from './src/services/storageService';
 import { checkIfDisabled, registerOrUpdateUserMeta } from './src/services/feedbackService';
 import { createNotificationChannel } from './src/services/notificationService';
 import { RootStackParamList } from './src/navigation/types';
@@ -32,12 +31,7 @@ function AppContent({ navRef }: AppContentProps) {
   const hydrateForUser  = useAppStore((s) => s.hydrateForUser);
   const isDarkMode      = useAppStore((s) => s.isDarkMode);
   const setProfile      = useAppStore((s) => s.setProfile);
-  const setSoapEntries  = useAppStore((s) => s.setSoapEntries);
-  const setMcpwaEntries = useAppStore((s) => s.setMcpwaEntries);
-  const setSwordEntries = useAppStore((s) => s.setSwordEntries);
-  const setSermonNotes  = useAppStore((s) => s.setSermonNotes);
   const setOnboardingDone = useAppStore((s) => s.setOnboardingDone);
-  const soapEntries     = useAppStore((s) => s.soapEntries);
   const signOut         = useAppStore((s) => s.signOut);
   const [ready, setReady]           = useState(false);
   const [splashDone, setSplashDone] = useState(false);
@@ -109,16 +103,8 @@ function AppContent({ navRef }: AppContentProps) {
         // Show the app immediately — background tasks run after
         setReady(true);
 
-        // Background: cloud sync (push/pull), user meta registration, disabled check
-        const localIsEmpty = soapEntries.length === 0;
-
-        syncOnLogin(user.uid, localIsEmpty, (cloud: LocalUserData) => {
-          if (cloud.profile)      setProfile(cloud.profile);
-          if (cloud.soapEntries)  setSoapEntries(cloud.soapEntries);
-          if (cloud.mcpwaEntries) setMcpwaEntries(cloud.mcpwaEntries);
-          if (cloud.swordEntries) setSwordEntries(cloud.swordEntries);
-          if (cloud.sermonNotes)  setSermonNotes(cloud.sermonNotes);
-        });
+        // Background: user meta registration + disabled check.
+        // Cloud journal/settings sync is handled centrally inside hydrateForUser.
 
         // Keep user roster up-to-date in Firestore for admin view
         void registerOrUpdateUserMeta(
@@ -153,7 +139,7 @@ function AppContent({ navRef }: AppContentProps) {
       authUnsub();
       notifSub.remove();
     };
-  }, []);
+  }, [hydrate, hydrateForUser, setOnboardingDone, setProfile, signOut, navRef]);
 
   useEffect(() => {
     if (ready) return;

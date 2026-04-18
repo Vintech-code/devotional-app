@@ -235,3 +235,33 @@ export async function cancelFeedbackReminder(): Promise<void> {
     }
   }
 }
+
+export async function scheduleDraftNudge(day: 2 | 3, hasUnfinishedDraft: boolean): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of scheduled) {
+    if ((n.content.data as Record<string, unknown>)?.type === `draft-nudge-day-${day}`) {
+      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
+  }
+
+  if (!hasUnfinishedDraft) return;
+
+  const granted = await requestNotificationPermissions();
+  if (!granted) return;
+  await createNotificationChannel();
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: day === 2 ? 'Day 2 check-in ✍️' : 'Day 3 check-in ✍️',
+      body: 'You have unfinished drafts. Open DevoVerse and finish today\'s reflection.',
+      sound: true,
+      data: { type: `draft-nudge-day-${day}`, screen: 'Journal' },
+      ...(Platform.OS === 'android' && { channelId: 'devotional-reminders' }),
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
+      hour: day === 2 ? 19 : 20,
+      minute: 0,
+    },
+  });
+}

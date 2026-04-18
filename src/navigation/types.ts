@@ -70,7 +70,6 @@ export type ProfileStackParamList = {
   Reminders:       undefined;
   Feedback:        undefined;
   Admin:           undefined;
-  Accountability:  undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

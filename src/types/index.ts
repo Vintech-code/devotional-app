@@ -99,9 +99,11 @@ export interface SermonNote {
   preacher: string;
   church: string;
   serviceDate: string;
-  mainScripture: string;
+  mainScripture?: string;
   notes: string;
   tags: string[];
+  noteFontSize?: number;
+  imageUris?: string[];
   createdAt: number;
 }
 

@@ -14,6 +14,7 @@ import {
   ActsEntry,
   DailyBreadCustomization,
 } from '../types';
+import { trackEvent } from './analyticsService';
 
 // ─── Active User ──────────────────────────────────────────────────────────────
 // Call setActiveUid() whenever auth state changes so all per-user reads/writes
@@ -46,8 +47,11 @@ const LEVEL_TITLES = [
 
 function getDayKey(timestamp: number): string {
   const d = new Date(timestamp);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
+  // Use local calendar day keys to avoid UTC shift errors that break streaks.
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function calculateCurrentStreak(timestamps: number[]): number {
@@ -55,13 +59,19 @@ function calculateCurrentStreak(timestamps: number[]): number {
   const days = new Set(timestamps.map(getDayKey));
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
+  const keyOf = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
   // If no entry today, allow yesterday as the streak start (grace period)
-  if (!days.has(cursor.toISOString().slice(0, 10))) {
+  if (!days.has(keyOf(cursor))) {
     cursor.setDate(cursor.getDate() - 1);
-    if (!days.has(cursor.toISOString().slice(0, 10))) return 0;
+    if (!days.has(keyOf(cursor))) return 0;
   }
   let streak = 0;
-  while (days.has(cursor.toISOString().slice(0, 10))) {
+  while (days.has(keyOf(cursor))) {
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
@@ -104,15 +114,29 @@ export const K = {
 async function getJson<T>(key: string, fallback: T): Promise<T> {
   try {
     const raw = await AsyncStorage.getItem(key);
-    if (raw === null) return fallback;
+    if (raw === null) {
+      const backup = await AsyncStorage.getItem(`${key}__backup`);
+      if (backup === null) return fallback;
+      return JSON.parse(backup) as T;
+    }
     return JSON.parse(raw) as T;
   } catch {
-    return fallback;
+    try {
+      const backup = await AsyncStorage.getItem(`${key}__backup`);
+      if (backup === null) return fallback;
+      return JSON.parse(backup) as T;
+    } catch {
+      return fallback;
+    }
   }
 }
 
 export async function setJson<T>(key: string, value: T): Promise<void> {
-  await AsyncStorage.setItem(key, JSON.stringify(value));
+  const raw = JSON.stringify(value);
+  await AsyncStorage.multiSet([
+    [key, raw],
+    [`${key}__backup`, raw],
+  ]);
 }
 
 /**
@@ -120,7 +144,7 @@ export async function setJson<T>(key: string, value: T): Promise<void> {
  * Used by the cloud sync to import data pulled from Firestore.
  */
 export async function importEntries<T>(baseKey: string, uid: string, entries: T[]): Promise<void> {
-  await AsyncStorage.setItem(`${baseKey}/${uid}`, JSON.stringify(entries));
+  await setJson(`${baseKey}/${uid}`, entries);
 }
 
 // ─── SOAP ─────────────────────────────────────────────────────────────────────
@@ -135,6 +159,8 @@ export async function saveSoapEntry(entry: SoapEntry): Promise<void> {
   if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
   await setJson(uk(K.SOAP), entries);
   await refreshProfileProgress();
+  await trackEvent('create_note', { method: 'SOAP' });
+  await trackEvent('save_success', { method: 'SOAP' });
 }
 
 export async function deleteSoapEntry(id: string): Promise<void> {
@@ -155,6 +181,8 @@ export async function saveMcpwaEntry(entry: McpwaEntry): Promise<void> {
   if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
   await setJson(uk(K.MCPWA), entries);
   await refreshProfileProgress();
+  await trackEvent('create_note', { method: 'MCPWA' });
+  await trackEvent('save_success', { method: 'MCPWA' });
 }
 
 export async function deleteMcpwaEntry(id: string): Promise<void> {
@@ -175,6 +203,8 @@ export async function saveSwordEntry(entry: SwordEntry): Promise<void> {
   if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
   await setJson(uk(K.SWORD), entries);
   await refreshProfileProgress();
+  await trackEvent('create_note', { method: 'SWORD' });
+  await trackEvent('save_success', { method: 'SWORD' });
 }
 
 export async function deleteSwordEntry(id: string): Promise<void> {
@@ -195,6 +225,8 @@ export async function saveSermonNote(note: SermonNote): Promise<void> {
   if (idx >= 0) notes[idx] = note; else notes.unshift(note);
   await setJson(uk(K.SERMONS), notes);
   await refreshProfileProgress();
+  await trackEvent('create_note', { method: 'SERMON' });
+  await trackEvent('save_success', { method: 'SERMON' });
 }
 
 export async function deleteSermonNote(id: string): Promise<void> {
@@ -215,6 +247,8 @@ export async function savePrayEntry(entry: PrayEntry): Promise<void> {
   if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
   await setJson(uk(K.PRAY_JOURNAL), entries);
   await refreshProfileProgress();
+  await trackEvent('create_note', { method: 'PRAY' });
+  await trackEvent('save_success', { method: 'PRAY' });
 }
 
 export async function deletePrayEntry(id: string): Promise<void> {
@@ -235,6 +269,8 @@ export async function saveActsEntry(entry: ActsEntry): Promise<void> {
   if (idx >= 0) entries[idx] = entry; else entries.unshift(entry);
   await setJson(uk(K.ACTS_JOURNAL), entries);
   await refreshProfileProgress();
+  await trackEvent('create_note', { method: 'ACTS' });
+  await trackEvent('save_success', { method: 'ACTS' });
 }
 
 export async function deleteActsEntry(id: string): Promise<void> {
