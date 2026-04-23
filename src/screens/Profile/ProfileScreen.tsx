@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +15,7 @@ import ToggleCard from '../../components/ToggleCard/ToggleCard';
 import ReadingHeatmap from '../../components/ReadingHeatmap/ReadingHeatmap';
 import AppToast from '../../components/AppToast/AppToast';
 import { makeStyles } from '../Profile/Profile.styles';
-import { saveAvatarUri, getActiveUid } from '../../services/storageService';
+import { saveAvatarUri, getActiveUid, saveUserProfile } from '../../services/storageService';
 import { auth } from '../../services/firebase';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
@@ -41,6 +41,28 @@ export default function ProfileScreen() {
   const [snackMsg,          setSnackMsg]           = useState('');
 
   const isAdmin = auth.currentUser?.email === 'clarkcabatuan09@gmail.com';
+  const fallbackName = (auth.currentUser?.displayName ?? auth.currentUser?.email?.split('@')[0] ?? '').trim();
+  const displayName =
+    profile?.name && profile.name.trim() !== '' && profile.name !== 'New Member'
+      ? profile.name
+      : (fallbackName || 'New Member');
+  const avatarUri = profile?.avatarUri ?? auth.currentUser?.photoURL ?? undefined;
+
+  useEffect(() => {
+    if (!profile) return;
+
+    const needsNameRepair = !profile.name || profile.name.trim() === '' || profile.name === 'New Member';
+    const needsAvatarRepair = !profile.avatarUri && !!auth.currentUser?.photoURL;
+    if (!needsNameRepair && !needsAvatarRepair) return;
+
+    const repaired = {
+      ...profile,
+      name: displayName,
+      avatarUri,
+    };
+    setProfile(repaired);
+    void saveUserProfile(repaired);
+  }, [profile, displayName, avatarUri, setProfile]);
 
   const lastMonthCount = useMemo(() => {
     const now = new Date();
@@ -108,12 +130,12 @@ export default function ProfileScreen() {
           onPress={() => { void handlePickAvatar(); }}
           activeOpacity={0.8}
         >
-          {profile?.avatarUri ? (
-            <Image source={{ uri: profile.avatarUri }} style={styles.avatarImage} />
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
           ) : (
             <View style={styles.avatar}>
               <Text style={styles.avatarInitials}>
-                {(profile?.name ?? 'U')[0].toUpperCase()}
+                {(displayName ?? 'U')[0].toUpperCase()}
               </Text>
             </View>
           )}
@@ -124,7 +146,7 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        <Text style={styles.name}>{profile?.name ?? 'New Member'}</Text>
+        <Text style={styles.name}>{displayName}</Text>
         <Text style={styles.memberSince}>
           Faithful member since {profile?.memberSince ?? 'today'}
         </Text>

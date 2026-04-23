@@ -18,10 +18,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper — true when the caller is the app admin
+    // Helper — true when the caller is the app admin.
+    // We allow both email and UID checks to avoid provider/token edge cases.
     function isAdmin() {
       return request.auth != null
-          && request.auth.token.email == 'clarkcabatuan09@gmail.com';
+          && (
+            request.auth.token.email == 'clarkcabatuan09@gmail.com'
+            || request.auth.uid == 'ENSFWQhDEYWMPMZOobY0KOWSMcd2'
+          );
     }
 
     // ── User data (per-user devotional sync + account metadata) ─────────────

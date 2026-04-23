@@ -14,6 +14,8 @@ import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { FirebaseError } from 'firebase/app';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 import { ProfileStackParamList } from '../../navigation/types';
 import { useColors, Spacing } from '../../theme';
@@ -23,6 +25,7 @@ import {
   getAllAppRatingsForAdmin,
   toggleUserDisabled,
   replyToFeedback,
+  APP_ADMIN_EMAIL,
   AdminUserRecord,
   FeedbackItem,
   FeedbackCategory,
@@ -30,7 +33,6 @@ import {
 } from '../../services/feedbackService';
 import { makeStyles } from './Admin.styles';
 import { auth } from '../../services/firebase';
-import { DiagnosticsSnapshot, getDiagnosticsSnapshot } from '../../services/diagnosticsService';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -40,6 +42,8 @@ const CAT_META: Record<FeedbackCategory, { label: string; color: string; bg: str
   question:   { label: 'QUESTION',   color: '#428a9b', bg: 'rgba(66,138,155,0.15)' },
   other:      { label: 'OTHER',      color: '#888',    bg: 'rgba(136,136,136,0.15)'},
 };
+
+const PAGE_SIZE = 8;
 
 function formatDate(ts: number): string {
   if (!ts) return '—';
@@ -54,7 +58,10 @@ export default function AdminScreen() {
   const colors     = useColors();
   const styles     = makeStyles(colors);
   const navigation = useNavigation<Nav>();
-  const adminUid   = auth.currentUser?.uid ?? '';
+
+  const [authReady, setAuthReady] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
+  const adminUid = currentUser?.uid ?? '';
 
   const [activeTab,    setActiveTab]    = useState<'users' | 'feedbacks' | 'ratings'>('users');
   const [users,        setUsers]        = useState<AdminUserRecord[]>([]);
@@ -72,63 +79,117 @@ export default function AdminScreen() {
   const [expandedFbId, setExpandedFbId] = useState<string | null>(null);
   const [replyDraft,   setReplyDraft]   = useState<Record<string, string>>({});
   const [sendingReply, setSendingReply] = useState<string | null>(null);
-  const [diagnostics, setDiagnostics] = useState<DiagnosticsSnapshot | null>(null);
+  const [usersVisible, setUsersVisible] = useState(PAGE_SIZE);
+  const [feedbacksVisible, setFeedbacksVisible] = useState(PAGE_SIZE);
+  const [ratingsVisible, setRatingsVisible] = useState(PAGE_SIZE);
+
+  const mapAdminLoadError = useCallback(
+    (error: unknown, resource: 'users' | 'feedbacks' | 'ratings'): string => {
+      if (!currentUser) {
+        return 'Admin session is not ready yet. Please wait a moment and retry.';
+      }
+
+      const signedInEmail = currentUser.email ?? 'no-email-account';
+      if (error instanceof FirebaseError) {
+        if (error.code === 'permission-denied') {
+          if (signedInEmail.toLowerCase() === APP_ADMIN_EMAIL.toLowerCase()) {
+            return `Access denied loading ${resource}. Your email matches admin (${signedInEmail}), so live Firestore rules are likely not updated in project devotional-app-dcdaf, or this account still lacks project IAM permissions.`;
+          }
+          return `Access denied loading ${resource}. Signed in as ${signedInEmail}. Admin must be ${APP_ADMIN_EMAIL} in Firestore rules.`;
+        }
+        if (error.code === 'unavailable') {
+          return `Could not load ${resource}. Firestore is currently unavailable; check your connection and retry.`;
+        }
+        return `Could not load ${resource} (${error.code}).`;
+      }
+
+      return `Could not load ${resource}. Please retry.`;
+    },
+    [currentUser],
+  );
 
   // ── Loaders ─────────────────────────────────────────────────────────────
 
   const fetchUsers = useCallback(async () => {
+    if (!currentUser) {
+      setLoadingUsers(false);
+      setErrorUsers('Please sign in as admin to view users.');
+      return;
+    }
+
     setLoadingUsers(true);
     setErrorUsers('');
     try {
+      await currentUser.getIdToken();
       const data = await getAllUsers();
       setUsers(data.sort((a, b) => b.registeredAt - a.registeredAt));
-    } catch {
-      setErrorUsers('Could not load users. Check Firestore rules and your connection.');
+    } catch (error) {
+      setErrorUsers(mapAdminLoadError(error, 'users'));
     } finally {
       setLoadingUsers(false);
     }
-  }, []);
+  }, [currentUser, mapAdminLoadError]);
 
   const fetchFeedbacks = useCallback(async () => {
+    if (!currentUser) {
+      setLoadingFb(false);
+      setErrorFb('Please sign in as admin to view feedbacks.');
+      return;
+    }
+
     setLoadingFb(true);
     setErrorFb('');
     try {
+      await currentUser.getIdToken();
       const data = await getAllFeedbacks();
       setFeedbacks(data);
-    } catch {
-      setErrorFb('Could not load feedbacks. Check Firestore rules and your connection.');
+    } catch (error) {
+      setErrorFb(mapAdminLoadError(error, 'feedbacks'));
     } finally {
       setLoadingFb(false);
     }
-  }, []);
+  }, [currentUser, mapAdminLoadError]);
 
   const fetchRatings = useCallback(async () => {
+    if (!currentUser) {
+      setLoadingRatings(false);
+      setErrorRatings('Please sign in as admin to view ratings.');
+      return;
+    }
+
     setLoadingRatings(true);
     setErrorRatings('');
     try {
-      const adminEmail = auth.currentUser?.email ?? '';
+      await currentUser.getIdToken();
+      const adminEmail = currentUser.email ?? '';
       if (!adminEmail) {
         setRatings([]);
+        setErrorRatings('This account has no email. Admin access requires an email-based account.');
         return;
       }
       const data = await getAllAppRatingsForAdmin(adminEmail);
       setRatings(data);
-    } catch {
-      setErrorRatings('Could not load ratings. Check Firestore rules and your connection.');
+    } catch (error) {
+      setErrorRatings(mapAdminLoadError(error, 'ratings'));
     } finally {
       setLoadingRatings(false);
     }
+  }, [currentUser, mapAdminLoadError]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (nextUser) => {
+      setCurrentUser(nextUser);
+      setAuthReady(true);
+    });
+    return unsub;
   }, []);
 
   useEffect(() => {
+    if (!authReady) return;
     void fetchUsers();
     void fetchFeedbacks();
     void fetchRatings();
-    void (async () => {
-      const snap = await getDiagnosticsSnapshot();
-      setDiagnostics(snap);
-    })();
-  }, [fetchUsers, fetchFeedbacks, fetchRatings]);
+  }, [authReady, fetchUsers, fetchFeedbacks, fetchRatings]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -210,6 +271,22 @@ export default function AdminScreen() {
     return true;
   });
 
+  const visibleUsers = filteredUsers.slice(0, usersVisible);
+  const visibleFeedbacks = filteredFeedbacks.slice(0, feedbacksVisible);
+  const visibleRatings = ratings.slice(0, ratingsVisible);
+
+  useEffect(() => {
+    setUsersVisible(PAGE_SIZE);
+  }, [search, users.length]);
+
+  useEffect(() => {
+    setFeedbacksVisible(PAGE_SIZE);
+  }, [fbFilter, feedbacks.length]);
+
+  useEffect(() => {
+    setRatingsVisible(PAGE_SIZE);
+  }, [ratings.length]);
+
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
@@ -232,7 +309,7 @@ export default function AdminScreen() {
           <Icon source="shield-crown-outline" size={26} color={colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.greetingTitle}>Welcome, {auth.currentUser?.displayName ?? 'Admin'}</Text>
+          <Text style={styles.greetingTitle}>Welcome, {currentUser?.displayName ?? 'Admin'}</Text>
           <Text style={styles.greetingSubtitle}>
             Monitor users · Check feedback · Review ratings
           </Text>
@@ -263,25 +340,6 @@ export default function AdminScreen() {
           </View>
         </View>
       </View>
-
-      {diagnostics && (
-        <View style={styles.opsCard}>
-          <Text style={styles.opsTitle}>Diagnostics</Text>
-          <Text style={styles.opsLine}>App Version: {diagnostics.appVersion}</Text>
-          <Text style={styles.opsLine}>Runtime: {diagnostics.runtimeVersion}</Text>
-          <Text style={styles.opsLine}>Auth: {diagnostics.authState} ({diagnostics.authUid})</Text>
-          <Text style={styles.opsLine}>Sync Queue: {diagnostics.syncQueue}</Text>
-          <Text style={styles.opsLine}>
-            Local Counts: SOAP {diagnostics.localCounts.soap} · MCPWA {diagnostics.localCounts.mcpwa} · SWORD {diagnostics.localCounts.sword} · PRAY {diagnostics.localCounts.pray} · ACTS {diagnostics.localCounts.acts} · Sermon {diagnostics.localCounts.sermon}
-          </Text>
-          <Text style={styles.opsLine}>
-            Failures: save {diagnostics.analytics.saveFailCount} · sync {diagnostics.analytics.syncFailCount} · partner connect {diagnostics.analytics.partnerConnectFailCount}
-          </Text>
-          <Text style={styles.opsLine}>
-            Drop-off: {Object.entries(diagnostics.analytics.methodDropoff).map(([k, v]) => `${k} ${v}`).join(' · ') || 'No drop-off data yet'}
-          </Text>
-        </View>
-      )}
 
       {/* Tabs */}
       <View style={styles.tabsWrap}>
@@ -348,7 +406,7 @@ export default function AdminScreen() {
 
       {/* ── Users Tab ──────────────────────────────────────────────────────── */}
       {activeTab === 'users' && (
-        <>
+        <View style={styles.tabPane}>
           <View style={styles.searchWrap}>
             <Icon source="magnify" size={18} color={colors.textMuted} />
             <TextInput
@@ -367,7 +425,7 @@ export default function AdminScreen() {
           </View>
 
           <ScrollView
-            style={styles.safe}
+            style={styles.listScroll}
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
           >
@@ -395,7 +453,7 @@ export default function AdminScreen() {
                 </Text>
               </View>
             ) : (
-              filteredUsers.map((user) => (
+              visibleUsers.map((user) => (
                 <View key={user.uid} style={styles.userCard}>
                   {/* Avatar */}
                   <View style={styles.userInitialCircle}>
@@ -448,13 +506,24 @@ export default function AdminScreen() {
                 </View>
               ))
             )}
+
+            {!loadingUsers && !errorUsers && filteredUsers.length > visibleUsers.length && (
+              <TouchableOpacity
+                onPress={() => setUsersVisible((prev) => prev + PAGE_SIZE)}
+                style={{ alignSelf: 'center', marginTop: Spacing.sm, padding: Spacing.sm }}
+              >
+                <Text style={{ color: colors.primary, fontWeight: '600' }}>
+                  Load more users ({filteredUsers.length - visibleUsers.length} remaining)
+                </Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
-        </>
+        </View>
       )}
 
       {/* ── Feedbacks Tab ─────────────────────────────────────────────────── */}
       {activeTab === 'feedbacks' && (
-        <>
+        <View style={styles.tabPane}>
           <View style={styles.filterRow}>
             {(['all', 'pending', 'replied'] as const).map((f) => {
               const active = fbFilter === f;
@@ -485,7 +554,7 @@ export default function AdminScreen() {
           </View>
 
           <ScrollView
-            style={styles.safe}
+            style={styles.listScroll}
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -514,7 +583,7 @@ export default function AdminScreen() {
                 </Text>
               </View>
             ) : (
-              filteredFeedbacks.map((fb) => {
+              visibleFeedbacks.map((fb) => {
                 const cat = CAT_META[fb.category] ?? CAT_META.other;
                 const isOpen = expandedFbId === fb.id;
                 return (
@@ -599,71 +668,95 @@ export default function AdminScreen() {
                 );
               })
             )}
+
+            {!loadingFb && !errorFb && filteredFeedbacks.length > visibleFeedbacks.length && (
+              <TouchableOpacity
+                onPress={() => setFeedbacksVisible((prev) => prev + PAGE_SIZE)}
+                style={{ alignSelf: 'center', marginTop: Spacing.sm, padding: Spacing.sm }}
+              >
+                <Text style={{ color: colors.primary, fontWeight: '600' }}>
+                  Load more feedbacks ({filteredFeedbacks.length - visibleFeedbacks.length} remaining)
+                </Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
-        </>
+        </View>
       )}
 
       {/* ── Ratings Tab ───────────────────────────────────────────────────── */}
       {activeTab === 'ratings' && (
-        <ScrollView
-          style={styles.safe}
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.ratingsSummaryCard}>
-            <Text style={styles.ratingsSummaryTitle}>App Rating Summary</Text>
-            <View style={styles.ratingsSummaryRow}>
-              <Text style={styles.ratingsSummaryScore}>{averageRating.toFixed(1)}</Text>
-              <Icon source="star" size={18} color="#EAB308" />
-              <Text style={styles.ratingsSummaryMeta}>from {ratings.length} ratings</Text>
-            </View>
-          </View>
-
-          {loadingRatings ? (
-            <View style={styles.centeredMsg}>
-              <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.centeredMsgText}>Loading ratings…</Text>
-            </View>
-          ) : errorRatings ? (
-            <View style={styles.centeredMsg}>
-              <Icon source="alert-circle-outline" size={36} color={colors.error} />
-              <Text style={[styles.centeredMsgText, { color: colors.error }]}>{errorRatings}</Text>
-              <TouchableOpacity
-                onPress={() => { void fetchRatings(); }}
-                style={{ marginTop: Spacing.md, padding: Spacing.sm }}
-              >
-                <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
-              </TouchableOpacity>
-            </View>
-          ) : ratings.length === 0 ? (
-            <View style={styles.emptyWrap}>
-              <Icon source="star-off-outline" size={40} color={colors.textMuted} />
-              <Text style={styles.emptyText}>No ratings submitted yet.</Text>
-            </View>
-          ) : (
-            ratings.map((r) => (
-              <View key={r.id} style={styles.ratingCard}>
-                <View style={styles.ratingHead}>
-                  <Text style={styles.ratingName}>{r.userName || 'User'}</Text>
-                  <Text style={styles.ratingDate}>{formatDate(r.updatedAt || r.createdAt)}</Text>
-                </View>
-                <Text style={styles.ratingEmail}>{r.userEmail}</Text>
-                <View style={styles.ratingStarsRow}>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <Icon
-                      key={n}
-                      source={n <= r.stars ? 'star' : 'star-outline'}
-                      size={16}
-                      color={n <= r.stars ? '#EAB308' : colors.textMuted}
-                    />
-                  ))}
-                  <Text style={styles.ratingStarsText}>{r.stars}/5</Text>
-                </View>
-                {r.review ? <Text style={styles.ratingReview}>{r.review}</Text> : null}
+        <View style={styles.tabPane}>
+          <ScrollView
+            style={styles.listScroll}
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.ratingsSummaryCard}>
+              <Text style={styles.ratingsSummaryTitle}>App Rating Summary</Text>
+              <View style={styles.ratingsSummaryRow}>
+                <Text style={styles.ratingsSummaryScore}>{averageRating.toFixed(1)}</Text>
+                <Icon source="star" size={18} color="#EAB308" />
+                <Text style={styles.ratingsSummaryMeta}>from {ratings.length} ratings</Text>
               </View>
-            ))
-          )}
-        </ScrollView>
+            </View>
+
+            {loadingRatings ? (
+              <View style={styles.centeredMsg}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.centeredMsgText}>Loading ratings…</Text>
+              </View>
+            ) : errorRatings ? (
+              <View style={styles.centeredMsg}>
+                <Icon source="alert-circle-outline" size={36} color={colors.error} />
+                <Text style={[styles.centeredMsgText, { color: colors.error }]}>{errorRatings}</Text>
+                <TouchableOpacity
+                  onPress={() => { void fetchRatings(); }}
+                  style={{ marginTop: Spacing.md, padding: Spacing.sm }}
+                >
+                  <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : ratings.length === 0 ? (
+              <View style={styles.emptyWrap}>
+                <Icon source="star-off-outline" size={40} color={colors.textMuted} />
+                <Text style={styles.emptyText}>No ratings submitted yet.</Text>
+              </View>
+            ) : (
+              visibleRatings.map((r) => (
+                <View key={r.id} style={styles.ratingCard}>
+                  <View style={styles.ratingHead}>
+                    <Text style={styles.ratingName}>{r.userName || 'User'}</Text>
+                    <Text style={styles.ratingDate}>{formatDate(r.updatedAt || r.createdAt)}</Text>
+                  </View>
+                  <Text style={styles.ratingEmail}>{r.userEmail}</Text>
+                  <View style={styles.ratingStarsRow}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Icon
+                        key={n}
+                        source={n <= r.stars ? 'star' : 'star-outline'}
+                        size={16}
+                        color={n <= r.stars ? '#EAB308' : colors.textMuted}
+                      />
+                    ))}
+                    <Text style={styles.ratingStarsText}>{r.stars}/5</Text>
+                  </View>
+                  {r.review ? <Text style={styles.ratingReview}>{r.review}</Text> : null}
+                </View>
+              ))
+            )}
+
+            {!loadingRatings && !errorRatings && ratings.length > visibleRatings.length && (
+              <TouchableOpacity
+                onPress={() => setRatingsVisible((prev) => prev + PAGE_SIZE)}
+                style={{ alignSelf: 'center', marginTop: Spacing.sm, padding: Spacing.sm }}
+              >
+                <Text style={{ color: colors.primary, fontWeight: '600' }}>
+                  Load more ratings ({ratings.length - visibleRatings.length} remaining)
+                </Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </View>
       )}
     </SafeAreaView>
   );

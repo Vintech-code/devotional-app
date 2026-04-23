@@ -166,6 +166,8 @@ export const makeStyles = (c: ColorScheme) =>
     },
 
     // ── Scroll content ────────────────────────────────────────────────────
+    tabPane: { flex: 1 },
+    listScroll: { flex: 1 },
     scroll: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
 
     // ── User card ────────────────────────────────────────────────────────

@@ -143,7 +143,11 @@ export async function cancelWeeklyReview(): Promise<void> {
 }
 
 /** Fire an immediate local notification (used by the bell "remind me now" feature). */
-export async function sendImmediateReminder(title: string, body: string): Promise<void> {
+export async function sendImmediateReminder(
+  title: string,
+  body: string,
+  data?: Record<string, unknown>,
+): Promise<void> {
   const granted = await requestNotificationPermissions();
   if (!granted) return;
   await createNotificationChannel();
@@ -152,6 +156,7 @@ export async function sendImmediateReminder(title: string, body: string): Promis
       title,
       body,
       sound: true,
+      data,
       ...(Platform.OS === 'android' && { channelId: 'devotional-reminders' }),
     },
     trigger: null, // fire immediately
