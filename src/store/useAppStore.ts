@@ -18,6 +18,7 @@ import {
 import * as storage from '../services/storageService';
 import { signOut as firebaseSignOut } from '../services/authService';
 import { pushToCloud, pullFromCloud, mergeById } from '../services/userDataSyncService';
+import { pullFromCloud as pullLegacyCloud } from '../services/syncService';
 import {
   scheduleDailyReminder,
   scheduleRateAppReminder,
@@ -229,7 +230,7 @@ export const useAppStore = create<AppState>((set) => ({
     // Scope the storage service to this user FIRST
     storage.setActiveUid(uid);
 
-    const [
+    let [
       onboardingDone,
       selectedMethod,
       reminderSettings,
@@ -254,6 +255,46 @@ export const useAppStore = create<AppState>((set) => ({
       storage.getUserReadingPlans(),
       storage.getPrayerRequests(),
     ]);
+
+    // Recovery fallback for older backups in users/{uid} document shape.
+    const hasLocalJournalData = (
+      soapEntries.length
+      + mcpwaEntries.length
+      + swordEntries.length
+      + sermonNotes.length
+      + prayEntries.length
+      + actsEntries.length
+    ) > 0;
+
+    if (!hasLocalJournalData) {
+      try {
+        const legacy = await pullLegacyCloud(uid);
+        const hasLegacyData = !!(
+          legacy
+          && (
+            (legacy.soapEntries?.length ?? 0)
+            + (legacy.mcpwaEntries?.length ?? 0)
+            + (legacy.swordEntries?.length ?? 0)
+            + (legacy.sermonNotes?.length ?? 0)
+          ) > 0
+        );
+
+        if (legacy && hasLegacyData) {
+          await storage.importUserData(legacy);
+          const restored = await Promise.all([
+            storage.getSoapEntries(),
+            storage.getMcpwaEntries(),
+            storage.getSwordEntries(),
+            storage.getSermonNotes(),
+            storage.getPrayEntries(),
+            storage.getActsEntries(),
+          ]);
+          [soapEntries, mcpwaEntries, swordEntries, sermonNotes, prayEntries, actsEntries] = restored;
+        }
+      } catch {
+        // Ignore legacy recovery failures; local storage still remains source of truth.
+      }
+    }
 
     // Always recalculate streak & counts from actual entries (fixes reset-on-sign-in bug)
     const [freshProfile, avatarUri] = await Promise.all([

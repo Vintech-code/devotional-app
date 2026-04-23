@@ -147,10 +147,54 @@ export async function importEntries<T>(baseKey: string, uid: string, entries: T[
   await setJson(`${baseKey}/${uid}`, entries);
 }
 
+async function recoverLegacyEntriesForScopedKey<T>(baseKey: string, scopedKey: string): Promise<T[] | null> {
+  // 1) Recover from pre-UID key format.
+  const legacy = await getJson<T[]>(baseKey, []);
+  if (Array.isArray(legacy) && legacy.length > 0) {
+    await setJson(scopedKey, legacy);
+    return legacy;
+  }
+
+  // 2) Recover from legacy UID-scoped keys by merging all valid candidates.
+  // This restores entries created across older app versions that used different
+  // UID key paths, while de-duplicating by id when possible.
+  const keys = await AsyncStorage.getAllKeys();
+  const candidateKeys = keys.filter((k) => (
+    k.startsWith(`${baseKey}/`)
+    && !k.endsWith('__backup')
+    && k !== scopedKey
+  ));
+
+  if (candidateKeys.length === 0) return null;
+
+  const arrays = await Promise.all(candidateKeys.map((k) => getJson<T[]>(k, [])));
+  const combined = arrays.flat().filter(Boolean);
+  if (combined.length === 0) return null;
+
+  const byId = new Map<string, T>();
+  const passthrough: T[] = [];
+  combined.forEach((item) => {
+    const anyItem = item as unknown as { id?: unknown };
+    if (typeof anyItem?.id === 'string' && anyItem.id.length > 0) {
+      byId.set(anyItem.id, item);
+      return;
+    }
+    passthrough.push(item);
+  });
+
+  const migrated = [...byId.values(), ...passthrough] as T[];
+  await setJson(scopedKey, migrated);
+  return migrated;
+}
+
 // ─── SOAP ─────────────────────────────────────────────────────────────────────
 
 export async function getSoapEntries(): Promise<SoapEntry[]> {
-  return getJson<SoapEntry[]>(uk(K.SOAP), []);
+  const scopedKey = uk(K.SOAP);
+  const scoped = await getJson<SoapEntry[]>(scopedKey, []);
+  if (scoped.length > 0 || !_uid) return scoped;
+  const recovered = await recoverLegacyEntriesForScopedKey<SoapEntry>(K.SOAP, scopedKey);
+  return recovered ?? scoped;
 }
 
 export async function saveSoapEntry(entry: SoapEntry): Promise<void> {
@@ -172,7 +216,11 @@ export async function deleteSoapEntry(id: string): Promise<void> {
 // ─── MCPWA ────────────────────────────────────────────────────────────────────
 
 export async function getMcpwaEntries(): Promise<McpwaEntry[]> {
-  return getJson<McpwaEntry[]>(uk(K.MCPWA), []);
+  const scopedKey = uk(K.MCPWA);
+  const scoped = await getJson<McpwaEntry[]>(scopedKey, []);
+  if (scoped.length > 0 || !_uid) return scoped;
+  const recovered = await recoverLegacyEntriesForScopedKey<McpwaEntry>(K.MCPWA, scopedKey);
+  return recovered ?? scoped;
 }
 
 export async function saveMcpwaEntry(entry: McpwaEntry): Promise<void> {
@@ -194,7 +242,11 @@ export async function deleteMcpwaEntry(id: string): Promise<void> {
 // ─── SWORD ────────────────────────────────────────────────────────────────────
 
 export async function getSwordEntries(): Promise<SwordEntry[]> {
-  return getJson<SwordEntry[]>(uk(K.SWORD), []);
+  const scopedKey = uk(K.SWORD);
+  const scoped = await getJson<SwordEntry[]>(scopedKey, []);
+  if (scoped.length > 0 || !_uid) return scoped;
+  const recovered = await recoverLegacyEntriesForScopedKey<SwordEntry>(K.SWORD, scopedKey);
+  return recovered ?? scoped;
 }
 
 export async function saveSwordEntry(entry: SwordEntry): Promise<void> {
@@ -216,7 +268,11 @@ export async function deleteSwordEntry(id: string): Promise<void> {
 // ─── Sermon Notes ─────────────────────────────────────────────────────────────
 
 export async function getSermonNotes(): Promise<SermonNote[]> {
-  return getJson<SermonNote[]>(uk(K.SERMONS), []);
+  const scopedKey = uk(K.SERMONS);
+  const scoped = await getJson<SermonNote[]>(scopedKey, []);
+  if (scoped.length > 0 || !_uid) return scoped;
+  const recovered = await recoverLegacyEntriesForScopedKey<SermonNote>(K.SERMONS, scopedKey);
+  return recovered ?? scoped;
 }
 
 export async function saveSermonNote(note: SermonNote): Promise<void> {
@@ -238,7 +294,11 @@ export async function deleteSermonNote(id: string): Promise<void> {
 // --- PRAY Journal ---
 
 export async function getPrayEntries(): Promise<PrayEntry[]> {
-  return getJson<PrayEntry[]>(uk(K.PRAY_JOURNAL), []);
+  const scopedKey = uk(K.PRAY_JOURNAL);
+  const scoped = await getJson<PrayEntry[]>(scopedKey, []);
+  if (scoped.length > 0 || !_uid) return scoped;
+  const recovered = await recoverLegacyEntriesForScopedKey<PrayEntry>(K.PRAY_JOURNAL, scopedKey);
+  return recovered ?? scoped;
 }
 
 export async function savePrayEntry(entry: PrayEntry): Promise<void> {
@@ -260,7 +320,11 @@ export async function deletePrayEntry(id: string): Promise<void> {
 // --- ACTS Journal ---
 
 export async function getActsEntries(): Promise<ActsEntry[]> {
-  return getJson<ActsEntry[]>(uk(K.ACTS_JOURNAL), []);
+  const scopedKey = uk(K.ACTS_JOURNAL);
+  const scoped = await getJson<ActsEntry[]>(scopedKey, []);
+  if (scoped.length > 0 || !_uid) return scoped;
+  const recovered = await recoverLegacyEntriesForScopedKey<ActsEntry>(K.ACTS_JOURNAL, scopedKey);
+  return recovered ?? scoped;
 }
 
 export async function saveActsEntry(entry: ActsEntry): Promise<void> {
@@ -544,5 +608,8 @@ export async function clearUserData(): Promise<void> {
     `${K.ONBOARDING}/${uid}`,
     `${K.AVATAR}/${uid}`,
     `${K.READING_PLAN}/${uid}`,
+    `${K.PRAYER}/${uid}`,
+    `${K.PRAY_JOURNAL}/${uid}`,
+    `${K.ACTS_JOURNAL}/${uid}`,
   ]);
 }

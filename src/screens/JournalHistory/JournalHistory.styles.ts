@@ -244,6 +244,9 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     letterSpacing: 0.4,
   },
   clearDateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginLeft: 'auto',
     paddingHorizontal: Spacing.sm,
     paddingVertical: 6,
@@ -252,7 +255,31 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: c.border,
   },
+  clearDateBtnActive: {
+    backgroundColor: 'rgba(184,90,90,0.12)',
+    borderColor: c.error,
+  },
   clearDateText: {
+    fontSize: 11,
+    fontWeight: Typography.weight.bold,
+    color: c.textMuted,
+  },
+  clearDateTextActive: {
+    color: c.error,
+  },
+  dateFilterOffBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 'auto',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.md,
+    backgroundColor: c.surfaceAlt,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  dateFilterOffText: {
     fontSize: 11,
     fontWeight: Typography.weight.bold,
     color: c.textMuted,
@@ -436,6 +463,27 @@ export const makeStyles = (c: ColorScheme) => StyleSheet.create({
   selectCount: {
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semiBold,
+    color: c.textSecondary,
+  },
+  bottomSelectActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  bulkCancelBtn: {
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: c.surfaceAlt,
+    borderWidth: 1,
+    borderColor: c.border,
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    alignItems: 'center',
+  },
+  bulkCancelText: {
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
     color: c.textSecondary,
   },
   bulkDeleteBtn: {

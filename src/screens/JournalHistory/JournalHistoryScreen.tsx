@@ -17,6 +17,12 @@ import {
   deleteSermonNote,
   deletePrayEntry,
   deleteActsEntry,
+  getSoapEntries,
+  getMcpwaEntries,
+  getSwordEntries,
+  getSermonNotes,
+  getPrayEntries,
+  getActsEntries,
   refreshProfileProgress,
 } from '../../services/storageService';
 import ScreenHeader from '../../components/ScreenHeader/ScreenHeader';
@@ -139,6 +145,39 @@ export default function JournalHistoryScreen() {
   ].sort((a, b) => b.createdAt - a.createdAt), [soapEntries, mcpwaEntries, swordEntries, sermonNotes, prayEntries, actsEntries]);
 
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    const hasData = (
+      soapEntries.length
+      + mcpwaEntries.length
+      + swordEntries.length
+      + sermonNotes.length
+      + prayEntries.length
+      + actsEntries.length
+    ) > 0;
+    if (hasData) return;
+
+    void (async () => {
+      try {
+        const [soap, mcpwa, sword, sermon, pray, acts] = await Promise.all([
+          getSoapEntries(),
+          getMcpwaEntries(),
+          getSwordEntries(),
+          getSermonNotes(),
+          getPrayEntries(),
+          getActsEntries(),
+        ]);
+        setSoapEntries(soap);
+        setMcpwaEntries(mcpwa);
+        setSwordEntries(sword);
+        setSermonNotes(sermon);
+        setPrayEntries(pray);
+        setActsEntries(acts);
+      } catch {
+        // Ignore recovery refresh failures; user can continue with current state.
+      }
+    })();
+  }, [soapEntries.length, mcpwaEntries.length, swordEntries.length, sermonNotes.length, prayEntries.length, actsEntries.length, setSoapEntries, setMcpwaEntries, setSwordEntries, setSermonNotes, setPrayEntries, setActsEntries]);
 
   useEffect(() => {
     void (async () => {
@@ -381,14 +420,22 @@ export default function JournalHistoryScreen() {
           <Icon source="calendar" size={16} color={colors.textSecondary} />
           <Text style={styles.datePickerLabel}>Jump to Date: {fmtDate(selectedDate)}</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.clearDateBtn}
-          onPress={() => {
-            setSelectedDate(null);
-          }}
-        >
-          <Text style={styles.clearDateText}>Show All</Text>
-        </TouchableOpacity>
+        {selectedDate ? (
+          <TouchableOpacity
+            style={[styles.clearDateBtn, styles.clearDateBtnActive]}
+            onPress={() => {
+              setSelectedDate(null);
+            }}
+          >
+            <Icon source="close-circle" size={14} color={colors.error} />
+            <Text style={[styles.clearDateText, styles.clearDateTextActive]}>Clear Date</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.dateFilterOffBadge}>
+            <Icon source="filter-variant-remove" size={14} color={colors.textMuted} />
+            <Text style={styles.dateFilterOffText}>No Date Filter</Text>
+          </View>
+        )}
       </View>
 
       {selectedDate && (
@@ -534,14 +581,27 @@ export default function JournalHistoryScreen() {
           <Text style={styles.selectCount}>
             {selectedIds.size} selected
           </Text>
-          <TouchableOpacity
-            style={[styles.bulkDeleteBtn, selectedIds.size === 0 && { opacity: 0.4 }]}
-            disabled={selectedIds.size === 0}
-            onPress={handleBulkDelete}
-          >
-            <Icon source="trash-can-outline" size={16} color="#fff" />
-            <Text style={styles.bulkDeleteText}>Delete</Text>
-          </TouchableOpacity>
+          <View style={styles.bottomSelectActions}>
+            <TouchableOpacity
+              style={styles.bulkCancelBtn}
+              onPress={() => {
+                setSelectMode(false);
+                setSelectedIds(new Set());
+              }}
+            >
+              <Icon source="close" size={16} color={colors.textSecondary} />
+              <Text style={styles.bulkCancelText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.bulkDeleteBtn, selectedIds.size === 0 && { opacity: 0.4 }]}
+              disabled={selectedIds.size === 0}
+              onPress={handleBulkDelete}
+            >
+              <Icon source="trash-can-outline" size={16} color="#fff" />
+              <Text style={styles.bulkDeleteText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
